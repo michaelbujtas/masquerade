@@ -2,10 +2,16 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using DevConsole;
+using UnityEngine.UI;
 
 namespace DevConsole{
 	[System.Serializable]
 	public class Console : MonoBehaviour {
+
+		//Hacky Customization
+		public Text text;
+		public InputField inputField;
+
 		
 		//=============================
 		//VARS
@@ -78,6 +84,7 @@ namespace DevConsole{
 			}
 			if (dontDestroyOnLoad)
 				DontDestroyOnLoad(gameObject);
+
 		}
 
 		void OnEnable(){
@@ -100,8 +107,22 @@ namespace DevConsole{
 				new Command<string>("Application.LoadLevelS", Application.LoadLevel, "Loads a level based on an string value")
 			);
 		}
-		void Prueba(string s){
-			Debug.Log (s);
+
+
+		//=============================
+		//UPDATE (Custom, Hacky)
+		//=============================
+		void Update()
+		{
+			text.text = consoleText;
+		}
+
+		public void RunInputCommand(InputField input)
+		{
+			if (input.text.Length > 0)
+				PrintInput(input.text);
+			input.text = "";
+
 		}
 		//=============================
 		//GUI
@@ -130,11 +151,12 @@ namespace DevConsole{
 			float height = lineHeight*numLines;
 			float scrollHeight = height>currentConsoleHeight?height:currentConsoleHeight;
 
+			//Treat buffer [Moved out of if(!closed)]
+			for (int i = 0; i < buffer.Count; i++)
+				BasePrintOnGUI(buffer[i].Key, buffer[i].Value);
+			buffer.Clear();
+
 			if (!closed){
-				//Treat buffer
-				for (int i = 0; i< buffer.Count; i++)
-					BasePrintOnGUI(buffer[i].Key, buffer[i].Value);
-				buffer.Clear();
 
 				if (!moving)
 					GUI.FocusControl("TextField");
@@ -216,6 +238,7 @@ namespace DevConsole{
 				GUI.EndScrollView();
 				if (inputText == string.Empty)
 					showHelp= true;
+
 			}
 
 			//HELP WINDOW

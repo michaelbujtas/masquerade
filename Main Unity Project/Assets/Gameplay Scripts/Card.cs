@@ -6,6 +6,29 @@ using DevConsole;
 [AdvancedInspector]
 public class Card : MonoBehaviour {
 
+	[Inspect]
+	byte? index = null;
+	
+	public byte? Index
+	{
+		get
+		{
+			if (index == null)
+				Console.LogError("Card index is not yet set.");
+			return index;
+		}
+		set
+		{
+			if(index == null)
+			{
+				index = value;
+			}
+			else
+			{
+				Console.LogError("You're trying to reindex a card. You should never have to do that.");
+			}
+		}
+	}
 
 	[Inspect]
     public string CardName;
@@ -73,7 +96,7 @@ public class Card : MonoBehaviour {
 	public void LinkRenderer(CardRenderer renderer)
 	{
 		Renderer = renderer;
-		Renderer.Card = this;
+		//Renderer.Card = this;
 	}
 
 	public void LinkLogic(CardLogic logic)

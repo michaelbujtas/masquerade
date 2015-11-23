@@ -9,7 +9,10 @@ using AdvancedInspector;
 public class CardRenderer : MonoBehaviour
 {
 	[Inspect]
-    public Text AttackText;
+	public GameObject Visuals;
+
+	[Inspect]
+	public Text AttackText;
 	[Inspect]
 	public Text DefenseText;
 	[Inspect]
@@ -23,10 +26,18 @@ public class CardRenderer : MonoBehaviour
 	CardSelector Selector;
 
 	[Inspect]
-	public bool NoSelector;
+	public bool DummyRenderer;
 
 	[Inspect]
 	public Card Card;
+
+	[Inspect]
+	public byte Index = CardIndex.EMPTY_SLOT;
+
+	[Inspect]
+	CardIndex CardIndex;
+
+
 
 	public void LinkCard(Card card)
 	{
@@ -35,28 +46,36 @@ public class CardRenderer : MonoBehaviour
 
 	public RectTransform rectTransform
 	{
-		get { return (RectTransform)transform;  }
+		get { return (RectTransform)transform; }
 	}
 
 	// Use this for initialization
-	void Start () {
+	void Awake() {
+		CardIndex = FindObjectOfType<CardIndex>();
 
-		ImportantObjectReference reference = FindObjectOfType<ImportantObjectReference>();
+		/*ImportantObjectReference reference = FindObjectOfType<ImportantObjectReference>();
 
 		Menu = reference.CardOptionsMenu;
         Selector = reference.CardSelector;
 
 
         if (Selector != null && !NoSelector)
-            Selector.CardsInPlay.Add(this);
-
-    }
-	
+            Selector.CardsInPlay.Add(this);*/
 
 
-    public void SetFacing(bool facing)
+	}
+
+
+	public void Update()
+	{
+		if(!DummyRenderer)
+			RefreshCardImage();
+	}
+
+
+    public void SetFacing(bool isFaceUp)
     {
-        if (facing)
+        if (isFaceUp)
         {
             AttackText.color = Color.black;
             DefenseText.color = Color.black;
@@ -89,20 +108,43 @@ public class CardRenderer : MonoBehaviour
 
     public void RefreshCardImage()
     {
-		if (Card != null)
+		if (Index == CardIndex.EMPTY_SLOT)
 		{
-			SetFacing(Card.IsFaceUp);
-			AttackText.text = FormatCombatValue(Card.Attack, Card.AttackBonus);
-			DefenseText.text = FormatCombatValue(Card.Defense, Card.DefenseBonus);
-			NameText.text = Card.CardName;
-			name = NameText.text;
+			Visuals.SetActive(false);
 		}
 		else
 		{
-			SetFacing(true);
-			AttackText.text = "";
-			DefenseText.text = "";
-			NameText.text = "NULL";
+			Visuals.SetActive(true);
+
+			if (CardIndex.PLAYER_1_FACEDOWN <= Index && Index <= CardIndex.PLAYER_4_FACEDOWN)
+			{
+				SetFacing(false);
+				Background.color = Color.black;
+				AttackText.text = "¿";
+				DefenseText.text = "?";
+				NameText.text = "¿" + Index + "?";
+			}
+			else
+			{
+
+				Card Card = CardIndex.GetCard(Index);
+
+				if (Card != null)
+				{
+					SetFacing(Card.IsFaceUp);
+					AttackText.text = FormatCombatValue(Card.Attack, Card.AttackBonus);
+					DefenseText.text = FormatCombatValue(Card.Defense, Card.DefenseBonus);
+					NameText.text = Card.CardName;
+					name = NameText.text;
+				}
+				else
+				{
+					SetFacing(true);
+					AttackText.text = "";
+					DefenseText.text = "";
+					NameText.text = "NULL";
+				}
+			}
 		}
         
     }
@@ -131,7 +173,7 @@ public class CardRenderer : MonoBehaviour
 	public void Destroy()
 	{
 		Card.Renderer = null;
-		if(!NoSelector && Selector != null)
+		if(!DummyRenderer && Selector != null)
 			Selector.CardsInPlay.Remove(this);
 		Destroy(this.gameObject);
 	}
