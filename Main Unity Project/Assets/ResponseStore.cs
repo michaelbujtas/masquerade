@@ -9,9 +9,7 @@ public class ResponseStore<T>
 	
 	public ResponseStore()
 	{
-		Responses = new Response<T>[255];
-		for (byte i = 0; i < byte.MaxValue; i++)
-			Responses[i] = new Response<T>(i);
+		Responses = new Response<T>[byte.MaxValue];
 	}
 
 
@@ -20,6 +18,9 @@ public class ResponseStore<T>
 		//Should maybe be random open instead of first open?
 		for(byte i = 0; i <= byte.MaxValue; i++)
 		{
+			if (Responses[i] == null)
+				Responses[i] = new Response<T>(i);
+
 			if(Responses[i].FlagSafeToOverwrite)
 			{
 				Responses[i].Set();

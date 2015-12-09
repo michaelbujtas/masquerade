@@ -14,6 +14,9 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 	public byte PlaceInTurnOrder = 0; //0-3, we don't handle players dropping very well, if someone drops someone gets skipped. This is a demo
 
 	[Inspect]
+	public byte MyPlayerNumber = 0; 
+
+	[Inspect]
 	public List<IndexHand> ClockwiseHands = new List<IndexHand>();
 
 	List<IndexHand> UsedHands = new List<IndexHand>();
@@ -26,8 +29,13 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 
 	[Inspect]
 	public IndexFaceUpChoiceMenu FaceUpChoiceMenu;
+	[Inspect]
+	public IndexActionChoiceMenu ActionChoiceMenu;
+	[Inspect]
+	public IndexCardChoiceMenu CardChoiceMenu;
 
-	ResponseStore<bool> facingRequestResponses =  new ResponseStore<bool>();
+	ResponseStore<bool> facingRequestResponses = new ResponseStore<bool>();
+	ResponseStore<ActionDescriptor> actionRequestResponses = new ResponseStore<ActionDescriptor>();
 
 	[Inspect]
 	public NetworkingPlayer CurrentPlayer
@@ -45,8 +53,6 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 		}
 	}
 
-
-
 	public void AdvanceTurn()
 	{
 		if (OwningNetWorker != null && OwningNetWorker.Connected && OwningNetWorker.IsServer)
@@ -61,22 +67,22 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 		}
 	}
 
-
-
-
 	public void RequestButtonClickUI() //Server
 	{
-		//StartGame();
+		StartGame();
 	}
-
 
 	public void DrawButtonClickUI() //Server
 	{
 		if (CurrentPlayer != null && OwningNetWorker.IsServer)
-		StartCoroutine(DrawCardCOR(PlaceInTurnOrder));
+			StartCoroutine(DrawCardCOR(PlaceInTurnOrder));
 	}
 
-
+	public void TakeActionButtonClickUI() //Server
+	{
+		if (CurrentPlayer != null && OwningNetWorker.IsServer)
+			StartCoroutine(TakeActionCOR(PlaceInTurnOrder));
+	}
 
 	[BRPC]
 	public void AlertTurnRPC() //Called by Server on Client
@@ -93,13 +99,11 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 
 	}
 
-
 	[BRPC]
 	public void SetPlayerSlotIndexRPC(byte player, byte slot, byte index)
 	{
 		ClockwiseHands[player].SetIndex(slot, index);
 	}
-
 
 	[BRPC]
 	public void ConfigureHandsRPC(bool fourPlayers, byte playerNumber)
@@ -138,32 +142,7 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 		}
 	}
 
-	[BRPC]
-	public void RequestChooseFacingRPC(byte choiceID, byte index)//Called by server on client
-	{
-		Console.Log("Recieved a request (#" + choiceID + ") to choose the facing of " + index + ".");
-		FaceUpChoiceMenu.GetChoice(index,
-			delegate (bool choice)
-			{
-				Console.Log("Facing Choice Delegate Hit (#" + choiceID + "). Sending ResponseChooseFacingRPC");
-				RPC("ResponseChooseFacingRPC", NetworkReceivers.Server, choiceID, choice);
-			}
-			);
-	}
-
-	
-	[BRPC]
-	public void ResponseChooseFacingRPC(byte choiceID, bool choice)
-	{
-		Console.Log("Recieved a response to my facing request (#" + choiceID + ") [" + choice + "].");
-		Response<bool> response = facingRequestResponses.Responses[choiceID];
-		if (response != null && response.FlagWaiting)
-		{
-			response.Fill(choice);
-		}
-	}
-
-	
+	//Draw a card system uses DrawCardCOR and the ChooseFacing RPCs
 	public IEnumerator DrawCardCOR(byte playerIndex)
 	{
 		Console.Log("Starting Draw Coroutine.", Color.blue);
@@ -191,6 +170,128 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 		//No RPC to set facing on client machines yet exists. Right now all cards are face-up to the person who drew them
 		//and face-down to everyone else.
 
+	}
+
+	[BRPC]
+	void RequestChooseFacingRPC(byte choiceID, byte index)//Called by server on client
+	{
+		Console.Log("Recieved a request (#" + choiceID + ") to choose the facing of " + index + ".", Color.blue);
+		FaceUpChoiceMenu.GetChoice(index,
+			delegate (bool choice)
+			{
+				Console.Log("Facing Choice Delegate Hit (#" + choiceID + "). Sending ResponseChooseFacingRPC", Color.blue);
+				RPC("ResponseChooseFacingRPC", NetworkReceivers.Server, choiceID, choice);
+			}
+			);
+	}
+
+	[BRPC]
+	void ResponseChooseFacingRPC(byte choiceID, bool choice)
+	{
+		Console.Log("Recieved a response to my facing request (#" + choiceID + ") [" + choice + "].");
+		Response<bool> response = facingRequestResponses.Responses[choiceID];
+		if (response != null && response.FlagWaiting)
+		{
+			response.Fill(choice);
+		}
+	}
+
+	//Action system uses TakeActionCOR and the TakeAction RPCs
+	public IEnumerator TakeActionCOR(byte playerIndex)
+	{
+		Console.Log("Starting Take Action Coroutine.", Color.blue);
+
+		Response<ActionDescriptor> response = actionRequestResponses.Add();
+		Console.Log("Sending RequestTakeActionRPC", Color.blue);
+		AuthoritativeRPC("RequestTakeActionRPC", OwningNetWorker, GetPlayer(playerIndex), false, response.Index);
+		int framesWaited = 0;
+		while (!response.FlagCompleted)
+		{
+			framesWaited++;
+			if (framesWaited > 60)
+			{
+
+				Console.Log("Waited 60 frames for response.", Color.blue);
+				framesWaited = 0;
+			}
+			yield return null;
+		}
+		Console.Log("Got a response. Right now, I'm not doing any gameplay with it.", Color.blue);
+		switch (response.Result.Type)
+		{
+			case CardAction.FLIP:
+				Console.Log("Flipping card #" + response.Result.ActorIndex, Color.blue);
+				//This is where we would actually flip it
+				break;
+			case CardAction.ATTACK:
+				Console.Log("Card #" + response.Result.ActorIndex + " attacks Card #" + response.Result.TargetIndex, Color.blue);
+				//This is where we would actually attack
+				break;
+			case CardAction.ACTIVATE:
+				Console.Log("Activating card #" + response.Result.ActorIndex, Color.blue);
+				//This is where we would actually attack
+				break;
+
+		}
+
+		response.Recycle();
+		//No RPC to set facing on client machines yet exists. Right now all cards are face-up to the person who drew them
+		//and face-down to everyone else.
+	}
+
+	[BRPC]
+	void RequestTakeActionRPC(byte choiceID)
+	{
+
+		Console.Log("Recieved a request (#" + choiceID + ") to take an action.");
+		/*ActionChoiceMenu.GetChoice(1, 
+			delegate (CardAction choice)
+			{
+				Console.Log("Take Action Delegate Hit (#" + choiceID + "). Sending ResponseTakeActionRPC");
+				byte sendChoiceID = choiceID;
+				byte sendActorIndex = 1;
+				byte sendActionType = (byte)choice;
+				byte sendTargetIndex = 205;
+				Console.Log(sendChoiceID, Color.cyan);
+				Console.Log(sendActorIndex, Color.cyan);
+				Console.Log(sendActionType, Color.cyan);
+				Console.Log(sendTargetIndex, Color.cyan);
+
+				RPC("ResponseTakeActionRPC", NetworkReceivers.Server, sendChoiceID, sendActorIndex, sendActionType, sendTargetIndex);
+			}
+			);*/
+
+
+		CardChoiceMenu.GetChoice(ClockwiseHands[MyPlayerNumber].CardsOwned, Color.green,
+			delegate (byte choice)
+			{
+				Console.Log("First Take Action Delegate Hit (#" + choiceID + "). Sending ResponseTakeActionRPC");
+				byte sendChoiceID = choiceID;
+				byte sendActorIndex = choice;
+				byte sendActionType = 1;
+				byte sendTargetIndex = 205;
+				RPC("ResponseTakeActionRPC", NetworkReceivers.Server, sendChoiceID, sendActorIndex, sendActionType, sendTargetIndex);
+
+			}
+
+			);
+
+	}
+
+	[BRPC]
+	void ResponseTakeActionRPC(byte choiceID, byte actorIndex, byte actionType, byte targetIndex)
+	{
+
+		Console.Log("Recieved a response to my Take Action request (#" + choiceID + ")");
+		Console.Log(choiceID, Color.magenta);
+		Console.Log(actorIndex, Color.magenta);
+		Console.Log(actionType, Color.magenta);
+		Console.Log(targetIndex, Color.magenta);
+		Response<ActionDescriptor> response = actionRequestResponses.Responses[choiceID];
+		if (response != null && response.FlagWaiting)
+		{
+			response.Fill(new ActionDescriptor(actorIndex, (CardAction)actionType, targetIndex));
+		}
 	}
 
 	public NetworkingPlayer GetPlayer(byte playerIndex)
@@ -225,7 +326,7 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 	public void StartGame()
 	{
 		Console.Log("Starting the game.");
-		List<byte> baseNumbers = new List<byte>();
+		/*List<byte> baseNumbers = new List<byte>();
 		for (byte i = 0; i < OwningNetWorker.Players.Count; i++)
 			baseNumbers.Add(i);
 		List<byte> shuffledNumbers = new List<byte>();
@@ -241,6 +342,25 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 		{
 			byte playerNumber = shuffledNumbers[0];
 			AuthoritativeRPC("ConfigureHandsRPC", OwningNetWorker, p, playerNumber == 0, fourPlayers, playerNumber);
-		}
+		}*/
+
+		int i = 0;
+		foreach (NetworkingPlayer p in OwningNetWorker.Players)
+		{
+			AuthoritativeRPC("SetPlayerNumberRPC", OwningNetWorker, p, false, i);
+			i++;
+        }
+	}
+
+	[BRPC]
+	public void SetPlayerNumberRPC(byte number)
+	{
+		MyPlayerNumber = number;
+		Console.Log("Setting my player number. I'm #" + MyPlayerNumber);
+	}
+	public void Start()
+	{
+		for (byte i = 0; i < ClockwiseHands.Count; i++)
+			ClockwiseHands[i].PlayerNumber = i;
 	}
 }

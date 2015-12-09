@@ -29,7 +29,19 @@ public class CardRenderer : MonoBehaviour
 	public bool DummyRenderer;
 
 	[Inspect]
-	public Card Card;
+	public Card Card
+	{
+		get
+		{
+			if(Index < 200)
+				return CardIndex.GetCard(Index);
+			return null;
+		}
+		set
+		{
+			throw new System.Exception("You're using something incompatible with the newly-broken Card Renderer rewrite. Sorry sorry big sorry.");
+		}
+	}
 
 	[Inspect]
 	public byte Index = CardIndex.EMPTY_SLOT;

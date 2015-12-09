@@ -1,10 +1,13 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 using DevConsole;
+using System.Linq;
+
 
 public class IndexHand : MonoBehaviour {
 
 	public List<CardRenderer> Renderers;
+	public byte PlayerNumber;
 
 	public void Awake()
 	{
@@ -27,6 +30,38 @@ public class IndexHand : MonoBehaviour {
 					return i;
 			Console.LogError("ArgumentOutOfRangeException: No open slots in IndexHand.");
 			throw new System.NotFiniteNumberException();
+		}
+	}
+
+	public List<byte> CardsOpenToAttack
+	{
+		get
+		{
+			List<byte> retval = new List<byte>();
+			var faceUpCards =
+				from r in Renderers
+				where r.Card != null && r.Card.IsFaceUp
+				select r.Index;
+			retval.AddRange(faceUpCards);
+			if(retval.Count == 0 && CardsOwned.Count > 0)
+			{
+				retval.Add((byte)(PlayerNumber + CardIndex.PLAYER_1_FACEDOWN));
+			}
+			return retval;
+		}
+	}
+
+	public List<byte> CardsOwned
+	{
+		get
+		{
+			List<byte> retval = new List<byte>();
+			var nonBlankCards =
+				from r in Renderers
+				where r.Card != null
+				select r.Index;
+			retval.AddRange(nonBlankCards);
+			return retval;
 		}
 	}
 }

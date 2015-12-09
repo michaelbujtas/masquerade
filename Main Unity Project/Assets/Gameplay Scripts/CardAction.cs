@@ -1,7 +1,8 @@
 ﻿
 
-public enum CardAction
+public enum CardAction : byte
 {
+	UNSET = 1,
 	ATTACK,
 	FLIP,
 	ACTIVATE,

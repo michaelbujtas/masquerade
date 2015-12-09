@@ -1,11 +1,4 @@
-Mono path[0] = 'C:/Users/Lou/Git/Masquerade/Main Unity Project/Builds/build_Data/Managed'
-Mono path[1] = 'C:/Users/Lou/Git/Masquerade/Main Unity Project/Builds/build_Data/Mono'
-Mono config path = 'C:/Users/Lou/Git/Masquerade/Main Unity Project/Builds/build_Data/Mono/etc'
-PlayerConnection initialized from C:/Users/Lou/Git/Masquerade/Main Unity Project/Builds/build_Data (debug = 0)
-PlayerConnection initialized network socket : 0.0.0.0 55119
-Multi-casting "[IP] 192.168.0.104 [Port] 55119 [Flags] 2 [Guid] 3361807333 [EditorId] 2544821648 [Version] 1048832 [Id] WindowsPlayer(DESKTOP-610HQA9) [Debug] 0" to [225.0.0.222:54997]...
-PlayerConnection already initialized - listening to [192.168.0.104:55119]
-Initialize engine version: 5.2.2f1 (3757309da7e7)
+Initialize engine version: 5.2.3f1 (f3d16a1fa2dd)
 GfxDevice: creating device client; threaded=1
 Direct3D:
     Version:  Direct3D 11.0 [level 11.0]
@@ -24,63 +17,30 @@ Loading C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed
 Platform assembly: C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\UnityEngine.Networking.dll (this message is harmless)
 Loading C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\UnityEngine.Networking.dll into Unity Child Domain
 Platform assembly: C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\System.Core.dll (this message is harmless)
-- Completed reload, in  0.143 seconds
+- Completed reload, in  0.160 seconds
 <RI> Initializing input.
 <RI> Input initialized.
 desktop: 2560x1440 59Hz; virtual: 7680x1446 at -2560,-6
 <RI> Initialized touch support.
 Platform assembly: C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\System.dll (this message is harmless)
 Setting up 2 worker threads for Enlighten.
-  Thread -> id: 3590 -> priority: 1 
-  Thread -> id: 2118 -> priority: 1 
+  Thread -> id: 24fc -> priority: 1 
+  Thread -> id: 3c7c -> priority: 1 
 Platform assembly: C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\System.Configuration.dll (this message is harmless)
 Platform assembly: C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\System.Xml.dll (this message is harmless)
 Connection Established
-UnityEngine.Debug:Internal_Log(Int32, String, Object)
-UnityEngine.Debug:Log(Object)
-SimpleConnect:<AddListeners>m__60() (at C:\Users\Lou\Git\Masquerade\Main Unity Project\Assets\NetworkingDemo\SimpleConnect.cs:75)
-BeardedManStudios.Network.NetWorker:<OnConnected>m__2E() (at C:\Users\Lou\Git\Masquerade\Main Unity Project\Assets\Bearded Man Studios Inc\Forge Networking\MainScripts\Core\NetWorker.cs:429)
-BeardedManStudios.Network.Unity.MainThreadManager:Update() (at C:\Users\Lou\Git\Masquerade\Main Unity Project\Assets\Bearded Man Studios Inc\Forge Networking\MainScripts\Unity\MainThreadManager.cs:127)
- 
-(Filename: C:/Users/Lou/Git/Masquerade/Main Unity Project/Assets/NetworkingDemo/SimpleConnect.cs Line: 75)
-
-Server Disconnected for Reason: The connection has been forcefully closed
  
 (Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 64)
-
-get_gameObject can only be called from the main thread.
-Constructors and field initializers will be executed from the loading thread when loading a scene.
-Don't use this function in the constructor or field initializers, instead move initialization code to the Awake or Start function.
- 
-(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineComponentBindings.gen.cpp Line: 28)
-
-Connection Closed or Lost
-UnityEngine.Debug:Internal_Log(Int32, String, Object)
-UnityEngine.Debug:Log(Object)
-SimpleConnect:<AddListeners>m__61() (at C:\Users\Lou\Git\Masquerade\Main Unity Project\Assets\NetworkingDemo\SimpleConnect.cs:84)
-BeardedManStudios.Network.NetWorker:OnDisconnected() (at C:\Users\Lou\Git\Masquerade\Main Unity Project\Assets\Bearded Man Studios Inc\Forge Networking\MainScripts\Core\NetWorker.cs:459)
-BeardedManStudios.Network.CrossPlatformUDP:DisconnectCleanup(Boolean) (at C:\Users\Lou\Git\Masquerade\Main Unity Project\Assets\Bearded Man Studios Inc\Forge Networking\MainScripts\Core\CrossPlatformUDP.cs:774)
-BeardedManStudios.Network.Unity.NetWorkerKiller:OnApplicationQuit() (at C:\Users\Lou\Git\Masquerade\Main Unity Project\Assets\Bearded Man Studios Inc\Forge Networking\MainScripts\Unity\NetWorkerKiller.cs:95)
- 
-(Filename: C:/Users/Lou/Git/Masquerade/Main Unity Project/Assets/NetworkingDemo/SimpleConnect.cs Line: 84)
 
 Connection Closed or Lost
  
 (Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 64)
 
-get_gameObject can only be called from the main thread.
-Constructors and field initializers will be executed from the loading thread when loading a scene.
-Don't use this function in the constructor or field initializers, instead move initialization code to the Awake or Start function.
- 
-(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineComponentBindings.gen.cpp Line: 28)
-
 Connection Closed or Lost
  
 (Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 64)
 
-get_gameObject can only be called from the main thread.
-Constructors and field initializers will be executed from the loading thread when loading a scene.
-Don't use this function in the constructor or field initializers, instead move initialization code to the Awake or Start function.
+Connection Closed or Lost
  
-(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineComponentBindings.gen.cpp Line: 28)
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 64)
 

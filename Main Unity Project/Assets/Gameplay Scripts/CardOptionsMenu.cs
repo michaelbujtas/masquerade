@@ -52,30 +52,27 @@ public class CardOptionsMenu : MonoBehaviour {
 
     public void AttackButton()
     {
-		//Engine.Attack(referenceCardRenderer.Card);
 		currentRequest.Fill(CardAction.ATTACK);
         HideMenu();
     }
 
     public void FlipUpButton()
     {
-		//Engine.FlipUp(referenceCardRenderer.Card);
 		currentRequest.Fill(CardAction.FLIP);
 		HideMenu();
     }
     public void FlipDownButton()
     {
-		//Engine.FlipDown(referenceCardRenderer.Card);
 		currentRequest.Fill(CardAction.FLIP);
 		HideMenu();
     }
 
     public void AbilityButton()
     {
-		//Debug.Log("Abilities are even harder!");
 		currentRequest.Fill(CardAction.ACTIVATE);
 		HideMenu();
 	}
+
     public void BackButton()
 	{
 		currentRequest.Fill(CardAction.CANCEL);
