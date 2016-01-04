@@ -43,7 +43,7 @@ public class IndexHand : MonoBehaviour {
 				where r.Card != null && r.Card.IsFaceUp
 				select r.Index;
 			retval.AddRange(faceUpCards);
-			if(retval.Count == 0 && CardsOwned.Count > 0)
+			if(retval.Count == 0/* && CardsOwned.Count > 0*/)
 			{
 				retval.Add((byte)(PlayerNumber + CardIndex.PLAYER_1_FACEDOWN));
 			}
@@ -62,6 +62,20 @@ public class IndexHand : MonoBehaviour {
 				select r.Index;
 			retval.AddRange(nonBlankCards);
 			return retval;
+		}
+	}
+
+	public byte RandomFaceDownCard
+	{
+		get
+		{
+			List<byte> possibleCards = new List<byte>();
+			var faceDownCards =
+				from r in Renderers
+				where r.Card != null && !r.Card.IsFaceUp
+				select r.Index;
+			possibleCards.AddRange(faceDownCards);
+			return possibleCards[Random.Range(0, possibleCards.Count)];
 		}
 	}
 }

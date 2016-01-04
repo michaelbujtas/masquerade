@@ -1,4 +1,4 @@
-﻿/*-----------------------------+------------------------------\
+/*-----------------------------+------------------------------\
 |                                                             |
 |                        !!!NOTICE!!!                         |
 |                                                             |
@@ -20,11 +20,12 @@
 
 
 #if !NETFX_CORE
-using UnityEngine;
-
-using System;
-
 using BeardedManStudios.Network;
+using System;
+using UnityEngine;
+#if UNITY_5_3
+using UnityEngine.SceneManagement;
+#endif
 
 public class UnityHandle : MonoBehaviour
 {
@@ -79,7 +80,7 @@ public class UnityHandle : MonoBehaviour
 			if (args[i] == "-room")
 			{
 				RoomName = next;
-				Application.LoadLevel(RoomName);
+				BeardedManStudios.Network.Unity.UnitySceneManager.LoadScene(RoomName);
 				loadedRoom = true;
 
 				//if (!Application.isLoadingLevel)
@@ -142,8 +143,13 @@ public class UnityHandle : MonoBehaviour
 
 	private void Start()
 	{
+		#if UNITY_5_3
+		if (moveToNextSceneOnStart)
+			BeardedManStudios.Network.Unity.UnitySceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+		#else
 		if (moveToNextSceneOnStart)
 			Application.LoadLevel(Application.loadedLevel + 1);
+		#endif
 	}
 
 	/// <summary>
@@ -154,8 +160,7 @@ public class UnityHandle : MonoBehaviour
 	/// <param name="port">Port of the host</param>
 	public static void TeleportToRoom(string scene, string host, ushort port)
 	{
-		Application.LoadLevel(scene);
-
+		BeardedManStudios.Network.Unity.UnitySceneManager.LoadScene(scene);
 		Networking.Disconnect();
 		Networking.Connect(host, port, Networking.TransportationProtocolType.TCP);
 	}

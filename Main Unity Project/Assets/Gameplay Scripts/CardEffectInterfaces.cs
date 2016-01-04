@@ -5,7 +5,11 @@
 
 public interface IOnKilled
 {
-	void OnKilled(Card killer);
+	void OnKilled(Card killer, DeathContext context);
+}
+public interface IOnDeath
+{
+	void OnDeath();
 }
 
 public interface IActivatedAbility

@@ -2,13 +2,17 @@
 using System.Collections;
 using AdvancedInspector;
 using DevConsole;
+using BeardedManStudios.Network;
+
 
 [AdvancedInspector]
-public class Card : MonoBehaviour {
+public class Card : SimpleNetworkedMonoBehavior {
+
+	//Networking stuff attached to the card, set dynamically
 
 	[Inspect]
 	byte? index = null;
-	
+
 	public byte? Index
 	{
 		get
@@ -30,6 +34,14 @@ public class Card : MonoBehaviour {
 		}
 	}
 
+	public MasqueradePlayer Owner;
+
+	public byte? OwnerIndex = null;
+
+	public byte? CurrentSlot = null;
+
+	//Actual card information
+
 	[Inspect]
     public string CardName;
 	[Inspect]
@@ -47,6 +59,8 @@ public class Card : MonoBehaviour {
 		get { return isFaceUp; }
 		set { isFaceUp = value; }
 	}
+
+
 	[Inspect, CreateDerived]
 	public CardLogic[] logic = new CardLogic[1];
 
@@ -80,17 +94,16 @@ public class Card : MonoBehaviour {
 	{
 		get{ return isFaceUp == true; }
 	}
+
 	public bool CanFlipUp
 	{
 		get{ return isFaceUp == false; }
 	}
+
 	public bool CanActivateAbility
 	{
 		get { return Logic != null && Logic is IActivatedAbility; }
 	}
-
-	
-
 
 	public CardRenderer Renderer;
 	public void LinkRenderer(CardRenderer renderer)
@@ -106,6 +119,7 @@ public class Card : MonoBehaviour {
 	}
 
 	MasqueradeEngine engine;
+
 	public MasqueradeEngine Engine
 	{
 		get
@@ -116,10 +130,25 @@ public class Card : MonoBehaviour {
 		}
 	}
 
+	GameplayNetworking networking;
+
+	public GameplayNetworking Networking
+	{
+		get
+		{
+			if (networking == null)
+				networking = FindObjectOfType<GameplayNetworking>();
+			return networking;
+		}
+	}
+
+
 	public void Start()
 	{
 		if (Logic != null)
 			Logic.Card = this;
+
+
 
 	}
 
@@ -136,12 +165,7 @@ public class Card : MonoBehaviour {
 
 		if (newCard.Logic != null)
 			Logic = newCard.Logic.Instantiate(gameObject, this) as CardLogic;
-		/*
 
-		if (newCard.Logic != null)
-			//Logic = newCard.Logic;
-			newCard.Logic.CopyTo(this);
-			*/
     }
 
 
@@ -162,4 +186,87 @@ public class Card : MonoBehaviour {
 
         return Defense;
     }
+
+	public bool FlipAction(bool shouldBeFaceUp)
+	{
+		if (IsFaceUp == shouldBeFaceUp)
+			return false;
+		FlipAction();
+		return true;
+	}
+
+	public void FlipAction()
+	{
+		IsFaceUp = !IsFaceUp;
+		Sync();
+		Networking.EnsureProperFlippedness(this);
+	}
+
+
+	public void AttackAction(Card defender)
+	{
+
+		int attack = GetCombatAttack();
+		int defense = defender.GetCombatDefense();
+
+		Console.Log(CardName + " hit " + defender.CardName + " for " + attack + ".");
+		Console.Log(defender.CardName + " blocked for " + defense + ".");
+		if (attack >= defense)
+		{
+			defender.KillWithContext(this, DeathContext.DEFENDING);
+		}
+		else
+		{
+			KillWithContext(defender, DeathContext.ATTACKING);
+		}
+
+		if (Logic is IAfterAttacking)
+			((IAfterAttacking)Logic).AfterAttacking(defender);
+
+	}
+
+	public void KillWithContext(Card killer, DeathContext context)
+	{
+		Console.Log(killer.CardName + " killed " + CardName + ". Context: " + context.ToString(), Color.red);
+
+		if (Logic is IOnKilled)
+			((IOnKilled)Logic).OnKilled(killer, context);
+
+		Kill();
+	}
+
+	public void Kill()
+	{
+		Console.Log(CardName + " died.", Color.red);
+
+		if (Logic is IOnDeath)
+			((IOnDeath)Logic).OnDeath();
+
+		Networking.SendToDiscard(this);
+	}
+
+	public void Sync()
+	{
+		if(IsFaceUp)
+		{
+			//Sync with everybody
+			foreach (NetworkingPlayer p in OwningNetWorker.Players)
+			{
+				AuthoritativeRPC("SyncRPC", OwningNetWorker, p, false, IsFaceUp);
+			}
+		}
+		else
+		{
+			//Sync with the owner
+			AuthoritativeRPC("SyncRPC", OwningNetWorker, Owner.Player, false, IsFaceUp);
+		}
+	}
+
+	[BRPC]
+	void SyncRPC(bool shouldBeFaceup)
+	{
+		IsFaceUp = shouldBeFaceup;
+	}
+	
+
 }

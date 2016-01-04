@@ -55,8 +55,8 @@ public class MasqueradeEngine : MonoBehaviour {
 	public void Kill(Card killer, Card victim)
 	{
 		Console.Log(killer.CardName + " killed " + victim.CardName, Color.red);
-		if (victim.Logic is IOnKilled)
-			((IOnKilled)victim.Logic).OnKilled(killer);
+		//if (victim.Logic is IOnKilled)
+		//	((IOnKilled)victim.Logic).OnKilled(killer);
 		Player1.Hand.RemoveCard(victim.Renderer);
 		DiscardPile.Discard(victim);
 		victim.Renderer.Destroy();
