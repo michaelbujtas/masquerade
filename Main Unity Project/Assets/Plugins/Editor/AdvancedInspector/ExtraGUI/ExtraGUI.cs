@@ -6,8 +6,6 @@ using System.Text;
 using UnityEngine;
 using UnityEditor;
 
-using UniToolsEditor;
-
 namespace AdvancedInspector
 {
     public static class ExtraGUI

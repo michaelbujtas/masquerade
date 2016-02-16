@@ -157,8 +157,8 @@ namespace BeardedManStudios.Network
 		public NetworkingStream(Networking.ProtocolType protocolType) { Bytes = new BMSByte(); this.ProtocolType = protocolType; }
 
 		public bool Ready { get; private set; }
-		public bool QueuedRPC { get; private set; }
-		public void Reset() { Ready = false; Bytes.Clear(); QueuedRPC = false; }
+		public bool SkipReplication { get; private set; }
+		public void Reset() { Ready = false; Bytes.Clear(); SkipReplication = false; }
 		public void ManualReady(byte frameIndex = 0) { Ready = true; FrameIndex = frameIndex; }
 
 		/// <summary>
@@ -172,24 +172,18 @@ namespace BeardedManStudios.Network
 		/// <param name="bufferedRPC">To know if this is a Buffered RPC</param>
 		/// <param name="customidentifier">A custom Identifier to be passed through</param>
 		/// <returns></returns>
-		public NetworkingStream Prepare(NetWorker socket, IdentifierType identifierType, ulong networkBehaviorId, BMSByte extra = null, NetworkReceivers receivers = NetworkReceivers.All, bool bufferedRPC = false, uint customidentifier = 0, ulong senderId = 0, bool noBehavior = false)
+		public NetworkingStream Prepare(NetWorker socket, IdentifierType identifierType, SimpleNetworkedMonoBehavior networkedBehavior, BMSByte extra = null, NetworkReceivers receivers = NetworkReceivers.All, bool bufferedRPC = false, uint customidentifier = 0, ulong senderId = 0)
 		{
-			if (noBehavior)
-				NetworkedBehavior = null;
-			else
-			{
-				lock (networkedObjectMutex)
-				{
-					NetworkedBehavior = SimpleNetworkedMonoBehavior.Locate(networkBehaviorId);
-				}
-			}
-
-			if (ReferenceEquals(NetworkedBehavior, null) && (extra == null || extra.Size == 0))
+			if (ReferenceEquals(networkedBehavior, null) && (extra == null || extra.Size == 0))
 				throw new NetworkException(9, "Prepare was called but nothing was sent to write");
 
-			NetworkedBehaviorId = networkBehaviorId;
-			
-			return PrepareFinal(socket, identifierType, networkBehaviorId, extra, receivers, bufferedRPC, customidentifier, senderId);
+			NetworkedBehaviorId = 0;
+			lock (networkedObjectMutex)
+			{
+				NetworkedBehavior = networkedBehavior;
+			}
+
+			return PrepareFinal(socket, identifierType, !ReferenceEquals(NetworkedBehavior, null) ? NetworkedBehavior.NetworkedId : 0, extra, receivers, bufferedRPC, customidentifier, senderId);
 		}
 
 		/// <summary>
@@ -258,11 +252,7 @@ namespace BeardedManStudios.Network
 					ObjectMapper.MapBytes(Bytes, (byte)0);
 
 				if (ProtocolType == Networking.ProtocolType.TCP)
-				{
-					List<byte> head = new List<byte>(BitConverter.GetBytes(Bytes.Size + 1));
-					head.Add(0);
-					Bytes.InsertRange(0, head.ToArray());
-				}
+					Bytes.InsertRange(0, BitConverter.GetBytes(Bytes.Size));
 
 				Ready = true;
 				return this;
@@ -319,7 +309,7 @@ namespace BeardedManStudios.Network
 
 				NetworkedBehavior = SimpleNetworkedMonoBehavior.Locate(NetworkedBehaviorId);
 
-				if (NetworkedBehaviorId > 0 && ReferenceEquals(NetworkedBehavior, null) && identifierType != IdentifierType.RPC)
+				if (NetworkedBehaviorId > 0 && ReferenceEquals(NetworkedBehavior, null) && !Networking.IsBareMetal && identifierType != IdentifierType.RPC)
 					return null;
 
 				// Remove the size of ProtocolType, identifier, NetworkId, etc.
@@ -341,7 +331,7 @@ namespace BeardedManStudios.Network
 					{
 						if (!socket.MasterServerFlag)
 						{
-							if (socket.UsingUnityEngine && ((ReferenceEquals(NetworkingManager.Instance, null) || !NetworkingManager.Instance.IsSetup || ReferenceEquals(NetworkingManager.Instance.OwningNetWorker, null))))
+							if (ReferenceEquals(NetworkingManager.Instance, null) || !NetworkingManager.Instance.IsSetup)
 								NetworkingManager.setupActions.Add(socket.GetNewPlayerUpdates);
 							else
 								socket.GetNewPlayerUpdates();
@@ -374,8 +364,8 @@ namespace BeardedManStudios.Network
 					if (identifierType == IdentifierType.RPC)
 					{
 						SimpleNetworkedMonoBehavior.QueueRPCForInstantiate(NetworkedBehaviorId, this);
-						QueuedRPC = true;
-						return null;
+						SkipReplication = true;
+						return this;
 					}
 
 					return null;
@@ -444,24 +434,24 @@ namespace BeardedManStudios.Network
 		/// <param name="readBytes">The byte array to update</param>
 		/// <param name="count">Amount of bytes to read</param>
 		/// <returns>The updated byte array</returns>
-		//public byte[] Read(ref byte[] readBytes, int count)
-		public byte[] Read(int count)
+		public byte[] Read(ref byte[] readBytes, int count)
 		{
-			byte[] readBytes = new byte[count];
-			//if (readBytes.Length < count)
-			//	readBytes = new byte[count];
+			if (readBytes.Length < count)
+				readBytes = new byte[count];
 
+#if UNITY_IOS || UNITY_IPHONE
 			try
 			{
-				for (int i = 0; i < count; i++)
-					readBytes[i] = Bytes.byteArr[Bytes.StartIndex(ByteReadIndex) + i];
+#endif
+			for (int i = 0; i < count; i++)
+				readBytes[i] = Bytes.byteArr[Bytes.StartIndex(ByteReadIndex) + i];
+#if UNITY_IOS || UNITY_IPHONE
 			}
 			catch (Exception ex)
 			{
-#if UNITY_EDITOR
-				UnityEngine.Debug.LogException(ex);
-#endif
+				//UnityEngine.Debug.Log(ex.Message);
 			}
+#endif
 
 			ByteReadIndex += count;
 

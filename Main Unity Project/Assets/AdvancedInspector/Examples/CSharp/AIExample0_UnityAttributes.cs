@@ -1,8 +1,4 @@
 ﻿using UnityEngine;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 
 using AdvancedInspector;
 
@@ -27,4 +23,7 @@ public class AIExample0_UnityAttributes : MonoBehaviour
 
     [TextArea]
     public string textAreaField;
+
+    [Angle, RangeValue(0, 360)]
+    public float wheel;
 }

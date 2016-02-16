@@ -4,7 +4,7 @@ using System.Collections.Generic;
 public class IndexDeck : MonoBehaviour {
 
 
-	public List<byte> Indices;
+	public List<byte> Indices = new List<byte>();
 
 
 	// Use this for initialization
@@ -36,5 +36,10 @@ public class IndexDeck : MonoBehaviour {
 		byte retVal = Indices[0];
 		Indices.RemoveAt(0);
 		return retVal;
+	}
+
+	public int CardsRemaining
+	{
+		get { return Indices.Count; }
 	}
 }

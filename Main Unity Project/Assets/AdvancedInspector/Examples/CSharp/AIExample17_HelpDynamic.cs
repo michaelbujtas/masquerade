@@ -1,6 +1,4 @@
 ﻿using UnityEngine;
-using System;
-using System.Collections;
 
 using AdvancedInspector;
 
@@ -11,13 +9,13 @@ public class AIExample17_HelpDynamic : MonoBehaviour
     [Inspect, Help("GetHelp")]
     public float myField;
 
-    private HelpAttribute GetHelp()
+    private HelpItem GetHelp()
     {
         if (myField > 0)
-            return new HelpAttribute(HelpType.Info, "Change me to a negative value.");
+            return new HelpItem(HelpType.Info, "Change me to a negative value.");
         else if (myField < 0)
-            return new HelpAttribute(HelpType.Warning, "Change me for positive!");
+            return new HelpItem(HelpType.Warning, "Change me for positive!");
         else
-            return new HelpAttribute(HelpType.Error, "Change me!!");
+            return new HelpItem(HelpType.Error, "Change me!!");
     }
 }

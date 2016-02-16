@@ -6,13 +6,15 @@ public class IndexFaceUpChoiceMenu : MonoBehaviour {
 	public GameObject Visuals;
 	public CardRenderer FaceUp, FaceDown;
 
-	Queue<Choice> decisionQueue = new Queue<Choice>();
+	List<Choice> decisionQueue = new List<Choice>();
 
 	public delegate void HandleChoiceDelegate(bool choice);
-	public void GetChoice(byte index, HandleChoiceDelegate handle)
+	public Choice GetChoice(byte index, HandleChoiceDelegate handle)
 	{
-		decisionQueue.Enqueue(new Choice(index, handle));
+		Choice retVal = new Choice(index, handle);
+        decisionQueue.Add(retVal);
 		ShowChoice();
+		return retVal;
 	}
 
 	public void OnFaceUpButtonUI()
@@ -33,7 +35,7 @@ public class IndexFaceUpChoiceMenu : MonoBehaviour {
 		else
 		{
 			Visuals.SetActive(true);
-			Choice nextChoice = decisionQueue.Peek();
+			Choice nextChoice = decisionQueue[0];
 
 			FaceUp.Index = nextChoice.Index;
 			FaceUp.RefreshCardImage();
@@ -46,12 +48,21 @@ public class IndexFaceUpChoiceMenu : MonoBehaviour {
 
 	void Choose(bool choice)
 	{
-		Choice currentChoice = decisionQueue.Dequeue();
+		Choice currentChoice = decisionQueue[0];
+		decisionQueue.RemoveAt(0);
 		currentChoice.Handle(choice);
 		ShowChoice();
 	}
 
-	private class Choice
+
+	public void PurgeChoice(Choice choice)
+	{
+		decisionQueue.Remove(choice);
+		ShowChoice();
+	}
+
+
+	public class Choice
 	{
 
 		public Choice(byte index, HandleChoiceDelegate handle)

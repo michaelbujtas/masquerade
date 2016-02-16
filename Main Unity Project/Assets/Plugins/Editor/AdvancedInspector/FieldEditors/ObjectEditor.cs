@@ -5,8 +5,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 
-using UniToolsEditor;
-
 namespace AdvancedInspector
 {
     public class ObjectEditor : FieldEditor
@@ -52,7 +50,9 @@ namespace AdvancedInspector
 
         public override void Draw(InspectorField field, GUIStyle style)
         {
-            if (field.GetAttribute<NoPicker>() != null)
+            IPicker picker = field.GetAttribute<IPicker>();
+
+            if (picker != null && !picker.IsPickingAvailable(field.Instances, field.GetValues()))
             {
                 object obj = field.GetValue();
                 if (field.Mixed)
@@ -141,6 +141,10 @@ namespace AdvancedInspector
                 field.SetValue(go);
             else if (typeof(Component).IsAssignableFrom(field.Type))
                 field.SetValue(go.GetComponent(field.Type));
+
+            for (int i = 0; i < field.SerializedInstances.Length; i++)
+                if (field.SerializedInstances[i] is IDataChanged)
+                    ((IDataChanged)field.SerializedInstances[i]).DataChanged();
         }
 
         public override void OnLabelDoubleClick(InspectorField field)

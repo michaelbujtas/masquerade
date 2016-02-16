@@ -21,6 +21,20 @@ public class IndexHand : MonoBehaviour {
 		Renderers[slot].RefreshCardImage();
 	}
 
+	public byte GetIndex(byte slot)
+	{
+		return Renderers[slot].Index;
+	}
+
+	public int? GetSlot(byte index)
+	{
+		for (int i = 0; i < Renderers.Count; i++)
+		{
+			if (Renderers[i].Index == index)
+				return i;
+        }
+		return null;
+	} 
 	public byte FirstOpenSlot
 	{
 		get
@@ -65,6 +79,19 @@ public class IndexHand : MonoBehaviour {
 		}
 	}
 
+	public List<byte> UntappedCards
+	{
+		get
+		{
+			List<byte> retval = new List<byte>();
+			var nonBlankCards =
+				from r in Renderers
+				where r.Card != null && !r.Card.IsTapped
+				select r.Index;
+			retval.AddRange(nonBlankCards);
+			return retval;
+		}
+	}
 	public byte RandomFaceDownCard
 	{
 		get
@@ -77,5 +104,18 @@ public class IndexHand : MonoBehaviour {
 			possibleCards.AddRange(faceDownCards);
 			return possibleCards[Random.Range(0, possibleCards.Count)];
 		}
+	}
+
+	public bool RemoveIndex(byte index)
+	{
+		if(CardsOwned.Contains(index))
+		{
+			int slot = (int)GetSlot(index);
+            Renderers[slot].Index = CardIndex.EMPTY_SLOT;
+			Renderers[slot].RefreshCardImage();
+			CardsOwned.Remove(index);
+			return true;
+		}
+		return false;
 	}
 }

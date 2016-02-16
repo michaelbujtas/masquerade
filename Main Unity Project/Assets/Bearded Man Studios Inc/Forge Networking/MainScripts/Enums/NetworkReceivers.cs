@@ -34,7 +34,6 @@ namespace BeardedManStudios.Network
 		AllProximity = 5,
 		OthersProximity = 6,
 		Owner = 7,
-		MessageGroup = 8,
-		ServerAndOwner = 9
+		MessageGroup = 8
 	}
 }

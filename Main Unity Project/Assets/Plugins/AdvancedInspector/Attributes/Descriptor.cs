@@ -14,10 +14,10 @@ namespace AdvancedInspector
     /// </summary>
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Method | AttributeTargets.Class | 
         AttributeTargets.Interface | AttributeTargets.Struct | AttributeTargets.Enum, Inherited = false)]
-    public class DescriptorAttribute : Attribute, IRuntimeAttribute<DescriptorAttribute>
+    public class DescriptorAttribute : Attribute, IRuntimeAttribute, IDescriptor
     {
-        public delegate DescriptorAttribute DescriptorDelegate();
-        public delegate DescriptorAttribute DescriptorStaticDelegate(DescriptorAttribute descriptor, object instance, object value);
+        public delegate Description DescriptorDelegate();
+        public delegate Description DescriptorStaticDelegate(DescriptorAttribute descriptor, object instance, object value);
 
         private static Color TRANSPARENT = new Color(0, 0, 0, 0);
 
@@ -32,16 +32,16 @@ namespace AdvancedInspector
             set { name = value; }
         }
 
-        private string description = "";
+        private string comment = "";
 
         /// <summary>
         /// Give this item a description. 
         /// Usually used for tooltip.
         /// </summary>
-        public string Description
+        public string Comment
         {
-            get { return description; }
-            set { description = value; }
+            get { return comment; }
+            set { comment = value; }
         }
 
         private string url = "";
@@ -79,6 +79,34 @@ namespace AdvancedInspector
             set { color = value; }
         }
 
+        #region IDescriptor Implementation
+        public Description GetDescription(object[] instances, object[] values)
+        {
+            if (delegates.Count == 0)
+                return new Description(name, comment, url, icon, color);
+
+            try
+            {
+                if (delegates[0].Target == null)
+                {
+                    return delegates[0].DynamicInvoke(this, instances[0], values[0]) as Description;
+                }
+                else
+                {
+                    return delegates[0].DynamicInvoke() as Description;
+                }
+            }
+            catch (Exception e)
+            {
+                if (e is TargetInvocationException)
+                    e = ((TargetInvocationException)e).InnerException;
+
+                Debug.LogError(string.Format("Invoking a method to retrieve a Destriptor attribute failed. The exception was \"{0}\".", e.Message));
+                return null;
+            }
+        }
+        #endregion
+
         #region IRuntime Implementation
         private string methodName = "";
 
@@ -103,32 +131,6 @@ namespace AdvancedInspector
         {
             get { return delegates; }
             set { delegates = value; }
-        }
-
-        public DescriptorAttribute Invoke(int index, object instance, object value)
-        {
-            if (delegates.Count == 0 || index >= delegates.Count)
-                return this;
-
-            try
-            {
-                if (delegates[index].Target == null)
-                {
-                    return delegates[0].DynamicInvoke(this, instance, value) as DescriptorAttribute;
-                }
-                else
-                {
-                    return delegates[0].DynamicInvoke() as DescriptorAttribute;
-                }
-            }
-            catch (Exception e)
-            {
-                if (e is TargetInvocationException)
-                    e = ((TargetInvocationException)e).InnerException;
-
-                Debug.LogError(string.Format("Invoking a method to retrieve a Destriptor attribute failed. The exception was \"{0}\".", e.Message));
-                return null;
-            }
         }
         #endregion
 
@@ -155,7 +157,7 @@ namespace AdvancedInspector
         private DescriptorAttribute(string name, string description, string url, float r, float g, float b, float a)
         {
             this.name = name;
-            this.description = description;
+            this.comment = description;
             this.url = url;
             color = new Color(r, g, b, a);
         }
@@ -168,95 +170,31 @@ namespace AdvancedInspector
         public DescriptorAttribute(string name, string description, Texture icon, Color color)
         {
             this.name = name;
-            this.description = description;
+            this.comment = description;
             this.icon = icon;
             this.color = color;
         }
         #endregion
 
-        public static DescriptorAttribute GetDescriptor(Type type)
+#if !NETFX_CORE
+        public static Description GetDescriptor(Type type)
         {
-            object[] obj = type.GetCustomAttributes(typeof(DescriptorAttribute), true);
+            object[] obj = type.GetCustomAttributes(typeof(IDescriptor), true);
 
             if (obj.Length == 0)
                 return null;
             else
-                return (obj[0] as DescriptorAttribute);
+                return (obj[0] as IDescriptor).GetDescription(null, null);
         }
 
-        public static List<DescriptorAttribute> GetDescriptors(List<Type> types)
+        public static List<Description> GetDescriptors(List<Type> types)
         {
-            List<DescriptorAttribute> descriptors = new List<DescriptorAttribute>();
-
+            List<Description> descriptions = new List<Description>();
             foreach (Type type in types)
-                descriptors.Add(GetDescriptor(type));
+                descriptions.Add(GetDescriptor(type));
 
-            return descriptors;
+            return descriptions;
         }
-    }
-
-    /// <summary>
-    /// Pairs an object with a descriptor.
-    /// Used by the Toolbox and the Advanced Inspector.
-    /// </summary>
-    public class DescriptorPair
-    {
-        private object value;
-
-        public object Value
-        {
-            get { return value; }
-        }
-
-        private DescriptorAttribute descriptor;
-
-        public DescriptorAttribute Descriptor
-        {
-            get { return descriptor; }
-        }
-
-        public DescriptorPair(object value, DescriptorAttribute descriptor)
-        {
-            this.value = value;
-            this.descriptor = descriptor;
-        }
-
-        public DescriptorPair(object value, string name)
-            : this(value, new DescriptorAttribute(name, "")) { }
-
-        public DescriptorPair(object value, string name, string description)
-            : this(value, new DescriptorAttribute(name, description)) { }
-
-        public static bool operator ==(DescriptorPair a, DescriptorPair b)
-        {
-            // If both are null, or both are same instance, return true.
-            if (System.Object.ReferenceEquals(a, b))
-                return true;
-
-            // If one is null, but not both, return false.
-            if (((object)a == null) || ((object)b == null))
-                return false;
-
-            return a.Equals(b);
-        }
-
-        public static bool operator !=(DescriptorPair a, DescriptorPair b)
-        {
-            return !(a == b);
-        }
-
-        public override bool Equals(object obj)
-        {
-            DescriptorPair other = obj as DescriptorPair;
-            if (other == null)
-                return false;
-
-            return this.Value.Equals(other.Value);
-        }
-
-        public override int GetHashCode()
-        {
-            return base.GetHashCode();
-        }
+#endif
     }
 }

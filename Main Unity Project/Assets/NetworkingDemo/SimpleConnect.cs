@@ -2,7 +2,7 @@
 using System.Collections;
 using BeardedManStudios.Network;
 using UnityEngine.UI;
-using System;
+using DevConsole;
 
 public class SimpleConnect : SimpleNetworkedMonoBehavior
 {
@@ -20,14 +20,16 @@ public class SimpleConnect : SimpleNetworkedMonoBehavior
 		get;
 		private set;
 	}
+
 	void Awake()
 	{
 		IsHeadless = SystemInfo.graphicsDeviceID == 0;
 	}
+
 	// Use this for initialization
 	void Start () {
 
-		disconnectButton.gameObject.SetActive(false);
+		//disconnectButton.gameObject.SetActive(false);
 
 		if(IsHeadless)
 		{
@@ -41,8 +43,9 @@ public class SimpleConnect : SimpleNetworkedMonoBehavior
 		{
 			IsConnected = Networking.IsConnected(Port);
 		}
-		catch
+		catch (System.Exception e)
 		{
+			Console.Log("Networking.IsConnected threw execption: " + e.GetType().ToString());
 			IsConnected = false;
 			//Jesus
 		}
@@ -50,6 +53,7 @@ public class SimpleConnect : SimpleNetworkedMonoBehavior
 
 	public void HostButtonClickUI()
 	{
+		Networking.Disconnect();
 		WeAreHost = true;
 		Networking.Host(Port, Networking.TransportationProtocolType.UDP, 4);
 		AddListeners();
@@ -57,6 +61,7 @@ public class SimpleConnect : SimpleNetworkedMonoBehavior
 
 	public void JoinButtonClickUI()
 	{
+		Networking.Disconnect();
 		WeAreHost = false;
 		string ip = ipField.text;
 		Networking.Connect(ip, Port, Networking.TransportationProtocolType.UDP, true);
@@ -66,46 +71,54 @@ public class SimpleConnect : SimpleNetworkedMonoBehavior
 	public void DisconnectButtonClickUI()
 	{
 		Networking.Disconnect();
+
 	}
+
 
 	public void AddListeners()
 	{
+
+
 		NetWorker.connected += delegate
 		{
-			Debug.Log("Connection Established");
-			joinButton.gameObject.SetActive(false);
-			hostButton.gameObject.SetActive(false);
-			disconnectButton.gameObject.SetActive(true);
+			Console.Log("Connection Established");
+			//joinButton.gameObject.SetActive(false);
+			//hostButton.gameObject.SetActive(false);
+			//disconnectButton.gameObject.SetActive(true);
 
 		};
 
 		NetWorker.disconnected += delegate
 		{
-			Debug.Log("Connection Closed or Lost");
-			joinButton.gameObject.SetActive(true);
-			hostButton.gameObject.SetActive(true);
-			disconnectButton.gameObject.SetActive(false);
+			Console.Log("Connection Closed or Lost");
+			//joinButton.gameObject.SetActive(true);
+			//hostButton.gameObject.SetActive(true);
+			//disconnectButton.gameObject.SetActive(false);
 			WeAreHost = false;
 		};
+		
+		
 
 		NetWorker.serverDisconnected += delegate (string reason)
 		{
-			Debug.Log("Server Disconnected for Reason: " + reason);
-			joinButton.gameObject.SetActive(true);
-			hostButton.gameObject.SetActive(true);
-			disconnectButton.gameObject.SetActive(false);
+			Console.Log("Server Disconnected for Reason: " + reason);
+			//joinButton.gameObject.SetActive(true);
+			//hostButton.gameObject.SetActive(true);
+			//disconnectButton.gameObject.SetActive(false);
 			WeAreHost = false;
 		};
+
 	}
 
 	public ushort Port
 	{
-		get { return ((ushort)Convert.ToInt16(portField.text, 10)); }
+		get { return ((ushort)System.Convert.ToInt16(portField.text, 10)); }
 	}
 
 	public NetWorker NetWorker
 	{
 		get { return Networking.Sockets[Port]; }
 	}
+
 
 }

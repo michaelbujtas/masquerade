@@ -19,17 +19,17 @@
 
 
 
+using UnityEngine;
+
 #if NETFX_CORE
+using System.Linq;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices.WindowsRuntime;
-using System.Linq;
 #endif
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using UnityEngine;
+using System.Collections.Generic;
 
 namespace BeardedManStudios.Network
 {
@@ -58,11 +58,6 @@ namespace BeardedManStudios.Network
 		/// Determine if the initial setup has been done or not
 		/// </summary>
 		private static bool initialSetup = false;
-
-		/// <summary>
-		/// Used for when creating new networked behaviors
-		/// </summary>
-		public static object networkedBehaviorsMutex = new object();
 
 		/// <summary>
 		/// A list of all of the current networked behaviors
@@ -115,7 +110,7 @@ namespace BeardedManStudios.Network
 		/// A list of RPC (remote methods) that are pending to be called for this object
 		/// </summary>
 		protected List<NetworkingStreamRPC> rpcStack = new List<NetworkingStreamRPC>();
-		private object rpcStackMutex = new object();
+		private object rpcStackMutex = new System.Object();
 		private string rpcStackExceptionMethodName = string.Empty;
 
 		/// <summary>
@@ -123,24 +118,11 @@ namespace BeardedManStudios.Network
 		/// </summary>
 		protected NetworkingPlayer CurrentRPCSender { get; set; }
 
-		[SerializeField, HideInInspector]
-		private int sceneNetworkedId = 0;
-
-		public int GetSceneNetworkedId() { return sceneNetworkedId; }
-
 		// TODO:  Optimization when an object is removed there needs to be a way to replace its spot
 		/// <summary>
 		/// The Network ID of this Simple Networked Monobehavior
 		/// </summary>
 		public ulong NetworkedId { get; private set; }
-
-		public void SetSceneNetworkedId(int id)
-		{
-			if (this is NetworkingManager || id < 1)
-				return;
-
-			sceneNetworkedId = id;
-		}
 
 		/// <summary>
 		/// If this object has been setup on the network
@@ -183,16 +165,14 @@ namespace BeardedManStudios.Network
 		public bool destroyOnDisconnect = false;
 
 		/// <summary>
-		/// Determines if this object has the ability to change owners
-		/// </summary>
-		public bool allowOwnershipChange = true;
-
-		/// <summary>
 		/// Get a generated Unique ID for the next simple networked mono behavior or its derivitive
 		/// </summary>
 		/// <returns>A Unique unsigned long ID</returns>
 		public static ulong GenerateUniqueId()
 		{
+			if (Networking.IsBareMetal && ObjectCounter == 0)
+				ObjectCounter++;
+
 			return ++ObjectCounter;
 		}
 
@@ -223,13 +203,8 @@ namespace BeardedManStudios.Network
 				return false;
 
 			// Destroy the object from the scene and remove it from the lookup
-
 			GameObject.Destroy(behavior.gameObject);
-
-			lock (networkedBehaviorsMutex)
-			{
-				networkedBehaviors.Remove(networkId);
-			}
+			networkedBehaviors.Remove(networkId);
 
 			if (Networking.PrimarySocket.IsServer)
 				Networking.PrimarySocket.ClearBufferedInstantiateFromID(networkId);
@@ -261,9 +236,6 @@ namespace BeardedManStudios.Network
 			}
 		}
 
-		/// <summary>
-		/// Get the RPC's of the simple networked monobehavior
-		/// </summary>
 		protected virtual void Reflect()
 		{
 			IsClearedForBuffer = true;
@@ -312,47 +284,35 @@ namespace BeardedManStudios.Network
 		{
 			initialSetup = false;
 
-			lock (networkedBehaviorsMutex)
+			foreach (SimpleNetworkedMonoBehavior behavior in networkedBehaviors.Values)
 			{
-				foreach (SimpleNetworkedMonoBehavior behavior in networkedBehaviors.Values)
+				if (!skip.Contains(behavior))
 				{
-					if (!skip.Contains(behavior))
-					{
-						if (behavior.dontDestroyOnLoad)
-							skip.Add(behavior);
-						else
-							behavior.Disconnect();
-					}
+					if (behavior.dontDestroyOnLoad)
+						skip.Add(behavior);
+					else
+						behavior.Disconnect();
 				}
-
-				networkedBehaviors.Clear();
 			}
+
+			networkedBehaviors.Clear();
 
 			for (int i = skip.Count - 1; i >= 0; --i)
 				if (skip[i] == null)
 					skip.RemoveAt(i);
 
-			lock (networkedBehaviorsMutex)
-			{
-				foreach (SimpleNetworkedMonoBehavior behavior in skip)
-					networkedBehaviors.Add(behavior.NetworkedId, behavior);
-			}
+			foreach (SimpleNetworkedMonoBehavior behavior in skip)
+				networkedBehaviors.Add(behavior.NetworkedId, behavior);
 		}
 
 		public static void ResetAll()
 		{
 			initialSetup = false;
 
-			lock (networkedBehaviorsMutex)
-			{
-				foreach (SimpleNetworkedMonoBehavior behavior in networkedBehaviors.Values)
-				{
-					behavior.Disconnect();
-					behavior.OwningNetWorker = null;
-				}
+			foreach (SimpleNetworkedMonoBehavior behavior in networkedBehaviors.Values)
+				behavior.Disconnect();
 
-				networkedBehaviors.Clear();
-			}
+			networkedBehaviors.Clear();
 
 			ObjectCounter = 0;
 		}
@@ -368,18 +328,17 @@ namespace BeardedManStudios.Network
 		/// <summary>
 		/// An initial setup to make sure that a networking manager exists before running any core logic
 		/// </summary>
-		public static void Initialize(NetWorker socket)
+		public static void Initialize()
 		{
 			lock (initializeMutex)
 			{
 				if (!initialSetup)
 				{
 					initialSetup = true;
-
 					if (NetworkingManager.Instance == null)
 						Instantiate(Resources.Load<GameObject>("BeardedManStudios/Networking Manager"));
 
-					if (!NetworkingManager.Instance.Populate(socket))
+					if (!NetworkingManager.Instance.Populate())
 						Networking.connected += DelayedInitialize;
 				}
 			}
@@ -388,7 +347,7 @@ namespace BeardedManStudios.Network
 		private static void DelayedInitialize(NetWorker socket)
 		{
 			initialSetup = false;
-			Initialize(socket);
+			Initialize();
 			Networking.connected -= DelayedInitialize;
 		}
 
@@ -415,7 +374,7 @@ namespace BeardedManStudios.Network
 					foreach (NetworkingStreamRPC rpcStream in missingIdBuffer[NetworkedId])
 					{
 						rpcStream.AssignBehavior(this);
-						InvokeRPC(rpcStream);
+						rpcStream.NetworkedBehavior.InvokeRPC(rpcStream);
 					}
 
 					missingIdBuffer.Remove(NetworkedId);
@@ -428,14 +387,6 @@ namespace BeardedManStudios.Network
 			// Just make sure that Unity doesn't destroy this objeect on load
 			if (dontDestroyOnLoad)
 				DontDestroyOnLoad(gameObject);
-		}
-
-		// JM: added for offline
-		public virtual void OfflineStart()
-		{
-			Unity.MainThreadManager.unityUpdate += UnityUpdate;
-			Unity.MainThreadManager.unityFixedUpdate += UnityFixedUpdate;
-			IsOwner = true;
 		}
 
 		/// <summary>
@@ -452,7 +403,7 @@ namespace BeardedManStudios.Network
 			// TODO:  Got through all objects in NetworkingManager stack and set them up
 			foreach (SimpleNetworkedMonoBehavior behavior in behaviors)
 				if (!(behavior is NetworkingManager) && behavior != null)
-					behavior.Setup(owningSocket, owningSocket.IsServer, GenerateUniqueId(), 0, true);
+					behavior.Setup(owningSocket, owningSocket.IsServer, GenerateUniqueId(), 0);
 		}
 
 		/// <summary>
@@ -463,9 +414,9 @@ namespace BeardedManStudios.Network
 		/// <param name="networkId">The NetworkID for this Simple Networked Monobehavior</param>
 		/// <param name="ownerId">The OwnerID for this Simple Networked Monobehavior</param>
 #if NETFX_CORE
-		public virtual async void Setup(NetWorker owningSocket, bool isOwner, ulong networkId, ulong ownerId, bool isSceneObject = false)
+		public virtual async void Setup(NetWorker owningSocket, bool isOwner, ulong networkId, ulong ownerId)
 #else
-		public virtual void Setup(NetWorker owningSocket, bool isOwner, ulong networkId, ulong ownerId, bool isSceneObject = false)
+		public virtual void Setup(NetWorker owningSocket, bool isOwner, ulong networkId, ulong ownerId)
 #endif
 		{
 			Reflect();
@@ -489,11 +440,7 @@ namespace BeardedManStudios.Network
 			OwningNetWorker = owningSocket;
 			IsOwner = isOwner;
 			OwnerId = ownerId;
-
-			if (!isSceneObject || sceneNetworkedId == 0)
-				NetworkedId = networkId;
-			else
-				NetworkedId = (ulong)sceneNetworkedId;
+			NetworkedId = networkId;
 
 			if (NetworkedId != 0 || !networkedBehaviors.ContainsKey(0))
 				networkedBehaviors.Add(NetworkedId, this);
@@ -518,98 +465,53 @@ namespace BeardedManStudios.Network
 			NetworkStart();
 		}
 
-		public int MaxRPCBatch = 10000;
-		public void ExecuteRPCStack()
+		protected virtual void UnityUpdate()
 		{
+			if (!NetworkingManager.IsOnline)
+			{
+				DoOwnerUpdate();
+				return;
+			}
+
+			if (this == null)
+			{
+				Unity.MainThreadManager.unityUpdate -= UnityUpdate;
+				return;
+			}
+
 			// If there are any pending RPC calls, then do them now on the main thread
 			if (rpcStack.Count != 0)
 			{
-				int currentRPCBatch = Mathf.Clamp(rpcStack.Count, 1, MaxRPCBatch);
-				bool found = false;
-
-				for (int i = 0; i < currentRPCBatch; i++)
+				lock (rpcStackMutex)
 				{
-					found = false;
-					NetworkingStreamRPC stream = rpcStack[i];
-
-					if (stream == null)
-						continue;
-
+					NetworkingStreamRPC stream = rpcStack[0];
 					rpcStackExceptionMethodName = stream.MethodName;
+
+					rpcStack.RemoveAt(0);
 
 					foreach (KeyValuePair<int, KeyValuePair<MethodInfo, List<IBRPCIntercept>>> rpc in RPCs)
 					{
+						if (stream == null)
+						{
+							DoOwnerUpdate();
+							return;
+						}
+
 						if (rpc.Value.Key.Name == stream.MethodName)
 						{
 							CurrentRPCSender = stream.Sender;
 							rpc.Value.Key.Invoke(this, stream.Arguments);
 							CurrentRPCSender = null;
-							found = true;
-							break;
+							DoOwnerUpdate();
+							return;
 						}
 					}
-
-					if (!found)
-					{
-						throw new NetworkException(13, "Invoked network method " + rpcStackExceptionMethodName + " not found or not marked with [BRPC]");
-					}
 				}
 
-				lock (rpcStackMutex)
-				{
-					rpcStack.RemoveRange(0, currentRPCBatch);
-				}
-			}
-		}
-
-		public void ChangeOwner(ulong newOwnerPlayerId)
-		{
-			if (!allowOwnershipChange)
-				return;
-
-			// Only the current owner or server can change the owner of this object
-			if (!IsOwner && !OwningNetWorker.IsServer)
-			{
-#if UNITY_EDITOR
-				Debug.LogError("Only the current owner or server can change the owner of this object");
-#endif
-				return;
+				throw new NetworkException(13, "Invoked network method " + rpcStackExceptionMethodName + " not found or not marked with [BRPC]");
 			}
 
-			if (!OwningNetWorker.IsServer)
-				RPC("ServerChangeOwner", NetworkReceivers.Server, newOwnerPlayerId);
-			else
-				ServerChangeOwner(newOwnerPlayerId);
-		}
-
-		// JM: made public to fix "NetworkException: No method marked with [BRPC] was found by the name ServerChangeOwner"
-		[BRPC]
-		public void ServerChangeOwner(ulong newOwnerPlayerId)
-		{
-			if (!OwningNetWorker.IsServer || !allowOwnershipChange)
-				return;
-
-			NetworkingPlayer player = null;
-			player = OwningNetWorker.Players.Find(x => x.NetworkId == newOwnerPlayerId);
-
-			if (player != null || newOwnerPlayerId == 0)
-				RPC("AssignNewOwner", newOwnerPlayerId);
-			else
-				Debug.LogError("No such player with id " + newOwnerPlayerId + " currently connected.");
-		}
-
-		[BRPC]
-		protected void AssignNewOwner(ulong newOwnerPlayerId)
-		{
-			if (!allowOwnershipChange)
-				return;
-
-			OwnerId = newOwnerPlayerId;
-
-			if (OwningNetWorker.Uniqueidentifier == newOwnerPlayerId)
-				IsOwner = true;
-			else
-				IsOwner = false;
+			DoOwnerUpdate();
 		}
 
 		private void DoOwnerUpdate()
@@ -620,31 +522,18 @@ namespace BeardedManStudios.Network
 				NonOwnerUpdate();
 		}
 
-		private void DoOwnerFixedUpdate()
+		protected virtual void UnityFixedUpdate()
 		{
+			if (this == null)
+			{
+				Unity.MainThreadManager.unityFixedUpdate -= UnityFixedUpdate;
+				return;
+			}
+
 			if (IsOwner)
 				OwnerFixedUpdate();
 			else
 				NonOwnerFixedUpdate();
-		}
-
-		protected virtual void UnityUpdate()
-		{
-			if (!Networking.RunActionsInFixedLoop) // JM: option for RPCs to run off fixed loop
-			{
-				ExecuteRPCStack();
-			}
-
-			DoOwnerUpdate();
-		}
-
-		protected virtual void UnityFixedUpdate()
-		{
-			if (Networking.RunActionsInFixedLoop) // JM: option for RPCs to run off fixed loop
-			{
-				ExecuteRPCStack();
-			}
-			DoOwnerFixedUpdate();
 		}
 
 		protected virtual void OwnerUpdate() { }
@@ -662,68 +551,64 @@ namespace BeardedManStudios.Network
 		/// <param name="stream">Networking Stream RPC to read from</param>
 		public bool InvokeRPC(NetworkingStreamRPC stream)
 		{
-			tmpRPCMapId = ObjectMapper.Map<int>(stream);
-
-			if (!RPCs.ContainsKey(tmpRPCMapId))
-				return true;
-
-			stream.SetName(RPCs[tmpRPCMapId].Key.Name);
-
-			List<object> args = new List<object>();
-
-			MethodInfo invoke = null;
-			List<IBRPCIntercept> attributes = null;
-			foreach (KeyValuePair<int, KeyValuePair<MethodInfo, List<IBRPCIntercept>>> m in RPCs)
+			lock (rpcStackMutex)
 			{
-				if (m.Value.Key.Name == stream.MethodName)
+				tmpRPCMapId = ObjectMapper.Map<int>(stream);
+				if (!RPCs.ContainsKey(tmpRPCMapId))
+					return true;
+
+				stream.SetName(RPCs[tmpRPCMapId].Key.Name);
+
+				List<object> args = new List<object>();
+
+				MethodInfo invoke = null;
+				List<IBRPCIntercept> attributes = null;
+				foreach (KeyValuePair<int, KeyValuePair<MethodInfo, List<IBRPCIntercept>>> m in RPCs)
 				{
-					invoke = m.Value.Key;
-					attributes = m.Value.Value;
-					break;
-				}
-			}
-
-			int start = stream.Bytes.StartIndex(stream.ByteReadIndex);
-			ParameterInfo[] pars = invoke.GetParameters();
-			foreach (ParameterInfo p in pars)
-			{
-				if (p.ParameterType == typeof(MessageInfo))
-					args.Add(new MessageInfo(stream.RealSenderId, stream.FrameIndex));
-				else
-					args.Add(ObjectMapper.Map(p.ParameterType, stream));
-			}
-
-			stream.SetArguments(args.ToArray());
-
-			if (ReferenceEquals(this, NetworkingManager.Instance))
-			{
-				if (OwningNetWorker.IsServer)
-				{
-					if (stream.MethodName == NetworkingStreamRPC.INSTANTIATE_METHOD_NAME)
-						stream.Arguments[1] = stream.SetupInstantiateId(stream, start);
-					else if (stream.MethodName == NetworkingStreamRPC.DESTROY_METHOD_NAME)
+					if (m.Value.Key.Name == stream.MethodName)
 					{
-						if (OwningNetWorker.ClearBufferedInstantiateFromID((ulong)args[0]))
+						invoke = m.Value.Key;
+						attributes = m.Value.Value;
+						break;
+					}
+				}
+
+				int start = stream.Bytes.StartIndex(stream.ByteReadIndex);
+				ParameterInfo[] pars = invoke.GetParameters();
+				foreach (ParameterInfo p in pars)
+				{
+					if (p.ParameterType == typeof(MessageInfo))
+						args.Add(new MessageInfo(stream.RealSenderId, stream.FrameIndex));
+					else
+						args.Add(ObjectMapper.Map(p.ParameterType, stream));
+				}
+
+				stream.SetArguments(args.ToArray());
+
+				if (ReferenceEquals(this, NetworkingManager.Instance))
+				{
+					if (OwningNetWorker.IsServer && stream.MethodName == NetworkingStreamRPC.INSTANTIATE_METHOD_NAME)
+						stream.Arguments[1] = stream.SetupInstantiateId(stream, start);
+
+					if (stream.MethodName == NetworkingStreamRPC.DESTROY_METHOD_NAME)
+					{
+						if (Networking.PrimarySocket.ClearBufferedInstantiateFromID((ulong)args[0]))
 						{
 							// Set flag if method removed instantiate
 							IsClearedForBuffer = !stream.BufferedRPC;
 						}
 					}
 				}
-			}
 
-			foreach (IBRPCIntercept interceptor in attributes)
-			{
-				if (!interceptor.ValidateRPC(stream))
-					return false;
-			}
+				foreach (IBRPCIntercept interceptor in attributes)
+				{
+					if (!interceptor.ValidateRPC(stream))
+						return false;
+				}
 
-			lock (rpcStackMutex)
-			{
 				rpcStack.Add(stream);
+				return true;
 			}
-
-			return true;
 		}
 
 		/// <summary>
@@ -746,27 +631,7 @@ namespace BeardedManStudios.Network
 					ObjectMapper.MapBytes(getStreamBuffer, rpc.Key);
 
 #if UNITY_EDITOR
-					int argCount = 0;
-					bool matcheTypes = true;
-
-					ParameterInfo[] parameters = rpc.Value.Key.GetParameters();
-					for (int i = 0; i < parameters.Length; i++)
-					{
-						if (parameters[i].ParameterType != typeof(MessageInfo))
-						{
-							if (parameters[i].ParameterType != arguments[i].GetType())
-							{
-								matcheTypes = false;
-								break;
-							}
-							argCount++;
-						}
-					}
-
-					if (!matcheTypes)
-						throw new NetworkException("There is no BRPC matching signature (" + string.Join(", ", arguments.Select(x => x.GetType().ToString()).ToArray()) + ") for method '" + methodName + "'");
-					
-					if (arguments.Length != argCount)
+					if (arguments.Length != rpc.Value.Key.GetParameters().Length)
 						throw new NetworkException("The number of arguments [" + arguments.Length + "] provided for the " + methodName + " RPC call do not match the method signature argument count [" + rpc.Value.Key.GetParameters().Length + "]");
 #endif
 
@@ -776,43 +641,13 @@ namespace BeardedManStudios.Network
 					bool buffered = receivers == NetworkReceivers.AllBuffered || receivers == NetworkReceivers.OthersBuffered;
 
 					rpcNetworkingStream.SetProtocolType(OwningNetWorker is CrossPlatformUDP ? Networking.ProtocolType.UDP : Networking.ProtocolType.TCP);
-					rpcNetworkingStream.Prepare(OwningNetWorker, NetworkingStream.IdentifierType.RPC, this.NetworkedId, getStreamBuffer, receivers, buffered);
+					rpcNetworkingStream.Prepare(OwningNetWorker, NetworkingStream.IdentifierType.RPC, this, getStreamBuffer, receivers, buffered);
 
 					return rpc.Key;
 				}
 			}
 
 			throw new NetworkException(14, "No method marked with [BRPC] was found by the name " + methodName);
-		}
-
-		private void AuthRPC(string methodName, NetWorker socket, NetworkingPlayer player, bool runOnServer, string uniqueIdentifier, bool reliable, params object[] arguments)
-		{
-			int rpcId = GetStreamRPC(methodName, NetworkReceivers.All, arguments);
-
-			if (socket is CrossPlatformUDP)
-				((CrossPlatformUDP)socket).Write(uniqueIdentifier + methodName, player, rpcNetworkingStream, reliable);
-			else
-				socket.Write(player, rpcNetworkingStream);
-
-			if (socket.IsServer && runOnServer)
-			{
-				Unity.MainThreadManager.Run(() =>
-				{
-					bool failedValidate = false;
-
-					foreach (IBRPCIntercept intercept in RPCs[rpcId].Value)
-					{
-						if (!intercept.ValidateRPC(RPCs[rpcId].Key))
-						{
-							failedValidate = true;
-							break;
-						}
-					}
-
-					if (!failedValidate)
-						RPCs[rpcId].Key.Invoke(this, arguments);
-				});
-			}
 		}
 
 		/// <summary>
@@ -824,19 +659,32 @@ namespace BeardedManStudios.Network
 		/// <param name="arguments">The RPC function parameters to be passed in</param>
 		public void AuthoritativeRPC(string methodName, NetWorker socket, NetworkingPlayer player, bool runOnServer, params object[] arguments)
 		{
-			AuthRPC(methodName, socket, player, runOnServer, "BMS_INTERNAL_Rpc_", true, arguments);
-		}
+			int rpcId = GetStreamRPC(methodName, NetworkReceivers.All, arguments);
 
-		/// <summary>
-		/// Used for the server to call an URPC method on a NetWorker(Socket) on a particular player
-		/// </summary>
-		/// <param name="methodName">Method(Function) name to call</param>
-		/// <param name="socket">The NetWorker(Socket) being used</param>
-		/// <param name="player">The NetworkingPlayer who will execute this RPC</param>
-		/// <param name="arguments">The RPC function parameters to be passed in</param>
-		public void AuthoritativeURPC(string methodName, NetWorker socket, NetworkingPlayer player, bool runOnServer, params object[] arguments)
-		{
-			AuthRPC(methodName, socket, player, runOnServer, "BMS_INTERNAL_Urpc_", false, arguments);
+			if (socket is CrossPlatformUDP)
+				((CrossPlatformUDP)socket).Write("BMS_INTERNAL_Rpc_" + methodName, player, rpcNetworkingStream, true);
+			else
+				socket.Write(player, rpcNetworkingStream);
+
+			if (socket.IsServer && runOnServer)
+			{
+				Unity.MainThreadManager.Run(() =>
+				{
+					bool faildValidate = false;
+
+					foreach (IBRPCIntercept intercept in RPCs[rpcId].Value)
+					{
+						if (!intercept.ValidateRPC(RPCs[rpcId].Key))
+						{
+							faildValidate = true;
+							break;
+						}
+					}
+
+					if (!faildValidate)
+						RPCs[rpcId].Key.Invoke(this, arguments);
+				});
+			}
 		}
 
 		/// <summary>
@@ -848,36 +696,16 @@ namespace BeardedManStudios.Network
 		/// <param name="arguments">The RPC function parameters to be passed in</param>
 		public void RPC(string methodName, NetWorker socket, NetworkReceivers receivers, params object[] arguments)
 		{
-			_RPC(methodName, socket, receivers, true, arguments);
-		}
-
-		/// <summary>
-		/// Call an Unreliable RPC method on a NetWorker(Socket) with receivers and arguments
-		/// </summary>
-		/// <param name="methodName">Method(Function) name to call</param>
-		/// <param name="socket">The NetWorker(Socket) being used</param>
-		/// <param name="receivers">Who shall receive the RPC</param>
-		/// <param name="arguments">The RPC function parameters to be passed in</param>
-		public void URPC(string methodName, NetWorker socket, NetworkReceivers receivers, params object[] arguments)
-		{
-			_RPC(methodName, socket, receivers, false, arguments);
-		}
-
-		//Helper function - toreau
-		private void _RPC(string methodName, NetWorker socket, NetworkReceivers receivers, bool reliable, params object[] arguments)
-		{
 			int rpcId = GetStreamRPC(methodName, receivers, arguments);
 
-			// JM: offline fix
 			if (NetworkingManager.IsOnline)
 			{
 				if (socket is CrossPlatformUDP)
-					((CrossPlatformUDP)socket).Write("BMS_INTERNAL_Rpc_" + methodName, rpcNetworkingStream, reliable);
+					((CrossPlatformUDP)socket).Write("BMS_INTERNAL_Rpc_" + methodName, rpcNetworkingStream, true);
 				else
 					socket.Write(rpcNetworkingStream);
 			}
 
-			// JM: added offline check and similar change that was in the reliable RPC
 			if ((!NetworkingManager.IsOnline || socket.IsServer) && receivers != NetworkReceivers.Others && receivers != NetworkReceivers.OthersBuffered && receivers != NetworkReceivers.OthersProximity)
 			{
 				Unity.MainThreadManager.Run(() =>
@@ -906,9 +734,56 @@ namespace BeardedManStudios.Network
 							args.Add(arguments[argCount++]);
 					}
 
-					CurrentRPCSender = OwningPlayer;
 					RPCs[rpcId].Key.Invoke(this, args.ToArray());
-					CurrentRPCSender = null;
+				});
+			}
+		}
+
+		/// <summary>
+		/// Call an Unreliable RPC method on a NetWorker(Socket) with receivers and arguments
+		/// </summary>
+		/// <param name="methodName">Method(Function) name to call</param>
+		/// <param name="socket">The NetWorker(Socket) being used</param>
+		/// <param name="receivers">Who shall receive the RPC</param>
+		/// <param name="arguments">The RPC function parameters to be passed in</param>
+		public void URPC(string methodName, NetWorker socket, NetworkReceivers receivers, params object[] arguments)
+		{
+			int rpcId = GetStreamRPC(methodName, receivers, arguments);
+
+			if (socket is CrossPlatformUDP)
+				((CrossPlatformUDP)socket).Write("BMS_INTERNAL_Rpc_" + methodName, rpcNetworkingStream, false);
+			else
+				socket.Write(rpcNetworkingStream);
+
+			if (socket.IsServer && receivers != NetworkReceivers.Others && receivers != NetworkReceivers.OthersBuffered && receivers != NetworkReceivers.OthersProximity)
+			{
+				Unity.MainThreadManager.Run(() =>
+				{
+					bool faildValidate = false;
+
+					foreach (IBRPCIntercept intercept in RPCs[rpcId].Value)
+					{
+						if (!intercept.ValidateRPC(RPCs[rpcId].Key))
+						{
+							faildValidate = true;
+							break;
+						}
+					}
+
+					if (faildValidate)
+						return;
+
+					List<object> args = new List<object>();
+					int argCount = 0;
+					foreach (ParameterInfo info in RPCs[rpcId].Key.GetParameters())
+					{
+						if (info.ParameterType == typeof(MessageInfo))
+							args.Add(new MessageInfo(OwningNetWorker.Me.NetworkId, NetworkingManager.Instance.CurrentFrame));
+						else
+							args.Add(arguments[argCount++]);
+					}
+
+					RPCs[rpcId].Key.Invoke(this, args.ToArray());
 				});
 			}
 		}
@@ -969,13 +844,14 @@ namespace BeardedManStudios.Network
 		public virtual void Deserialize(NetworkingStream stream) { }
 
 		/// <summary>
-		/// Used to do final cleanup when disconnecting. This gets called currently on application quit and scene resets
+		/// Used to do final cleanup when disconnecting. This gets called currently only on application quit
 		/// </summary>
 		public virtual void Disconnect()
 		{
 			Cleanup();
-			Unity.MainThreadManager.unityUpdate -= UnityUpdate;
-			Unity.MainThreadManager.unityFixedUpdate -= UnityFixedUpdate;
+
+			if (destroyOnDisconnect)
+				Networking.Destroy(this);
 		}
 
 		protected virtual void OnDestroy()
@@ -989,12 +865,7 @@ namespace BeardedManStudios.Network
 		{
 			Disconnect();
 			initialSetup = false;
-
-			lock (networkedBehaviorsMutex)
-			{
-				networkedBehaviors.Clear();
-			}
-
+			networkedBehaviors.Clear();
 			ObjectCounter = 0;
 			missingIdBuffer.Clear();
 		}

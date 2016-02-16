@@ -1,11 +1,10 @@
 ﻿using UnityEngine;
 using System;
-using System.Collections;
 
 using AdvancedInspector;
 
-[AdvancedInspector]
-public class AIExample22_DisplayAsParent : MonoBehaviour 
+[AdvancedInspector(true, false)]
+public class AIExample22_DisplayAsParent : MonoBehaviour
 {
     // The DisplayAsParent attribute prevents a sub-object from being expandable
     // Instead it display its inner fields as being part of the parent.
@@ -14,10 +13,10 @@ public class AIExample22_DisplayAsParent : MonoBehaviour
     [Inspect, DisplayAsParent]
     public SubObject myObject = new SubObject();
 
-    [AdvancedInspector]
+    [Serializable, AdvancedInspector(true, false)]
     public class SubObject
     {
         [Inspect]
-        public float myField;
+        public int testInputField;
     }
 }

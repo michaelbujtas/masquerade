@@ -19,8 +19,9 @@
 
 
 
-using BeardedManStudios.Network;
 using UnityEngine;
+
+using BeardedManStudios.Network;
 
 namespace BeardedManStudios.Forge.Examples
 {
@@ -41,7 +42,7 @@ namespace BeardedManStudios.Forge.Examples
 			}
 		}
 
-		private void PlayerSpawned(SimpleNetworkedMonoBehavior playerObject)
+		private void PlayerSpawned(GameObject playerObject)
 		{
 			Debug.Log("The player object " + playerObject.name + " has spawned at " + 
 				"X: " + playerObject.transform.position.x +

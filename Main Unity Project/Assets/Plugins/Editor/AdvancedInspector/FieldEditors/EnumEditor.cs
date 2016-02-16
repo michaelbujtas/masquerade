@@ -86,7 +86,6 @@ namespace AdvancedInspector
         private object DrawDropDown(Type type, long value, GUIStyle style, bool masked)
         {
             string[] names = GetNames(type);
-            Array values = Enum.GetValues(type);
 
             if (masked)
             {
@@ -99,14 +98,14 @@ namespace AdvancedInspector
             }
             else
             {
-                int selected = SelectedIndex(values, value);
+                var selected = Enum.ToObject(type, value);
 
                 if (style == null)
-                    selected = EditorGUILayout.Popup(selected, names);
+                    selected = EditorGUILayout.EnumPopup((Enum)selected);
                 else
-                    selected = EditorGUILayout.Popup(selected, names, style);
+                    selected = EditorGUILayout.EnumPopup((Enum)selected, style);
 
-                return Enum.ToObject(type, values.GetValue(selected));
+                return Enum.ToObject(type, selected);
             }
         }
 

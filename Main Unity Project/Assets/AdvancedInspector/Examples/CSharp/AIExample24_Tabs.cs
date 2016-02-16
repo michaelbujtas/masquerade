@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using UnityEngine;
-using System.Collections;
+﻿using UnityEngine;
 
 using AdvancedInspector;
 
-public class AIExample24_Tabs : MonoBehaviour 
+[AdvancedInspector]
+public class AIExample24_Tabs : MonoBehaviour
 {
     // Tabs work in a manner similar to groups.
     // However, only the fields of a single tab is display at the same time.

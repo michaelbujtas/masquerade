@@ -62,9 +62,9 @@ namespace AdvancedInspector
         {
             Animation animation = (Animation)target;
 
-            if ((animation != null) && ((animation.cullingType == AnimationCullingType.BasedOnClipBounds) || (animation.cullingType == AnimationCullingType.BasedOnUserBounds)))
+            if ((animation != null) && ((animation.cullingType == AnimationCullingType.BasedOnRenderers) || (animation.cullingType == AnimationCullingType.BasedOnRenderers)))
             {
-                set.Invoke(boxEditor, new object[] { animation.cullingType == AnimationCullingType.BasedOnUserBounds });
+                set.Invoke(boxEditor, new object[] { animation.cullingType == AnimationCullingType.BasedOnRenderers });
                 Bounds localBounds = animation.localBounds;
                 Vector3 center = localBounds.center;
                 Vector3 size = localBounds.size;

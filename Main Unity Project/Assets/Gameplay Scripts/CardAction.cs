@@ -6,5 +6,5 @@ public enum CardAction : byte
 	ATTACK,
 	FLIP,
 	ACTIVATE,
-	CANCEL
+	PASS
 }

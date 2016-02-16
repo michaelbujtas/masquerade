@@ -75,8 +75,8 @@ public class CardOptionsMenu : MonoBehaviour {
 
     public void BackButton()
 	{
-		currentRequest.Fill(CardAction.CANCEL);
-		HideMenu();
+		//currentRequest.Fill(CardAction.CANCEL);
+		//HideMenu();
     }
 
     public void HideMenu()

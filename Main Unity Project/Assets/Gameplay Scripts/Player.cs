@@ -82,9 +82,9 @@ public class Player : MonoBehaviour {
 			case CardAction.ACTIVATE:
 				Console.Log("No activated abilities yet");
 				break;
-			case CardAction.CANCEL:
+			/*case CardAction.CANCEL:
 				actionsLeft++;
-				break;
+				break;*/
 		}
 
 		if (action == CardAction.ATTACK)

@@ -24,7 +24,7 @@ namespace AdvancedInspector
                 new DescriptorAttribute("Mesh", "The mesh object used for collision detection.", "http://docs.unity3d.com/ScriptReference/MeshCollider-sharedMesh.html")));
         }
 
-        private HelpAttribute HelpMesh()
+        private HelpItem HelpMesh()
         {
             foreach (object instance in Instances)
             {
@@ -34,7 +34,7 @@ namespace AdvancedInspector
                     continue;
 
                 if (collider.sharedMesh == null)
-                    return new HelpAttribute(HelpType.Error, "The Mesh Collider requires a Mesh to work.");
+                    return new HelpItem(HelpType.Error, "The Mesh Collider requires a Mesh to work.");
             }
 
             return null;

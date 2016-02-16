@@ -28,18 +28,7 @@ namespace BeardedManStudios.Network.Unity
 		public static UnityEventObject Instance { get; private set; }
 
 		public delegate void BasicCallback();
-		public static event BasicCallback onDestroy
-		{
-			add
-			{
-				onDestroyInvoker += value;
-			}
-			remove
-			{
-				onDestroyInvoker -= value;
-			}
-		}
-		static BasicCallback onDestroyInvoker;
+		public static event BasicCallback onDestroy = null;
 
 		private bool skipCalls = false;
 
@@ -53,20 +42,15 @@ namespace BeardedManStudios.Network.Unity
 			}
 
 			Instance = this;
-		}
+        }
 
 		private void OnDestroy()
 		{
 			if (skipCalls)
 				return;
 
-			if (onDestroyInvoker != null)
-				onDestroyInvoker();
-		}
-
-		public static void Cleanup()
-		{
-			onDestroyInvoker = null;
+			if (onDestroy != null)
+				onDestroy();
 		}
 	}
 }

@@ -118,19 +118,44 @@ namespace BeardedManStudios.Network
 		}
 		NetworkUDPMessageEvent udpDataReadInvoker;  // Because iOS is stupid - Multi-cast function pointer.
 
-		public ClientManager ClientManager { get; protected set; }
+		/// <summary>
+		/// Dictionary of all the client sockets on the CrossPlatformUDP (NetWorker)
+		/// </summary>
+		public Dictionary<string, NetworkingPlayer> clientSockets = new Dictionary<string, NetworkingPlayer>();
 
-		private PacketManager packetManager = new PacketManager();
+		private object clientSocketMutex = new Object();
 
 		/// <summary>
-		/// A mutex for when players are being removed
+		/// Add a client to the CrossPlatformUDP (NetWorker)
 		/// </summary>
-		private object removalMutex = new object();
+		/// <param name="ip">Ip address of the player to add</param>
+		/// <param name="player">Player we are adding</param>
+		private void AddClient(string ip, NetworkingPlayer player)
+		{
+			lock (clientSocketMutex)
+			{
+				if (!clientSockets.ContainsKey(ip))
+				{
+					clientSockets.Add(ip, player);
+
+					if (Players == null)
+						Players = new List<NetworkingPlayer>(clientSockets.Values);
+					else
+						Players.Add(player);
+				}
+			}
+		}
+
+		private object removalMutex = new Object();
+
+		// TODO: Optomize the following
+		private Dictionary<NetworkingPlayer, Dictionary<uint, Dictionary<int, KeyValuePair<DateTime, Header[]>>>> multiPartPending = new Dictionary<NetworkingPlayer, Dictionary<uint, Dictionary<int, KeyValuePair<DateTime, Header[]>>>>();
+		private Dictionary<NetworkingPlayer, Dictionary<uint, Dictionary<int, KeyValuePair<DateTime, Header[]>>>> reliableMultiPartPending = new Dictionary<NetworkingPlayer, Dictionary<uint, Dictionary<int, KeyValuePair<DateTime, Header[]>>>>();
 
 		/// <summary>
 		/// A list of all the Reliable Packets Cache being stored
 		/// </summary>
-		public Dictionary<NetworkingPlayer, Dictionary<uint, Dictionary<uint, KeyValuePair<DateTime, List<BMSByte>>>>> reliablePacketsCache = new Dictionary<NetworkingPlayer, Dictionary<uint, Dictionary<uint, KeyValuePair<DateTime, List<BMSByte>>>>>();
+		public Dictionary<NetworkingPlayer, Dictionary<uint, KeyValuePair<DateTime, List<BMSByte>>>> reliablePacketsCache = new Dictionary<NetworkingPlayer, Dictionary<uint, KeyValuePair<DateTime, List<BMSByte>>>>();
 
 		private static Dictionary<uint, int> packetGroupIds = new Dictionary<uint, int>();
 		private const int PACKET_GROUP_TIMEOUT = 5000;                      // Milliseconds
@@ -147,9 +172,6 @@ namespace BeardedManStudios.Network
 		/// </summary>
 		new public bool IsServer { get; private set; }
 
-		/// <summary>
-		/// The list of unique identifiers that packets use for updates
-		/// </summary>
 		private static Dictionary<string, uint> updateidentifiers = new Dictionary<string, uint>();
 
 #if !NETFX_CORE
@@ -159,49 +181,70 @@ namespace BeardedManStudios.Network
 		private BackgroundWorker reliableWorker = null;
 #endif
 #endif
+		private static object reliableCacheMutex = new Object();
 
-		/// <summary>
-		/// The cached read stream
-		/// </summary>
 		private NetworkingStream readStream = new NetworkingStream();
-
-		/// <summary>
-		/// The cached write stream
-		/// </summary>
 		private NetworkingStream writeStream = new NetworkingStream();
 
-		/// <summary>
-		/// A list of players who currently timed out
-		/// </summary>
-		private List<NetworkingPlayer> timeoutDisconnects = new List<NetworkingPlayer>();
+		private class Header
+		{
+			public uint updateId;
+			public int packetGroupId;
+			public ushort packetCount;
+			public ushort packetOrderId;
+			public bool reliable;
+			public BMSByte payload = new BMSByte();
 
+			public Header(uint u, int g, ushort c, ushort o, bool r)
+			{
+				updateId = u;
+				packetGroupId = g;
+				packetCount = c;
+				packetOrderId = o;
+				reliable = r;
+			}
 
-		/// <summary>
-		/// Cache disconnected players
-		/// </summary>
-		private readonly List<NetworkingPlayer> disconnectedPlayers = new List<NetworkingPlayer>();
+			public Header(Header other)
+			{
+				Clone(other);
+			}
 
-		/// <summary>
-		/// The primary network write buffer cache
-		/// </summary>
-		private BMSByte writeBuffer = new BMSByte();
+			public void Clone(Header other)
+			{
+				updateId = other.updateId;
+				packetGroupId = other.packetGroupId;
+				packetCount = other.packetCount;
+				packetOrderId = other.packetOrderId;
+				reliable = other.reliable;
+				payload.Clone(other.payload);
+			}
 
-		public override List<NetworkingPlayer> Players { get { return ClientManager.Players; } }
+			public void Clone(uint u, int g, ushort c, ushort o, bool r)
+			{
+				updateId = u;
+				packetGroupId = g;
+				packetCount = c;
+				packetOrderId = o;
+				reliable = r;
+			}
 
-		private NetworkingPlayer sender = null;
+			public void SetPayload(BMSByte b)
+			{
+				payload.Clone(b);
+			}
+		}
 
 		/// <summary>
 		/// Constructor for the CrossPlatformUDP (NetWorker)
 		/// </summary>
 		/// <param name="isServer">If this is the server</param>
 		/// <param name="maxConnections">Maximum allowed connections on this CrossPlatformUDP (NetWorker)</param>
-		/// <param name="usingUnityEngine">True if running with NetworkingManager</param>
-		public CrossPlatformUDP(bool isServer, int maxConnections, bool usingUnityEngine = true)
-			: base(maxConnections, usingUnityEngine)
+		/// <param name="isSimpleType">If this is a simple Quick UDP</param>
+		public CrossPlatformUDP(bool isServer, int maxConnections, bool isSimpleType = false)
+			: base(maxConnections)
 		{
 			IsServer = isServer;
-			ClientManager = new ClientManager();
-			packetManager.packetListComplete += StreamCompleted;
+			Players = new List<NetworkingPlayer>();
 		}
 		~CrossPlatformUDP() { Disconnect(); }
 
@@ -254,42 +297,54 @@ namespace BeardedManStudios.Network
 					Ping();
 				}
 
-				ClientManager.Iterate((client) =>
+				lock (reliableCacheMutex)
 				{
-					packetManager.IterateSendPending(client, (pending) =>
+					foreach (KeyValuePair<NetworkingPlayer, Dictionary<uint, KeyValuePair<DateTime, List<BMSByte>>>> cache in reliablePacketsCache)
 					{
-						if (pending.Count == 0)
-							return;
+						if (cache.Value.Count == 0)
+							continue;
 
-						foreach (KeyValuePair<uint, Dictionary<int, PacketManager.SendPackets>> id in pending)
+						List<uint> keys = new List<uint>(cache.Value.Keys);
+
+						foreach (uint key in keys)
 						{
-							foreach (KeyValuePair<int, PacketManager.SendPackets> kv in id.Value)
+							if ((DateTime.Now - cache.Value[key].Key).TotalMilliseconds > PreviousServerPing + plusPingTime)
 							{
-								if ((DateTime.Now - kv.Value.currentTime).TotalMilliseconds > PreviousServerPing + plusPingTime)
+								bool sent = false;
+								for (int i = 0; i < cache.Value[key].Value.Count; i++)
 								{
-									for (int i = 0; i < kv.Value.data.Count; i++)
+									if (cache.Value[key].Value == null || cache.Value[key].Value[i] == null)
+										continue;
+									else
 									{
-										if (kv.Value.data[i] == null)
-											continue;
+										if (breakDown.Count == 0)
+											breakDown.Add(cache.Value[key].Value[i]);
 										else
-										{
-											if (breakDown.Count == 0)
-												breakDown.Add(kv.Value.data[i]);
-											else
-												breakDown[0] = kv.Value.data[i];
+											breakDown[0] = cache.Value[key].Value[i];
 
-											Write(id.Key, client, null, true, breakDown);
+										Write(key, cache.Key, null, true, breakDown);
 
-											kv.Value.UpdateTime();
-										}
+										cache.Value[key] = new KeyValuePair<DateTime, List<BMSByte>>(DateTime.Now, cache.Value[key].Value);
+
+										sent = true;
+
+#if !NETFX_CORE
+										Thread.Sleep(1);
+#endif
+									}
+								}
+
+								if (!sent)
+								{
+									lock (reliableCacheMutex)
+									{
+										cache.Value.Remove(key);
 									}
 								}
 							}
 						}
-					});
-
-					return true;
-				});
+					}
+				}
 
 #if NETFX_CORE
 				await Task.Delay(ThreadSpeed);
@@ -328,15 +383,6 @@ namespace BeardedManStudios.Network
 
 		private ForgeMasterServerPing masterServerPing;
 
-		private NetworkingPlayer CreatePlayer(ulong playerId, object endpoint, string name = "")
-		{
-#if !NETFX_CORE
-			endpoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), Port);
-#endif
-
-			return new NetworkingPlayer(playerId, "127.0.0.1", endpoint, name);
-		}
-
 #if NETFX_CORE
 		/// <summary>
 		/// Connect with the CrossPlatformUDP (NetWorker) to a ip and port
@@ -365,7 +411,6 @@ namespace BeardedManStudios.Network
 			previousPingTime = DateTime.Now;
 
 			connector = new Thread(new ParameterizedThreadStart(ThreadedConnect));
-			connector.IsBackground = true;
 			connector.Start(new object[] { hostAddress, port, localIp });
 
 			PreviousServerPing = 100;
@@ -382,6 +427,7 @@ namespace BeardedManStudios.Network
 						double time = (DateTime.Now - (DateTime)((object[])latencySimulationPackets[0])[0]).TotalMilliseconds;
 						string endpoint = (string)((object[])latencySimulationPackets[0])[1];
 						BMSByte bytes = (BMSByte)((object[])latencySimulationPackets[0])[2];
+						bytes.ResetPointer();
 
 						if (Math.Round(networkLatencySimulationTime - time) > 0)
 							Thread.Sleep((int)Math.Round(networkLatencySimulationTime - time));
@@ -437,8 +483,7 @@ namespace BeardedManStudios.Network
 					groupEP = new IPEndPoint(IPAddress.Any, 0);
 
 #endif
-					Me = CreatePlayer(ServerPlayerCounter, ReadClient, "SERVER");
-					ServerPlayerCounter++;
+					Me = new NetworkingPlayer(ServerPlayerCounter++, "127.0.0.1", ReadClient, "SERVER");
 
 					if (!string.IsNullOrEmpty(ForgeMasterServer.MasterServerIp))
 						masterServerPing = new ForgeMasterServerPing(this);
@@ -532,7 +577,8 @@ namespace BeardedManStudios.Network
 
 					server = new NetworkingPlayer(0, hostEndpoint.Address.ToString() + "+" + hostEndpoint.Port, hostEndpoint, "SERVER");
 
-					packetManager.RegisterNewClient(server);
+					reliableMultiPartPending.Add(server, new Dictionary<uint, Dictionary<int, KeyValuePair<DateTime, Header[]>>>());
+					multiPartPending.Add(server, new Dictionary<uint, Dictionary<int, KeyValuePair<DateTime, Header[]>>>());
 
 					lock (writersBlockMutex)
 					{
@@ -540,28 +586,18 @@ namespace BeardedManStudios.Network
 							updateidentifiers = new Dictionary<string, uint>();
 
 						BMSByte tmp = new BMSByte();
-						ObjectMapper.MapBytes(tmp, "connect", port, AuthHash);
+						ObjectMapper.MapBytes(tmp, "connect", port);
 
 						writeStream.SetProtocolType(Networking.ProtocolType.ReliableUDP);
-						writeStream.Prepare(this, NetworkingStream.IdentifierType.None, 0, tmp, noBehavior: true);
+						writeStream.Prepare(this, NetworkingStream.IdentifierType.None, null, tmp);
 						Write("BMS_INTERNAL_Udp_Connect", writeStream, true);
 					}
-
-					// JM: uncommented out timeout code
-					Threading.Task.Run(() =>
-					{
-						Thread.Sleep(ConnectTimeout);
-
-						if (!Connected)
-							OnConnectTimeout();
-					}, ConnectTimeout);
 				}
 
 #if !NETFX_CORE
 				if (networkLatencySimulationTime > 0.0f)
 				{
 					latencyThread = new Thread(LatencySimulator);
-					latencyThread.IsBackground = true;
 					latencyThread.Start();
 				}
 #endif
@@ -577,7 +613,7 @@ namespace BeardedManStudios.Network
 		/// </summary>
 		public override void GetNewPlayerUpdates()
 		{
-			Me = CreatePlayer(Uniqueidentifier, null);
+			Me = new NetworkingPlayer(Uniqueidentifier, "127.0.0.1", null, string.Empty);
 
 			lock (writersBlockMutex)
 			{
@@ -585,8 +621,9 @@ namespace BeardedManStudios.Network
 				ObjectMapper.MapBytes(tmp, "update");
 
 				writeStream.SetProtocolType(Networking.ProtocolType.ReliableUDP);
-				writeStream.Prepare(this, NetworkingStream.IdentifierType.None, 0, tmp, noBehavior: true);
+				writeStream.Prepare(this, NetworkingStream.IdentifierType.None, null, tmp);
 				Write("BMS_INTERNAL_Udp_New_Player", writeStream, true);
+				//System.Diagnostics.Debug.WriteLine("wrote player update request");
 			}
 		}
 
@@ -604,7 +641,7 @@ namespace BeardedManStudios.Network
 					ObjectMapper.MapBytes(tmp, reason);
 
 					writeStream.SetProtocolType(Networking.ProtocolType.UDP);
-					writeStream.Prepare(this, NetworkingStream.IdentifierType.Disconnect, 0, tmp, noBehavior: true);
+					writeStream.Prepare(this, NetworkingStream.IdentifierType.Disconnect, null, tmp);
 #if NETFX_CORE
 					WriteAndClose(id, player, writeStream);
 #else
@@ -637,8 +674,15 @@ namespace BeardedManStudios.Network
 		{
 			lock (removalMutex)
 			{
-				ClientManager.RemoveClient(player);
-				packetManager.DeregisterClient(player);
+				if (clientSockets.ContainsKey(player.Ip))
+					clientSockets.Remove(player.Ip);
+
+				if (multiPartPending.ContainsKey(player))
+					multiPartPending.Remove(player);
+
+				if (reliableMultiPartPending.ContainsKey(player))
+					reliableMultiPartPending.Remove(player);
+
 				CleanUDPRPCForPlayer(player);
 			}
 		}
@@ -713,8 +757,16 @@ namespace BeardedManStudios.Network
 #endif
 			}
 
-			ClientManager.RemoveAllClients();
-			packetManager.Reset();
+			if (multiPartPending != null)
+				multiPartPending.Clear();
+
+			if (clientSockets != null)
+			{
+				lock (clientSocketMutex)
+				{
+					clientSockets.Clear();
+				}
+			}
 
 			if (timeout)
 				OnTimeoutDisconnected();
@@ -730,7 +782,7 @@ namespace BeardedManStudios.Network
 				ObjectMapper.MapBytes(tmp, "disconnect");
 
 				writeStream.SetProtocolType(Networking.ProtocolType.ReliableUDP);
-				writeStream.Prepare(this, NetworkingStream.IdentifierType.None, 0, tmp, noBehavior: true);
+				writeStream.Prepare(this, NetworkingStream.IdentifierType.None, null, tmp);
 				Write("BMS_INTERNAL_Udp_Disconnect", writeStream, true);
 			}
 
@@ -748,7 +800,7 @@ namespace BeardedManStudios.Network
 				ObjectMapper.MapBytes(tmp, "disconnect");
 
 				writeStream.SetProtocolType(Networking.ProtocolType.ReliableUDP);
-				writeStream.Prepare(this, NetworkingStream.IdentifierType.None, 0, tmp, noBehavior: true);
+				writeStream.Prepare(this, NetworkingStream.IdentifierType.None, null, tmp);
 				Write("BMS_INTERNAL_Udp_Disconnect", writeStream, true);
 			}
 
@@ -813,27 +865,53 @@ namespace BeardedManStudios.Network
 						packetBufferList[i].BlockCopy(bytes.byteArr, bytes.StartIndex() + i * PAYLOAD_SIZE, PAYLOAD_SIZE);
 					else
 						packetBufferList[i].BlockCopy(bytes.byteArr, bytes.StartIndex() + i * PAYLOAD_SIZE, bytes.Size - (i * PAYLOAD_SIZE));
+				}
 
+				lock (reliableCacheMutex)
+				{
 					if (reliable)
 					{
-						BMSByte bufferClone = new BMSByte().Clone(packetBufferList[i]);
+						List<BMSByte> packets = new List<BMSByte>();
+
+						foreach (BMSByte b in packetBufferList)
+							packets.Add(new BMSByte().Clone(b));
 
 						if (IsServer)
 						{
 							if (player != null)
-								packetManager.PacketSendPending(player, updateId, packetGroupIds[updateId], i, packetCount, bufferClone);
+							{
+								if (!reliablePacketsCache.ContainsKey(player))
+									reliablePacketsCache.Add(player, new Dictionary<uint, KeyValuePair<DateTime, List<BMSByte>>>());
+
+								if (!reliablePacketsCache[player].ContainsKey(updateId))
+									reliablePacketsCache[player].Add(updateId, new KeyValuePair<DateTime, List<BMSByte>>(DateTime.Now, new List<BMSByte>(packets)));
+								else
+									reliablePacketsCache[player][updateId] = new KeyValuePair<DateTime, List<BMSByte>>(DateTime.Now, new List<BMSByte>(packets));
+							}
 							else
 							{
-								ClientManager.Iterate((client) =>
+								foreach (NetworkingPlayer currentPlayer in Players)
 								{
-									packetManager.PacketSendPending(client, updateId, packetGroupIds[updateId], i, packetCount, bufferClone);
+									if (!reliablePacketsCache.ContainsKey(currentPlayer))
+										reliablePacketsCache.Add(currentPlayer, new Dictionary<uint, KeyValuePair<DateTime, List<BMSByte>>>());
 
-									return true;
-								});
+									if (!reliablePacketsCache[currentPlayer].ContainsKey(updateId))
+										reliablePacketsCache[currentPlayer].Add(updateId, new KeyValuePair<DateTime, List<BMSByte>>(DateTime.Now, new List<BMSByte>(packets)));
+									else
+										reliablePacketsCache[currentPlayer][updateId] = new KeyValuePair<DateTime, List<BMSByte>>(DateTime.Now, new List<BMSByte>(packets));
+								}
 							}
 						}
 						else
-							packetManager.PacketSendPending(server, updateId, packetGroupIds[updateId], i, packetCount, bufferClone);
+						{
+							if (!reliablePacketsCache.ContainsKey(server))
+								reliablePacketsCache.Add(server, new Dictionary<uint, KeyValuePair<DateTime, List<BMSByte>>>());
+
+							if (!reliablePacketsCache[server].ContainsKey(updateId))
+								reliablePacketsCache[server].Add(updateId, new KeyValuePair<DateTime, List<BMSByte>>(DateTime.Now, new List<BMSByte>(packets)));
+							else
+								reliablePacketsCache[server][updateId] = new KeyValuePair<DateTime, List<BMSByte>>(DateTime.Now, new List<BMSByte>(packets));
+						}
 					}
 				}
 			}
@@ -871,19 +949,13 @@ namespace BeardedManStudios.Network
 			//else
 			buffer.RemoveStart(sizeof(uint) + sizeof(int) + sizeof(ushort) + sizeof(ushort) + sizeof(byte));
 
-			if (packetHeader.reliable)
+			if (IsServer)
 			{
-				if (IsServer)
-				{
-					if (sender != null)
-						WriteReceived(packetHeader.updateId, packetHeader.packetGroupId, packetHeader.packetOrderId, sender);
-				}
-				else
-					WriteReceived(packetHeader.updateId, packetHeader.packetGroupId, packetHeader.packetOrderId, server);
-
-				if (packetManager.HasReadPacket(sender, packetHeader))
-					return packetHeader;
+				if (sender != null)
+					WriteReceived(packetHeader.updateId, packetHeader.packetGroupId, packetHeader.packetOrderId, sender);
 			}
+			else
+				WriteReceived(packetHeader.updateId, packetHeader.packetGroupId, packetHeader.packetOrderId, server);
 
 			if (buffer.Size <= 0)
 				return null;
@@ -893,6 +965,79 @@ namespace BeardedManStudios.Network
 			return packetHeader;
 		}
 
+		/// <summary>
+		/// Write the data on a given CrossPlatformUDP(NetWorker) from a ip, port, id, data and reliability
+		/// </summary>
+		/// <param name="hostAddress">Ip address of the host</param>
+		/// <param name="port">Port of the host</param>
+		/// <param name="updateidentifier">Unique update identifier to be used</param>
+		/// <param name="data">Data to send</param>
+		/// <param name="reliable">If this is a reliable send</param>
+		[Obsolete("Static write methods on the UDP library are no longer supported")]
+		public static void Write(string hostAddress, ushort port, string updateidentifier, BMSByte data, bool reliable)
+		{
+			throw new NotImplementedException("This function is no longer supported");
+			//Write(hostAddress, port, updateidentifier, new NetworkingStream(Networking.ProtocolType.QuickUDP).Prepare(null,
+			//	NetworkingStream.IdentifierType.None, null, data
+			//), reliable);
+		}
+
+		/// <summary>
+		/// Write the data on a given CrossPlatformUDP(NetWorker) from a ip, port, id, networking stream and reliability
+		/// </summary>
+		/// <param name="hostAddress">Ip address of the host</param>
+		/// <param name="port">Port of the host</param>
+		/// <param name="updateidentifier">Unique update identifier to be used</param>
+		/// <param name="stream">Data to send</param>
+		/// <param name="reliable">If this is a reliable send</param>
+		public static void Write(string hostAddress, ushort port, string updateidentifier, NetworkingStream stream, bool reliable)
+		{
+			throw new NotImplementedException("This method has become obsolete");
+			//#if NETFX_CORE
+			//			DatagramSocket client = new DatagramSocket();
+			//			HostName serverHost = new HostName(hostAddress);
+
+			//			Task tConnect = Task.Run(async () =>
+			//			{
+			//				await client.ConnectAsync(serverHost, port.ToString());
+			//			});
+
+			//			tConnect.Wait();
+
+			//			DataWriter writer = new DataWriter(client.OutputStream);
+			//			//uint length = writer.MeasureString(message);
+			//			writer.WriteBuffer(stream.Bytes.byteArr.AsBuffer(), (uint)stream.Bytes.StartIndex(), (uint)stream.Bytes.Size);
+			//			// Try to store (send?) synchronously
+
+			//			Task tWrite = Task.Run(async () =>
+			//			{
+			//				await writer.StoreAsync();
+			//			});
+			//			tWrite.Wait();
+
+			//			writer.DetachStream();
+			//			writer.Dispose();
+			//#else
+			//			CachedUdpClient client = new CachedUdpClient(hostAddress, port);
+
+			//			List<BMSByte> packets = PreparePackets(updateidentifier, stream, reliable);
+
+			//			foreach (BMSByte packet in packets)
+			//				client.Send(packet.Compress().byteArr, packet.Size, hostAddress, port);
+
+			//			client.Close();
+			//#endif
+		}
+
+#if NETFX_CORE
+		private static NetworkingStream gotResponse = null;
+#endif
+		public static NetworkingStream WriteAndGetResponse(string hostAddress, ushort port, string updateidentifier, NetworkingStream stream)
+		{
+			// TODO:  Implement
+			return null;
+		}
+
 		public override void Write(NetworkingPlayer player, NetworkingStream stream)
 		{
 			// TODO:  Implement
@@ -900,36 +1045,28 @@ namespace BeardedManStudios.Network
 
 		public override void Send(byte[] data, int length, object endpoint = null)
 		{
-#if !NETFX_CORE
-			// TODO:  Skip if sending to itself
-#else
-			// Don't have machine write to itself
-			if (((IPEndPoint)endpoint).Address.ToString() == "127.0.0.1")
-				return;
-#endif
-
 			if (TrackBandwidth)
 				BandwidthOut += (ulong)length;
 
 			try
 			{
 #if NETFX_CORE
-				Task tWrite = Task.Run(async () =>
-				{
-					DataWriter writer = null;
-					if (IsServer)
-						writer = new DataWriter(((DatagramSocket)endpoint).OutputStream);
-					else
-						writer = new DataWriter(ReadClient.OutputStream);
+			Task tWrite = Task.Run(async () =>
+			{
+				DataWriter writer = null;
+				if (IsServer)
+					writer = new DataWriter(((DatagramSocket)endpoint).OutputStream);
+				else
+					writer = new DataWriter(ReadClient.OutputStream);
 						
-					writer.WriteBuffer(data.AsBuffer(), (uint)0, (uint)length);
-					await writer.StoreAsync();
+				writer.WriteBuffer(data.AsBuffer(), (uint)0, (uint)length);
+				await writer.StoreAsync();
 						
-					writer.DetachStream();
-					writer.Dispose();
-				});
+				writer.DetachStream();
+				writer.Dispose();
+			});
 
-				tWrite.Wait();
+			tWrite.Wait();
 #else
 				ReadClient.Send(data, length, (IPEndPoint)endpoint);
 #endif
@@ -1030,28 +1167,20 @@ namespace BeardedManStudios.Network
 					data.MoveStartIndex(-1);
 				}
 
-				foreach (BMSByte packet in packets)
+				lock (clientSocketMutex)
 				{
-					byte[] sendData = packet.Compress().byteArr;
-
-					ClientManager.Iterate((player) =>
+					foreach (KeyValuePair<string, NetworkingPlayer> kv in clientSockets)
 					{
 						try
 						{
-							Send(sendData, packet.Size, player.SocketEndpoint);
+							foreach (BMSByte packet in packets)
+								Send(packet.Compress().byteArr, packet.Size, kv.Value.SocketEndpoint);
 						}
 						catch
 						{
-							disconnectedPlayers.Add(player);
+							Disconnect(kv.Value);
 						}
-
-						return true;
-					});
-
-					foreach (NetworkingPlayer player in disconnectedPlayers)
-						Disconnect(player);
-
-					disconnectedPlayers.Clear();
+					}
 				}
 			}
 			else
@@ -1135,16 +1264,16 @@ namespace BeardedManStudios.Network
 
 		private void RemoveReliable(uint updateId, NetworkingPlayer player)
 		{
-			if (IsServer && player == null)
+			lock (reliableCacheMutex)
 			{
-				ClientManager.Iterate((client) =>
+				if (IsServer && player == null)
 				{
-					packetManager.RemoveSendById(client, updateId);
-					return true;
-				});
+					foreach (NetworkingPlayer currentPlayer in Players)
+						reliablePacketsCache[currentPlayer].Remove(updateId);
+				}
+				else
+					reliablePacketsCache[player].Remove(updateId);
 			}
-			else
-				packetManager.RemoveSendById(player, updateId);
 		}
 
 		/// <summary>
@@ -1166,7 +1295,7 @@ namespace BeardedManStudios.Network
 					if (stream.identifierType == NetworkingStream.IdentifierType.RPC && (stream.Receivers == NetworkReceivers.AllBuffered || stream.Receivers == NetworkReceivers.OthersBuffered))
 						ServerBufferRPC(updateidentifier, stream);
 
-					if (ClientManager.Count == 0 || stream.Receivers == NetworkReceivers.Server)
+					if (clientSockets.Count == 0 || stream.Receivers == NetworkReceivers.Server)
 						return;
 
 					if (packets == null)
@@ -1175,18 +1304,16 @@ namespace BeardedManStudios.Network
 				else if (packets == null)
 					throw new NetworkException("There is no message being sent on this request");
 
-				NetworkingPlayer relaySender = null;
-
-				if (stream.RealSenderId == Me.NetworkId)
-					relaySender = Me;
-				else
-					relaySender = Players.Find(p => p.NetworkId == stream.RealSenderId);
-
-				foreach (BMSByte packet in packets)
+				lock (clientSocketMutex)
 				{
-					byte[] sendData = packet.Compress().byteArr;
+					NetworkingPlayer relaySender = null;
 
-					ClientManager.Iterate((player) =>
+					if (stream.RealSenderId == Me.NetworkId)
+						relaySender = Me;
+					else
+						relaySender = Players.Find(p => p.NetworkId == stream.RealSenderId);
+
+					foreach (KeyValuePair<string, NetworkingPlayer> kv in clientSockets)
 					{
 						if (stream != null)
 						{
@@ -1194,53 +1321,49 @@ namespace BeardedManStudios.Network
 							if (stream.Receivers == NetworkReceivers.OthersProximity || stream.Receivers == NetworkReceivers.AllProximity)
 							{
 								// If the receiver is out of range, do not update them with the message
-								if (UnityEngine.Vector3.Distance(stream.Sender.Position, player.Position) > ProximityMessagingDistance)
+								if (UnityEngine.Vector3.Distance(stream.Sender.Position, kv.Value.Position) > ProximityMessagingDistance)
 								{
-									player.PlayerObject.ProximityOutCheck(stream.Sender.PlayerObject);
-									if (reliable) RemoveReliable(updateidentifier, player);
-									return true;
+									kv.Value.PlayerObject.ProximityOutCheck(stream.Sender.PlayerObject);
+									if (reliable) RemoveReliable(updateidentifier, kv.Value);
+									continue;
 								}
-								else if (!ReferenceEquals(stream.Sender.PlayerObject, null) && !ReferenceEquals(player.PlayerObject, null))
-									player.PlayerObject.ProximityInCheck(stream.Sender.PlayerObject);
+								else if (!ReferenceEquals(stream.Sender.PlayerObject, null))
+									kv.Value.PlayerObject.ProximityInCheck(stream.Sender.PlayerObject);
 							}
 
-							if ((stream.Receivers == NetworkReceivers.Others || stream.Receivers == NetworkReceivers.OthersBuffered || stream.Receivers == NetworkReceivers.OthersProximity) && player.NetworkId == stream.RealSenderId)
+							if ((stream.Receivers == NetworkReceivers.Others || stream.Receivers == NetworkReceivers.OthersBuffered || stream.Receivers == NetworkReceivers.OthersProximity) && kv.Value.NetworkId == stream.RealSenderId)
 							{
-								if (reliable) RemoveReliable(updateidentifier, player);
-								return true;
+								if (reliable) RemoveReliable(updateidentifier, kv.Value);
+								continue;
 							}
 
-							if ((stream.Receivers == NetworkReceivers.Owner || stream.Receivers == NetworkReceivers.ServerAndOwner) && !ReferenceEquals(stream.NetworkedBehavior, null) && player.NetworkId != stream.NetworkedBehavior.OwnerId)
+							if (stream.Receivers == NetworkReceivers.Owner && !ReferenceEquals(stream.NetworkedBehavior, null) && kv.Value.NetworkId != stream.NetworkedBehavior.OwnerId)
 							{
-								if (reliable) RemoveReliable(updateidentifier, player);
-								return true;
+								if (reliable) RemoveReliable(updateidentifier, kv.Value);
+								continue;
 							}
 
-							if (stream.Receivers == NetworkReceivers.MessageGroup && player.MessageGroup != relaySender.MessageGroup)
+							if (IsServer)
 							{
-								if (reliable) RemoveReliable(updateidentifier, player);
-								return true;
+								if (stream.Receivers == NetworkReceivers.MessageGroup && kv.Value.MessageGroup != relaySender.MessageGroup)
+								{
+									if (reliable) RemoveReliable(updateidentifier, kv.Value);
+									continue;
+								}
 							}
 						}
 
 						try
 						{
-							Send(sendData, packet.Size, player.SocketEndpoint);
+							foreach (BMSByte packet in packets)
+								Send(packet.Compress().byteArr, packet.Size, kv.Value.SocketEndpoint);
 						}
 						catch
 						{
-							disconnectedPlayers.Add(player);
+							Disconnect(kv.Value);
 						}
-
-						return true;
-					});
+					}
 				}
-
-				// fenglin: Out of sync error when iterating over the clientSockets
-				foreach (var player in disconnectedPlayers)
-					Disconnect(player);
-
-				disconnectedPlayers.Clear();
 			}
 			else
 			{
@@ -1290,13 +1413,10 @@ namespace BeardedManStudios.Network
 		/// <param name="reliable">If this is a reliable send</param>
 		public override void Write(string updateidentifier, NetworkingStream stream, bool reliable = false)
 		{
-			lock (writersBlockMutex)
-			{
-				if (!updateidentifiers.ContainsKey(updateidentifier))
-					updateidentifiers.Add(updateidentifier, (uint)updateidentifiers.Count);
+			if (!updateidentifiers.ContainsKey(updateidentifier))
+				updateidentifiers.Add(updateidentifier, (uint)updateidentifiers.Count);
 
-				Write(updateidentifiers[updateidentifier], stream, reliable);
-			}
+			Write(updateidentifiers[updateidentifier], stream, reliable);
 		}
 
 		// Obsolete
@@ -1305,6 +1425,7 @@ namespace BeardedManStudios.Network
 			throw new NetworkException(4, "This method requires an updateidentifier, use the other Write method if unsure Write(id, stream)");
 		}
 
+		private byte[] NetworkInstantiateForBareMetal = new byte[] { 109, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 		private object rpcMutex = new object();
 		private bool ReadStream(string endpoint, NetworkingStream stream)
 		{
@@ -1313,45 +1434,114 @@ namespace BeardedManStudios.Network
 				if (stream.Receivers == NetworkReceivers.MessageGroup && Me.MessageGroup != stream.Sender.MessageGroup)
 					return true;
 
-				ClientManager.RunActionOnPlayerEndpoint(endpoint, (player) => { OnDataRead(player, stream); });
+				if (clientSockets.ContainsKey(endpoint))
+					OnDataRead(clientSockets[endpoint], stream);
 			}
 			else
 				OnDataRead(null, stream);
 
-			// Don't execute this logic on the server if the server doesn't own the object
-			if (!ReferenceEquals(stream.NetworkedBehavior, null) && stream.Receivers == NetworkReceivers.Owner)
-				return true;
-
 			if (stream.identifierType == NetworkingStream.IdentifierType.RPC)
 			{
-				lock (rpcMutex)
+				if (!Networking.IsBareMetal)
 				{
-					if ((new NetworkingStreamRPC(stream)).FailedExecution)
-						return false;
+					lock (rpcMutex)
+					{
+						if ((new NetworkingStreamRPC(stream)).FailedExecution)
+							return false;
+					}
+				}
+				else
+				{
+					bool found = true;
+					for (int i = 16; i < 16 + NetworkInstantiateForBareMetal.Length; i++)
+					{
+						if (stream.Bytes.byteArr[i] != NetworkInstantiateForBareMetal[i - 16])
+						{
+							found = false;
+							break;
+						}
+					}
+
+					if (found)
+					{
+						int current = 38;
+						foreach (byte b in BitConverter.GetBytes(SimpleNetworkedMonoBehavior.GenerateUniqueId()))
+							stream.Bytes.byteArr[current++] = b;
+					}
 				}
 			}
 
 			return true;
 		}
 
-		private bool ConsumeStream(bool isReliable, BMSByte data)
+		private void StreamCompleted(string endpoint, Header header, NetworkingStream stream)
 		{
-			readStream = new NetworkingStream(isReliable ? Networking.ProtocolType.ReliableUDP : Networking.ProtocolType.UDP);
-
-			if (readStream.Consume(this, sender, data) == null)
-				return false;
-
-			CurrentStreamOwner = readStream.Sender;
-
-			return true;
+			if (ReadStream(endpoint, stream) && IsServer)
+				RelayStream(header.updateId, stream);
 		}
 
-		private void StreamCompleted(uint updateId, bool isReliable, BMSByte data)
+		private BMSByte readMessageBuffer = new BMSByte();
+		private void ReadMessageFromPlayer(string endpoint, Header header, NetworkingPlayer sender, ref Dictionary<NetworkingPlayer, Dictionary<uint, Dictionary<int, KeyValuePair<DateTime, Header[]>>>> target, NetworkingStream stream)
 		{
-			ConsumeStream(isReliable, data);
+			if (stream.SkipReplication)
+				return;
 
-			if (ReadStream(sender.Ip, readStream) && IsServer)
-				RelayStream(updateId, readStream);
+			if (!target[sender].ContainsKey(header.updateId))
+				target[sender].Add(header.updateId, new Dictionary<int, KeyValuePair<DateTime, Header[]>>());
+
+			if (!target[sender][header.updateId].ContainsKey(header.packetGroupId))
+				target[sender][header.updateId].Add(header.packetGroupId, new KeyValuePair<DateTime, Header[]>(DateTime.Now, new Header[header.packetCount]));
+
+			bool alreadyDone = true;
+			foreach (Header head in target[sender][header.updateId][header.packetGroupId].Value)
+			{
+				if (head == null || head.payload == null || head.payload.Size == 0)
+				{
+					alreadyDone = false;
+					break;
+				}
+			}
+
+			if (alreadyDone)
+				return;
+
+			if (target[sender][header.updateId][header.packetGroupId].Value[header.packetOrderId] == null)
+				target[sender][header.updateId][header.packetGroupId].Value[header.packetOrderId] = new Header(header);
+			else
+				target[sender][header.updateId][header.packetGroupId].Value[header.packetOrderId].Clone(header);
+
+			bool done = true;
+			readMessageBuffer.Clear();
+			foreach (Header head in target[sender][header.updateId][header.packetGroupId].Value)
+			{
+				if (head == null || head.payload == null || head.payload.Size == 0)
+				{
+					done = false;
+					break;
+				}
+				else
+					readMessageBuffer.BlockCopy(head.payload.byteArr, head.payload.StartIndex(), head.payload.Size);
+			}
+
+			if (done)
+			{
+				if (stream == null || header.packetCount > 1)
+					stream = new NetworkingStream(header.reliable ? Networking.ProtocolType.ReliableUDP : Networking.ProtocolType.UDP).Consume(this, sender, readMessageBuffer);
+
+				CurrentStreamOwner = stream.Sender;
+
+				StreamCompleted(endpoint, header, stream);
+
+				// TODO:  Possibility that this is an older packet than the last, need to do better sorting
+				//target[sender][header.updateId].Remove(header.packetGroupId);
+
+				if (!header.reliable)
+					multiPartPending[sender][header.updateId].Remove(header.packetGroupId);
+
+				// TODO:  Write this message to all of the other clients
+			}
+			else
+				target[sender][header.updateId][header.packetGroupId] = new KeyValuePair<DateTime, Header[]>(DateTime.Now, target[sender][header.updateId][header.packetGroupId].Value);
 		}
 
 		private void CacheUpdate(NetworkingPlayer sender)
@@ -1359,169 +1549,93 @@ namespace BeardedManStudios.Network
 			if (sender == null)
 				return;
 
-			uint id = rawBuffer.GetBasicType<uint>(1);
-			int groupId = (rawBuffer.GetBasicType<int>(1 + sizeof(int)));
-			ushort orderId = (rawBuffer.GetBasicType<ushort>(1 + sizeof(uint) + sizeof(int)));
-
-			packetManager.PacketSendConfirmed(sender, id, groupId, orderId);
-		}
-
-		#region Connection Request
-		private bool ProcessClientConnection(string endpoint, Header header)
-		{
-			if (!IsServer)
-				return false;
-
-			lock (removalMutex)
+			lock (reliableCacheMutex)
 			{
-#if NETFX_CORE
-				DatagramSocket newConnection = new DatagramSocket();
-				HostName serverHost = new HostName(endpoint);
-							
-				Task tConnect = Task.Run(async () =>
+				if (!reliablePacketsCache.ContainsKey(sender))
+					return;
+
+				if (reliablePacketsCache[sender].Count > 0)
 				{
-					// Try to connect asynchronously
-					if (endpoint == "127.0.0.1")
-						await newConnection.ConnectAsync(serverHost, (Port + 1).ToString());
-					else
-						await newConnection.ConnectAsync(serverHost, Port.ToString());
-				});
-				tConnect.Wait();
-#else
+					uint id = rawBuffer.GetBasicType<uint>(1);
+					ushort orderId = (rawBuffer.GetBasicType<ushort>(1 + sizeof(uint) + sizeof(int)));
 
-				// Remove connect from bytes
-				ObjectMapper.Map<string>(readStream);
+					if (reliablePacketsCache[sender].ContainsKey(id) && reliablePacketsCache[sender][id].Value.Count > orderId)
+						reliablePacketsCache[sender][id].Value[(int)orderId] = null;
 
-				// Remove the sender port from the stream
-				ObjectMapper.Map<ushort>(readStream);
-
-				// Get the auth hash
-				string sentAuthHash = ObjectMapper.Map<string>(readStream);
-				if (sentAuthHash != AuthHash)
-				{
-					Disconnect("BMS_INTERNAL_DC_Invalid_Version", groupEP, "Your game version is out of date, please update in order to connect to this server");
-					return false;
+					return;
 				}
-#endif
-
-				if (Connections >= MaxConnections)
-				{
-#if NETFX_CORE
-								Disconnect("BMS_INTERNAL_DC_Max_Players", newConnection, "Max Players Reached On Server");
-#else
-					Disconnect("BMS_INTERNAL_DC_Max_Players", groupEP, "Max Players Reached On Server");
-#endif
-
-					return false;
-				}
-				else if (banList.ContainsKey(endpoint.Split('+')[0]))
-				{
-#if NETFX_CORE
-					Disconnect("BMS_INTERNAL_DC_Banned", newConnection, "You have been baned from the server for " + Math.Ceiling((banList[endpoint.Split('+')[0]] - DateTime.Now).TotalMinutes) + " more minutes");
-#else
-					Disconnect("BMS_INTERNAL_DC_Banned", groupEP, "You have been baned from the server for " + Math.Ceiling((banList[groupEP.Address.ToString()] - DateTime.Now).TotalMinutes) + " more minutes");
-#endif
-					return false;
-				}
-
-				ClientManager.RunActionOnPlayerEndpoint(endpoint, (player) => { Disconnect(player); });
-
-#if NETFX_CORE
-				sender = new NetworkingPlayer(ServerPlayerCounter++, endpoint, newConnection, name);
-#else
-				sender = new NetworkingPlayer(ServerPlayerCounter++, endpoint, new IPEndPoint(groupEP.Address, groupEP.Port), "");
-#endif
-
-				ClientManager.AddClient(endpoint, sender);
-				packetManager.RegisterNewClient(sender);
-
-				OnPlayerConnected(sender);
-
-				WriteReceived(header.updateId, header.packetGroupId, header.packetOrderId, sender);
-
-				lock (writersBlockMutex)
-				{
-					writeBuffer.Clear();
-					ObjectMapper.MapBytes(writeBuffer, sender.NetworkId);
-					writeStream.SetProtocolType(Networking.ProtocolType.ReliableUDP);
-					writeStream.Prepare(this, NetworkingStream.IdentifierType.Player, 0, writeBuffer, noBehavior: true);
-					Write("BMS_INTERNAL_Set_Player_Id", sender, writeStream, true);
-				}
-
-				return true;
 			}
 		}
-		#endregion
 
-		#region Timeouts
-		private void ProcessTimeouts()
-		{
-			foreach (NetworkingPlayer player in timeoutDisconnects)
-				Disconnect(player, "Player timed out");
-
-			timeoutDisconnects.Clear();
-		}
-		#endregion
-
+		private BMSByte writeBuffer = new BMSByte();
 		private void PacketReceived(string endpoint, BMSByte bytes)
 		{
-			sender = null;
+			if (TrackBandwidth)
+				BandwidthIn += (ulong)bytes.Size;
+
+			NetworkingPlayer sender = null;
 
 			if (IsServer)
-				sender = ClientManager.GetClientFromEndpoint(endpoint);
+			{
+				if (clientSockets.ContainsKey(endpoint))
+					sender = clientSockets[endpoint];
+			}
 			else
 				sender = server;
 
 			bytes.MoveStartIndex(1);
+
 			readStream.Reset();
 
 			Header header = null;
 			if (bytes.Size > 13)
 				header = GetPacketHeader(sender, ref bytes);
 
-			if (header != null && header.reliable && (!IsServer || ClientManager.HasEndpoint(endpoint)))
+			if (header != null)
 			{
-				if (packetManager.HasReadPacket(sender, header))
-					return;
+				if (header.reliable && clientSockets.ContainsKey(endpoint))
+				{
+					if (reliableMultiPartPending.ContainsKey(clientSockets[endpoint]))
+					{
+						if (reliableMultiPartPending[clientSockets[endpoint]].ContainsKey(header.updateId))
+						{
+							if (reliableMultiPartPending[clientSockets[endpoint]][header.updateId].ContainsKey(header.packetGroupId))
+							{
+								// This packet has already been read
+								return;
+							}
+						}
+					}
+				}
 			}
 
-			if (header == null || (header.packetOrderId == 0 && header.packetCount == 1))
-			{
-				if (base.ProcessReceivedData(sender, header == null ? bytes : header.payload, bytes[0], endpoint, CacheUpdate))
-					return;
-			}
+			if (base.ProcessReceivedData(sender, header == null ? bytes : header.payload, bytes[0], endpoint, CacheUpdate))
+				return;
 
 			if (header == null)
 				return;
 
 			if (header.packetCount == 1)
 			{
-				if (!ConsumeStream(header.reliable, header.payload))
-				{
-					packetManager.PacketRead(sender, header, true);
-
-					if (IsServer && readStream.QueuedRPC)
-						RelayStream(header.updateId, readStream);
-
-					return;
-				}
+				readStream.SetProtocolType(header.reliable ? Networking.ProtocolType.ReliableUDP : Networking.ProtocolType.UDP);
+				if (readStream.Consume(this, sender, header.payload) == null)
+					if (!Networking.IsBareMetal)
+						return;
 
 				if (readStream.identifierType == NetworkingStream.IdentifierType.Player)
 				{
 					if (!Connected)
 						OnConnected();
+
+					return;
 				}
 			}
-
-			// Something went wrong with the read stream
-			if (!readStream.Ready)
-				return;
 
 			if (!IsServer)
 			{
 				sender = server;
 
-				if (readStream.identifierType == NetworkingStream.IdentifierType.Disconnect)
+				if (readStream.Ready && readStream.identifierType == NetworkingStream.IdentifierType.Disconnect)
 				{
 					DisconnectCleanup();
 					OnDisconnected(ObjectMapper.Map<string>(readStream));
@@ -1530,74 +1644,157 @@ namespace BeardedManStudios.Network
 			}
 			else
 			{
-				try
+				if (readStream.Ready)
 				{
 					// New player
-					if (ObjectMapper.Compare<string>(readStream, "connect"))
+					if (readStream.Bytes.Size < 22 && ObjectMapper.Compare<string>(readStream, "connect"))
 					{
-						// If the player has not already connected then process connection request
-						if (!ClientManager.HasEndpoint(endpoint))
-							ProcessClientConnection(endpoint, header);
+						lock (removalMutex)
+						{
+							// TODO:  In the future a player can connect with a pre-determined name
+							string name = string.Empty;
 
-						return;
-					}
-					else if (ObjectMapper.Compare<string>(readStream, "update"))
-					{
-						UpdateNewPlayer(sender);
-						return;
-					}
-					else if (ObjectMapper.Compare<string>(readStream, "disconnect"))
-					{
-						// TODO:  If this eventually sends something to the player they will not exist
-						Disconnect(sender);
-						return;
-					}
-				}
-				catch
-				{
-#if UNITY_EDITOR
-					UnityEngine.Debug.LogError("Mal-formed defalut communication from " + groupEP.Address.ToString() + ":" + groupEP.Port);
-					//throw new NetworkException(12, "Mal-formed defalut communication");
+#if NETFX_CORE
+							DatagramSocket newConnection = new DatagramSocket();
+							HostName serverHost = new HostName(endpoint);
+							
+							Task tConnect = Task.Run(async () =>
+							{
+								// Try to connect asynchronously
+								if (endpoint == "127.0.0.1")
+									await newConnection.ConnectAsync(serverHost, (Port + 1).ToString());
+								else
+									await newConnection.ConnectAsync(serverHost, Port.ToString());
+							});
+							tConnect.Wait();
+#else
+							//string[] hostPort = endpoint.Split(CachedUdpClient.HOST_PORT_CHARACTER_SEPARATOR);
+							//string host = hostPort[0];
+
+							// Remove connect from bytes
+							ObjectMapper.Map<string>(readStream);
+
+							// Remove the sender port from the stream
+							ObjectMapper.Map<ushort>(readStream);
+							//ushort senderPort = ObjectMapper.Map<ushort>(readStream);
 #endif
 
-					return;
-				}
+							if (Connections >= MaxConnections)
+							{
+#if NETFX_CORE
+								Disconnect("BMS_INTERNAL_DC_Max_Players", newConnection, "Max Players Reached On Server");
+#else
+								Disconnect("BMS_INTERNAL_DC_Max_Players", groupEP, "Max Players Reached On Server");
+#endif
 
-				// Non "connected" clients should not continue after this point
-				if (!ClientManager.HasEndpoint(endpoint))
-					return;
+								return;
+							}
+							else if (banList.ContainsKey(endpoint.Split('+')[0]))
+							{
+#if NETFX_CORE
+								Disconnect("BMS_INTERNAL_DC_Banned", newConnection, "You have been baned from the server for " + Math.Ceiling((banList[endpoint.Split('+')[0]] - DateTime.Now).TotalMinutes) + " more minutes");
+#else
+								Disconnect("BMS_INTERNAL_DC_Banned", groupEP, "You have been baned from the server for " + Math.Ceiling((banList[groupEP.Address.ToString()] - DateTime.Now).TotalMinutes) + " more minutes");
+#endif
+								return;
+							}
 
-				// Timeout checks
-				ClientManager.Iterate((player) =>
-				{
-					// Ping the current sender to prevent timouts
-					if (player == sender)
-					{
-						sender = player;
-						sender.Ping();
+							if (clientSockets.ContainsKey(endpoint))
+								Disconnect(clientSockets[endpoint]);
+
+#if NETFX_CORE
+							sender = new NetworkingPlayer(ServerPlayerCounter++, endpoint, newConnection, name);
+#else
+							sender = new NetworkingPlayer(ServerPlayerCounter++, endpoint, new IPEndPoint(groupEP.Address, groupEP.Port), name);
+#endif
+
+							AddClient(endpoint, sender);
+
+							reliableMultiPartPending.Add(sender, new Dictionary<uint, Dictionary<int, KeyValuePair<DateTime, Header[]>>>());
+							multiPartPending.Add(sender, new Dictionary<uint, Dictionary<int, KeyValuePair<DateTime, Header[]>>>());
+
+							OnPlayerConnected(sender);
+
+							WriteReceived(header.updateId, header.packetGroupId, header.packetOrderId, sender);
+
+							lock (writersBlockMutex)
+							{
+								writeBuffer.Clear();
+								ObjectMapper.MapBytes(writeBuffer, sender.NetworkId);
+								writeStream.SetProtocolType(Networking.ProtocolType.ReliableUDP);
+								writeStream.Prepare(this, NetworkingStream.IdentifierType.Player, null, writeBuffer);
+								Write("BMS_INTERNAL_Set_Player_Id", sender, writeStream, true);
+							}
+
+							return;
+						}
 					}
 					else
 					{
-						// Check to see if any clients have passed the timout time
-						if ((DateTime.Now - player.LastPing).TotalSeconds > player.InactiveTimeoutSeconds)
-							timeoutDisconnects.Add(player);
+						if (!clientSockets.ContainsKey(endpoint))
+						{
+							// This is a connect and write
+							if (udpDataReadInvoker != null)
+								udpDataReadInvoker(endpoint, readStream);
+
+							return;
+						}
 					}
+				}
 
-					return true;
-				});
+				lock (clientSocketMutex)
+				{
+					foreach (KeyValuePair<string, NetworkingPlayer> player in clientSockets)
+					{
+						if (player.Key == endpoint)
+						{
+							sender = player.Value;
+							sender.Ping();
+						}
+						else
+						{
+							if ((DateTime.Now - player.Value.LastPing).TotalSeconds > player.Value.InactiveTimeoutSeconds)
+							{
+								Disconnect(player.Value, "Player timed out");
+							}
+						}
+					}
+				}
 
-				// Since we just processed ping times, it is time to process any timeouts
-				ProcessTimeouts();
+				if (readStream.Ready)
+				{
+					// TODO:  These need to be done better since there are many of them
+					if (readStream.Bytes.Size < 22)
+					{
+						try
+						{
+							if (ObjectMapper.Compare<string>(readStream, "update"))
+								UpdateNewPlayer(sender);
+
+							if (ObjectMapper.Compare<string>(readStream, "disconnect"))
+							{
+								// TODO:  If this eventually sends something to the player they will not exist
+								Disconnect(sender);
+								return;
+							}
+						}
+						catch
+						{
+							throw new NetworkException(12, "Mal-formed defalut communication");
+						}
+					}
+				}
 			}
 
-			// TODO:  Look into if this is still required
 			if (!IsServer && Uniqueidentifier == 0)
 				return;
 
-			packetManager.PacketRead(sender, header);
+			if (header.reliable)
+				ReadMessageFromPlayer(endpoint, header, sender, ref reliableMultiPartPending, readStream);
+			else
+				ReadMessageFromPlayer(endpoint, header, sender, ref multiPartPending, readStream);
 		}
 
-		#region Initial Data Read In
 		private string incomingEndpoint = string.Empty;
 		private BMSByte readBuffer = new BMSByte();
 #if NETFX_CORE
@@ -1630,7 +1827,6 @@ namespace BeardedManStudios.Network
 			{
 				lastReadTime = DateTime.Now;
 				Thread timeout = new Thread(TimeoutCheck);
-				timeout.IsBackground = true;
 				timeout.Start();
 			}
 
@@ -1643,8 +1839,8 @@ namespace BeardedManStudios.Network
 					while (true)
 					{
 #if UNITY_IOS || UNITY_IPHONE
-						if (readWorker == null || !readWorker.IsAlive)
-							return;
+					if (readWorker == null || !readWorker.IsAlive)
+						return;
 #else
 						if (readWorker.CancellationPending)
 							return;
@@ -1657,7 +1853,7 @@ namespace BeardedManStudios.Network
 
 						if (packetDropSimulationChance > 0)
 						{
-							if (new Random().NextDouble() <= packetDropSimulationChance)
+							if (new System.Random().NextDouble() <= packetDropSimulationChance)
 								continue;
 						}
 
@@ -1674,22 +1870,12 @@ namespace BeardedManStudios.Network
 						if (!IsServer)
 							lastReadTime = DateTime.Now;
 
-						if (TrackBandwidth)
-							BandwidthIn += (ulong)readBuffer.Size;
-
-						lock (writersBlockMutex)
-						{
-							PacketReceived(incomingEndpoint, readBuffer);
-						}
+						PacketReceived(incomingEndpoint, readBuffer);
 					}
 				}
 				catch (SocketException ex)
 				{
-					if (ex.ErrorCode == 10038) // JM: ignore this exception
-					{
-						// This is an iOS standard exception for stopping a socket
-					}
-					else if (ex.ErrorCode != 10004)
+					if (ex.ErrorCode != 10004)
 					{
 						// TODO:  In the master server capture this error and see who it is, then remove them from the hosts list
 
@@ -1715,12 +1901,17 @@ namespace BeardedManStudios.Network
 #endif
 						}
 					}
+					else if (ex.ErrorCode == 10038)
+					{
+						// This is an iOS standard exception for stopping a socket
+					}
 				}
-				catch (ThreadAbortException abortEx)
-				{
-					Console.WriteLine("Closing down on thread abort" + abortEx.StackTrace);
-					//Ignore thread aborts
-				}
+#if UNITY_IOS || UNITY_IPHONE
+			catch (ThreadAbortException abortEx)
+			{
+				//Ignore thread aborts
+			}
+#endif
 				catch (Exception ex)
 				{
 					if (Networking.IsBareMetal)
@@ -1741,6 +1932,5 @@ namespace BeardedManStudios.Network
 			} while (ignoreError);
 #endif
 		}
-		#endregion
 	}
 }

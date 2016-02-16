@@ -73,24 +73,24 @@ namespace AdvancedInspector
             DestroyImmediate(this, true);
         }
 
-		/// <summary>
-		/// Instantiate an existing Component on the same owner GameObject
-		/// </summary>
-		public ComponentMonoBehaviour Instantiate()
+        /// <summary>
+        /// Instanciate an existing Component on the same owner GameObject
+        /// </summary>
+        public ComponentMonoBehaviour Instantiate()
         {
             return Instantiate(gameObject, Owner);
         }
 
-		/// <summary>
-		/// Instantiate an existing Component on the same owner GameObject but with a new onwer.
-		/// </summary>
-		public ComponentMonoBehaviour Instantiate(MonoBehaviour owner)
+        /// <summary>
+        /// Instanciate an existing Component on the same owner GameObject but with a new onwer.
+        /// </summary>
+        public ComponentMonoBehaviour Instantiate(MonoBehaviour owner)
         {
             return Instantiate(gameObject, owner);
         }
 
         /// <summary>
-        /// Instantiate an existing Component on the target GameObject.
+        /// Instanciate an existing Component on the target GameObject.
         /// </summary>
         public ComponentMonoBehaviour Instantiate(GameObject go, MonoBehaviour owner)
         {
@@ -105,8 +105,11 @@ namespace AdvancedInspector
             Type type = original.GetType();
 
             if (type == typeof(string))
-
+#if !NETFX_CORE
                 return ((string)original).Clone();
+#else
+                return original;
+#endif
             else if (type.Namespace == "System")
                 return original;
             else if (typeof(IList).IsAssignableFrom(type))
@@ -119,10 +122,15 @@ namespace AdvancedInspector
                 return ScriptableObject.Instantiate((ScriptableObject)original);
             else if (typeof(UnityEngine.Object).IsAssignableFrom(type))
                 return original;
+#if !NETFX_CORE
             else if (type.IsClass)
                 return CopyClass(go, owner, original);
             else
                 return original;
+#else
+            else
+                return CopyClass(go, owner, original);
+#endif
         }
 
         private static IList CopyList(GameObject go, MonoBehaviour owner, IList original)
@@ -190,8 +198,10 @@ namespace AdvancedInspector
             else
                 infos = type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy).ToList();
 
+#if !NETFX_CORE
             if (type.BaseType != null && type.BaseType != typeof(object))
                 infos.AddRange(GetFields(type.BaseType, true));
+#endif
 
             return infos;
         }

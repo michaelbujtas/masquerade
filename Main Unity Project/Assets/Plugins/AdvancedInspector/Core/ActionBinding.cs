@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
 
 using UnityEngine;
 
@@ -55,12 +53,12 @@ namespace AdvancedInspector
 
         private IList GetComponents()
         {
-            List<DescriptorPair> components = new List<DescriptorPair>();
+            List<DescriptionPair> components = new List<DescriptionPair>();
             if (gameObject == null)
                 return components;
 
             foreach (Component component in gameObject.GetComponents(typeof(Component)))
-                components.Add(new DescriptorPair(component, new DescriptorAttribute(component.GetType().Name, "")));
+                components.Add(new DescriptionPair(component, new Description(component.GetType().Name, "")));
 
             return components;
         }
@@ -100,7 +98,7 @@ namespace AdvancedInspector
 
         private IList GetMethods()
         {
-            List<DescriptorPair> methods = new List<DescriptorPair>();
+            List<DescriptionPair> methods = new List<DescriptionPair>();
             if (gameObject == null || component == null)
                 return methods;
 
@@ -114,7 +112,7 @@ namespace AdvancedInspector
 
                 ParameterInfo[] param = info.GetParameters();
 
-                methods.Add(new DescriptorPair(info, new DescriptorAttribute(GetParamNames(info.Name, param), "")));
+                methods.Add(new DescriptionPair(info, new Description(GetParamNames(info.Name, param), "")));
             }
 
             foreach (PropertyInfo info in component.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy))
@@ -128,7 +126,7 @@ namespace AdvancedInspector
 
                 ParameterInfo[] param = method.GetParameters();
 
-                methods.Add(new DescriptorPair(method, new DescriptorAttribute(GetParamNames(info.Name, param), "")));
+                methods.Add(new DescriptionPair(method, new Description(GetParamNames(info.Name, param), "")));
             }
 
             return methods;
@@ -184,7 +182,11 @@ namespace AdvancedInspector
             for (int i = 0; i < parameters.Length; i++)
                 types[i] = parameters[i].Type;
 
+#if !NETFX_CORE
             return component.GetType().GetMethod(method, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy, null, types, null);
+#else
+            return component.GetType().GetMethod(method, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy);
+#endif
         }
 
         [Inspect, Collection(0, false), SerializeField]
@@ -298,7 +300,7 @@ namespace AdvancedInspector
                 get { return canBeInternal; }
             }
 
-            #region Values
+#region Values
             [SerializeField]
             private BindingValueType type;
 
@@ -383,7 +385,7 @@ namespace AdvancedInspector
             private Bounds boundsValue = new Bounds(Vector3.zero, Vector3.zero);
             [SerializeField]
             private UnityEngine.Object referenceValue = new UnityEngine.Object();
-            #endregion
+#endregion
 
             [Inspect("IsStatic")]
             [RuntimeResolve("GetRuntimeType")]
@@ -397,8 +399,12 @@ namespace AdvancedInspector
                         if (value.GetType().IsAssignableFrom(Type))
                             return value;
 
+#if !NETFX_CORE
                         System.ComponentModel.TypeConverter converter = System.ComponentModel.TypeDescriptor.GetConverter(Type);
                         return converter.ConvertTo(value, Type);
+#else
+                        return value;
+#endif
                     }
 
                     switch (type)
@@ -513,12 +519,12 @@ namespace AdvancedInspector
 
             private IList GetComponents()
             {
-                List<DescriptorPair> components = new List<DescriptorPair>();
+                List<DescriptionPair> components = new List<DescriptionPair>();
                 if (gameObject == null)
                     return components;
 
                 foreach (Component component in gameObject.GetComponents(typeof(Component)))
-                    components.Add(new DescriptorPair(component, new DescriptorAttribute(component.GetType().Name, "")));
+                    components.Add(new DescriptionPair(component, new Description(component.GetType().Name, "")));
 
                 return components;
             }
@@ -547,7 +553,7 @@ namespace AdvancedInspector
 
             private IList GetMethods()
             {
-                List<DescriptorPair> methods = new List<DescriptorPair>();
+                List<DescriptionPair> methods = new List<DescriptionPair>();
                 if (gameObject == null || component == null)
                     return methods;
 
@@ -560,7 +566,7 @@ namespace AdvancedInspector
                         continue;
 
                     string paramName = info.ReturnType.Name + " " + info.Name + "()";
-                    methods.Add(new DescriptorPair(info, new DescriptorAttribute(paramName, "")));
+                    methods.Add(new DescriptionPair(info, new Description(paramName, "")));
                 }
 
                 foreach (PropertyInfo info in component.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy))
@@ -573,7 +579,7 @@ namespace AdvancedInspector
                         continue;
 
                     string paramName = method.ReturnType.Name + " " + info.Name + "()";
-                    methods.Add(new DescriptorPair(method, new DescriptorAttribute(paramName, "")));
+                    methods.Add(new DescriptionPair(method, new Description(paramName, "")));
                 }
 
                 return methods;
@@ -588,9 +594,14 @@ namespace AdvancedInspector
                 if (info.ReturnType == null || info.ReturnType == typeof(void))
                     return false;
 
+#if !NETFX_CORE
                 System.ComponentModel.TypeConverter converter = System.ComponentModel.TypeDescriptor.GetConverter(info.ReturnType);
                 if (!Type.IsAssignableFrom(info.ReturnType) && !converter.CanConvertTo(Type))
                     return false;
+#else
+                if (!Type.IsAssignableFrom(info.ReturnType))
+                    return false;
+#endif
 
                 return true;
             }

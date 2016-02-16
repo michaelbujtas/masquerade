@@ -11,7 +11,7 @@ namespace AdvancedInspector
     /// It's grayed out in the inspector, even if there's a setter.
     /// </summary>
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Method, AllowMultiple = false)]
-    public class ReadOnlyAttribute : Attribute, IListAttribute, IRuntimeAttribute<bool>
+    public class ReadOnlyAttribute : Attribute, IReadOnly, IListAttribute, IRuntimeAttribute<bool>
     {
         public delegate bool ReadOnlyDelegate();
         public delegate bool ReadOnlyStaticDelegate(ReadOnlyAttribute readOnly, object instance, object value);
@@ -66,6 +66,20 @@ namespace AdvancedInspector
                 Debug.LogError(string.Format("Invoking a method to retrieve a ReadOnly attribute failed. The exception was \"{0}\".", e.Message));
                 return false;
             }
+        }
+        #endregion
+
+        #region IReadOnly Implementation
+        public bool IsReadOnly(object[] instances, object[] values)
+        {
+            if (delegates.Count == 0)
+                return true;
+
+            for (int i = 0; i < delegates.Count; i++)
+                if (Invoke(i, instances[i], values[i]))
+                    return true;
+
+            return false;
         }
         #endregion
 

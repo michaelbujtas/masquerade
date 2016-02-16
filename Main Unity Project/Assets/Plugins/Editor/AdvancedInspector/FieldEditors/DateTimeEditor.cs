@@ -3,8 +3,6 @@ using UnityEditor;
 using System;
 using System.Collections;
 
-using UniToolsEditor;
-
 namespace AdvancedInspector
 {
     public class DateTimeEditor : FieldEditor, IModal

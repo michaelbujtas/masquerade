@@ -74,14 +74,4 @@ namespace AdvancedInspector
             this.extension = extension;
         }
     }
-
-    public enum TextFieldType
-    {
-        Standard,
-        Password,
-        Area,
-        Tag,
-        File,
-        Folder
-    }
 }

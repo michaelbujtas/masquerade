@@ -20,12 +20,14 @@
 
 
 #if !NETFX_CORE
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Net;
+using System.Collections;
 using System.Net.Sockets;
+using System.Net;
+using System;
+using System.Text;
+using System.ComponentModel;
 using System.Threading;
+using System.Collections.Generic;
 #endif
 
 namespace BeardedManStudios.Network
@@ -50,13 +52,15 @@ namespace BeardedManStudios.Network
 		private BackgroundWorker readWorker = null;
 
 		private NetworkingStream staticWriteStream = new NetworkingStream();
+		private NetworkingStream writeStream = new NetworkingStream();
+		private NetworkingStream readStream = new NetworkingStream();
 
 		/// <summary>
 		/// Should the messages be relayed to all
 		/// </summary>
 		public bool RelayToAll { get; set; }
 
-		private object removalMutex = new object();
+		private object removalMutex = new Object();
 
 		/// <summary>
 		/// Constructor with a given Maximum allowed connections
@@ -81,6 +85,7 @@ namespace BeardedManStudios.Network
 		public override void Connect(string hostAddress, ushort port)
 		{
 			Host = hostAddress;
+			//UnityEngine.Debug.Log("Connecting to address: " + hostAddress + " with port " + port);
 
 			connector = new Thread(new ParameterizedThreadStart(ThreadedConnect));
 			connector.Start(new object[] { hostAddress, port });
@@ -205,10 +210,9 @@ namespace BeardedManStudios.Network
 			if (stream.identifierType == NetworkingStream.IdentifierType.RPC && (stream.Receivers == NetworkReceivers.AllBuffered || stream.Receivers == NetworkReceivers.OthersBuffered))
 				ServerBufferRPC(stream);
 
-			if (stream.Receivers == NetworkReceivers.Server || stream.Receivers == NetworkReceivers.ServerAndOwner)
+			if (stream.Receivers == NetworkReceivers.Server)
 				return;
 
-			byte[] sendData = stream.Bytes.Compress().byteArr;
 			for (int i = 0; i < Players.Count; i++)
 			{
 				if ((stream.Receivers == NetworkReceivers.Others || stream.Receivers == NetworkReceivers.OthersBuffered) && Players[i] == stream.Sender)
@@ -220,7 +224,24 @@ namespace BeardedManStudios.Network
 					continue;
 				}
 
-				Send(sendData, sendData.Length, Players[i].SocketEndpoint);
+				Send(stream.Bytes.Compress().byteArr, stream.Bytes.Size, Players[i].SocketEndpoint);
+			}
+		}
+
+		private object tmp = new Object();
+		private void StreamReceived(NetworkingPlayer player, BMSByte data)
+		{
+			lock (tmp)
+			{
+				readStream.Consume(this, player, data);
+
+				DataRead(player, readStream);
+
+				if (ObjectMapper.Compare<string>(readStream, "update"))
+					UpdateNewPlayer(player);
+
+				if (RelayToAll)
+					RelayStream(readStream);
 			}
 		}
 
@@ -306,7 +327,7 @@ namespace BeardedManStudios.Network
 
 							staticWriteStream.SetProtocolType(Networking.ProtocolType.TCP);
 							WriteAndClose(tcpClient, staticWriteStream.Prepare(
-								this, NetworkingStream.IdentifierType.Disconnect, 0, writeBuffer, noBehavior: true));
+								this, NetworkingStream.IdentifierType.Disconnect, null, writeBuffer));
 						}
 
 						return;
@@ -341,7 +362,7 @@ namespace BeardedManStudios.Network
 
 				writeStream.SetProtocolType(Networking.ProtocolType.TCP);
 				Write((NetworkingPlayer)e.UserState, writeStream.Prepare(this,
-					NetworkingStream.IdentifierType.Player, 0, writeBuffer, noBehavior: true));
+					NetworkingStream.IdentifierType.Player, null, writeBuffer));
 
 				OnPlayerConnected((NetworkingPlayer)e.UserState);
 			}

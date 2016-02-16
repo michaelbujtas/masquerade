@@ -1,5 +1,6 @@
 ﻿using BeardedManStudios.Network;
 using UnityEngine;
+using System.Collections;
 
 /// <summary>
 /// This zombie is created by the server and is only controlled by the server

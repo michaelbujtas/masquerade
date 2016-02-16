@@ -1,14 +1,11 @@
 ﻿using UnityEngine;
 using UnityEditor;
 using System;
-using System.Collections;
 
 namespace AdvancedInspector
 {
     public class TimeSpanEditor : FieldEditor
     {
-        private InspectorField field;
-
         public override Type[] EditedTypes
         {
             get { return new Type[] { typeof(TimeSpan) }; }

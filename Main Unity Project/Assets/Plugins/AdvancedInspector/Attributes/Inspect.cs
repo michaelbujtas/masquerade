@@ -11,7 +11,7 @@ namespace AdvancedInspector
     /// You can input a conditional statement for your property to show up or not.
     /// </summary>
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Method)]
-    public class InspectAttribute : Attribute, IRuntimeAttribute<bool>
+    public class InspectAttribute : Attribute, IRuntimeAttribute, IVisibility
     {
         public delegate bool InspectDelegate();
         public delegate bool InspectStaticDelegate(InspectAttribute inspect, object instance, object value);
@@ -43,13 +43,69 @@ namespace AdvancedInspector
 
         /// <summary>
         /// Priority of display of this item.
-        /// Smaller values are displayed first. Negative value are supported.
+        /// Smaller values are displayed first. Negative value are supported. Default is 0.
         /// </summary>
         public int Priority
         {
             get { return priority; }
             set { priority = value; }
         }
+
+        #region IVisibility Implementation
+        public bool IsItemVisible(object[] instances, object[] values)
+        {
+            if (delegates.Count == 0)
+                return true;
+
+            try
+            {
+                for (int i = 0; i < delegates.Count; i++)
+                {
+                    if (i >= instances.Length)
+                        break;
+
+                    bool visible = false;
+                    if (delegates[i].Target == null)
+                    {
+                        if (condition)
+                            visible = (bool)delegates[i].DynamicInvoke(this, instances[i], values[i]);
+                        else
+                            visible = !(bool)delegates[i].DynamicInvoke(this, instances[i], values[i]);
+                    }
+                    else
+                    {
+                        if (condition)
+                            visible = (bool)delegates[i].DynamicInvoke();
+                        else
+                            visible = !(bool)delegates[i].DynamicInvoke();
+                    }
+
+                    if (visible)
+                        return true;
+                }
+
+                return false;
+            }
+            catch (Exception e)
+            {
+                if (e is TargetInvocationException)
+                    e = ((TargetInvocationException)e).InnerException;
+
+                Debug.LogError(string.Format("Invoking a method to retrieve a Inspect attribute failed. The exception was \"{0}\".", e.Message));
+                return false;
+            }
+        }
+
+        public InspectorLevel GetItemLevel(object[] parents, object[] values)
+        {
+            return level;
+        }
+
+        public int GetItemPriority(object[] parents, object[] values)
+        {
+            return priority;
+        }
+        #endregion
 
         #region IRuntime Implementation
         private string methodName = "";
@@ -76,38 +132,6 @@ namespace AdvancedInspector
         {
             get { return delegates; }
             set { delegates = value; }
-        }
-
-        public bool Invoke(int index, object instance, object value)
-        {
-            if (delegates.Count == 0 || index >= delegates.Count)
-                return true;
-
-            try
-            {
-                if (delegates[index].Target == null)
-                {
-                    if (condition)
-                        return (bool)delegates[index].DynamicInvoke(this, instance, value);
-                    else
-                        return !(bool)delegates[index].DynamicInvoke(this, instance, value);
-                }
-                else
-                {
-                    if (condition)
-                        return (bool)delegates[index].DynamicInvoke();
-                    else
-                        return !(bool)delegates[index].DynamicInvoke();
-                }
-            }
-            catch (Exception e)
-            {
-                if (e is TargetInvocationException)
-                    e = ((TargetInvocationException)e).InnerException;
-
-                Debug.LogError(string.Format("Invoking a method to retrieve a Inspect attribute failed. The exception was \"{0}\".", e.Message));
-                return true;
-            }
         }
         #endregion
 
@@ -181,15 +205,5 @@ namespace AdvancedInspector
             this.delegates.Add(method);
         }
         #endregion
-    }
-
-    /// <summary>
-    /// You can change or add your own levels.
-    /// </summary>
-    public enum InspectorLevel
-    {
-        Basic = 0,
-        Advanced = 1,
-        Debug = 2
     }
 }

@@ -34,21 +34,34 @@ namespace AdvancedInspector
 
             object value = field.GetValue();
 
-            bool isMask = value is LayerMask;
-
-            int mask;
-            if (isMask)
-                mask = (int)(LayerMask)value;
-            else
-                mask = (int)value;
-
-            int result;
-            if (DrawLayerMaskField(mask, style, out result))
+            if (value != null)
             {
+                bool isMask = value is LayerMask;
+
+                int mask;
                 if (isMask)
-                    field.SetValue((LayerMask)result);
+                    mask = (int)(LayerMask)value;
                 else
+                    mask = (int)value;
+
+                int result;
+                if (DrawLayerMaskField(mask, style, out result))
+                {
+                    if (isMask)
+                        field.SetValue((LayerMask)result);
+                    else
+                        field.SetValue(result);
+                }
+            }
+            else
+            {
+                EditorGUI.showMixedValue = true;
+
+                int result;
+                if (DrawLayerMaskField(0, style, out result))
+                {
                     field.SetValue(result);
+                }
             }
         }
 

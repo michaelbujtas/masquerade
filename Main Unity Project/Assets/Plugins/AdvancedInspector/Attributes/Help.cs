@@ -12,15 +12,14 @@ namespace AdvancedInspector
     /// When a property is flagged this way, a help box is added after the inspector's field.
     /// </summary>
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = true)]
-    public class HelpAttribute : Attribute, IRuntimeAttribute<HelpAttribute>
+    public class HelpAttribute : Attribute, IRuntimeAttribute, IHelp
     {
         public const string IsNull = "HelpAttribute.IsValueNull";
         public const string IsNullOrEmpty = "HelpAttribute.IsStringNullOrEmpty";
         public const string IsMatch = "HelpAttribute.IsRegexMatch";
-        
 
-        public delegate HelpAttribute HelpDelegate();
-        public delegate HelpAttribute HelpStaticDelegate(HelpAttribute help, object instance, object value);
+        public delegate HelpItem HelpDelegate();
+        public delegate HelpItem HelpStaticDelegate(HelpAttribute help, object instance, object value);
 
         private HelpType type;
 
@@ -68,6 +67,40 @@ namespace AdvancedInspector
             set { regex = value; }
         }
 
+        #region IHelp Implementation
+        public IList<HelpItem> GetHelp(object[] instances, object[] values)
+        {
+            if (delegates.Count == 0)
+                return new HelpItem[] { new HelpItem(type, message, position) };
+
+            try
+            {
+                List<HelpItem> helps = new List<HelpItem>();
+                for (int i = 0; i < delegates.Count; i++)
+                {
+                    HelpItem help = null;
+                    if (delegates[i].Target == null)
+                        help = delegates[i].DynamicInvoke(this, instances[i], values[i]) as HelpItem;
+                    else
+                        help = delegates[i].DynamicInvoke() as HelpItem;
+
+                    if (help != null && !helps.Contains(help))
+                        helps.Add(help);
+                }
+
+                return helps;
+            }
+            catch (Exception e)
+            {
+                if (e is TargetInvocationException)
+                    e = ((TargetInvocationException)e).InnerException;
+
+                Debug.LogError(string.Format("Invoking a method failed while trying to retrieve a Help attribute. The exception was \"{0}\".", e.Message));
+                return new HelpItem[0];
+            }
+        }
+        #endregion
+
         #region IRuntime Implementation
         private string methodName = "";
 
@@ -93,34 +126,9 @@ namespace AdvancedInspector
             get { return delegates; }
             set { delegates = value; }
         }
-
-        public HelpAttribute Invoke(int index, object instance, object value)
-        {
-            if (delegates.Count == 0 || index >= delegates.Count)
-                return this;
-
-            try
-            {
-                if (delegates[index].Target == null)
-                {
-                    return delegates[0].DynamicInvoke(this, instance, value) as HelpAttribute;
-                }
-                else
-                {
-                    return delegates[0].DynamicInvoke() as HelpAttribute;
-                }
-            }
-            catch (Exception e)
-            {
-                if (e is TargetInvocationException)
-                    e = ((TargetInvocationException)e).InnerException;
-
-                Debug.LogError(string.Format("Invoking a method failed while trying to retrieve a Help attribute. The exception was \"{0}\".", e.Message));
-                return null;
-            }
-        }
         #endregion
 
+        #region Constructors
         public HelpAttribute(string methodName)
             : this(methodName, HelpType.None, HelpPosition.After, "") { }
 
@@ -145,36 +153,37 @@ namespace AdvancedInspector
         {
             this.delegates.Add(method);
         }
+        #endregion
 
-        private static HelpAttribute IsValueNull(HelpAttribute help, object instance, object value)
+        #region Static Help
+        private static HelpItem IsValueNull(HelpAttribute help, object instance, object value)
         {
             if (value == null || (value is UnityEngine.Object && ((UnityEngine.Object)value) == null))
-            {
-                return help;
-            }
+                return new HelpItem(help.type, help.message);
 
             return null;
         }
 
-        private static HelpAttribute IsStringNullOrEmpty(HelpAttribute help, object instance, object value)
+        private static HelpItem IsStringNullOrEmpty(HelpAttribute help, object instance, object value)
         { 
             if (value is string && string.IsNullOrEmpty((string)value))
-                return help;
+                return new HelpItem(help.type, help.message);
 
             return null;
         }
 
-        private static HelpAttribute IsRegexMatch(HelpAttribute help, object instance, object value)
+        private static HelpItem IsRegexMatch(HelpAttribute help, object instance, object value)
         {
             if (value == null)
                 return null;
 
             string text = value.ToString();
             if (System.Text.RegularExpressions.Regex.IsMatch(text, help.regex))
-                return help;
+                return new HelpItem(help.type, help.message);
 
             return null;
         }
+        #endregion
     }
 
     /// <summary>

@@ -1,4 +1,4 @@
-/*-----------------------------+------------------------------\
+﻿/*-----------------------------+------------------------------\
 |                                                             |
 |                        !!!NOTICE!!!                         |
 |                                                             |
@@ -94,14 +94,14 @@ public class ServerListManager : MonoBehaviour
 		if (socket.Connected)
 		{
 			Networking.SetPrimarySocket(socket);
-			BeardedManStudios.Network.Unity.UnitySceneManager.LoadScene(host.sceneName);
+			Application.LoadLevel(host.sceneName);
 		}
 		else
 		{
 			socket.connected += delegate()
 			{
 				Networking.SetPrimarySocket(socket);
-				BeardedManStudios.Network.Unity.UnitySceneManager.LoadScene(host.sceneName);
+				Application.LoadLevel(host.sceneName);
 			};
 		}
 	}

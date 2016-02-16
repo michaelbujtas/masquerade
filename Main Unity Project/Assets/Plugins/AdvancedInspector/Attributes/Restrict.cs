@@ -14,7 +14,7 @@ namespace AdvancedInspector
     /// The method itself is resolved when creating the field to know which instance to invoke.
     /// </summary>
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
-    public class RestrictAttribute : Attribute, IListAttribute, IRuntimeAttribute<IList>
+    public class RestrictAttribute : Attribute, IRestrict, IListAttribute, IRuntimeAttribute
     {
         public delegate IList RestrictDelegate();
         public delegate IList RestrictStaticDelegate(RestrictAttribute restrict, object instance, object value);
@@ -41,6 +41,44 @@ namespace AdvancedInspector
             set { maxItemsPerRow = value; }
         }
 
+        #region IRestrict Implementation
+        public IList GetRestricted(object[] instances, object[] values)
+        {
+            if (delegates.Count == 0)
+                return null;
+
+            try
+            {
+                if (delegates[0].Target == null)
+                {
+                    return delegates[0].DynamicInvoke(this, instances[0], values[0]) as IList;
+                }
+                else
+                {
+                    return delegates[0].DynamicInvoke() as IList;
+                }
+            }
+            catch (Exception e)
+            {
+                if (e is TargetInvocationException)
+                    e = ((TargetInvocationException)e).InnerException;
+
+                Debug.LogError(string.Format("Invoking a method to retrieve a Restrict attribute data failed. The exception was \"{0}\".", e.Message));
+                return null;
+            }
+        }
+
+        public RestrictDisplay GetDisplay(object[] instances, object[] values)
+        {
+            return display;
+        }
+
+        public int GetItemsPerRow(object[] instances, object[] values)
+        {
+            return maxItemsPerRow;
+        }
+        #endregion
+
         #region IRuntime Implementation
         private string methodName = "";
 
@@ -66,32 +104,6 @@ namespace AdvancedInspector
             get { return delegates; }
             set { delegates = value; }
         }
-
-        public IList Invoke(int index, object instance, object value)
-        {
-            if (delegates.Count == 0 || index >= delegates.Count)
-                return null;
-
-            try
-            {
-                if (delegates[index].Target == null)
-                {
-                    return delegates[index].DynamicInvoke(this, instance, value) as IList;
-                }
-                else
-                {
-                    return delegates[index].DynamicInvoke() as IList;
-                }
-            }
-            catch (Exception e)
-            {
-                if (e is TargetInvocationException)
-                    e = ((TargetInvocationException)e).InnerException;
-
-                Debug.LogError(string.Format("Invoking a method to retrieve a Restrict attribute data failed. The exception was \"{0}\".", e.Message));
-                return null;
-            }
-        }
         #endregion
 
         public RestrictAttribute(string methodName)
@@ -111,12 +123,5 @@ namespace AdvancedInspector
             this.delegates.Add(method);
             this.display = display;
         }
-    }
-
-    public enum RestrictDisplay
-    { 
-        DropDown,
-        Toolbox,
-        Button
     }
 }

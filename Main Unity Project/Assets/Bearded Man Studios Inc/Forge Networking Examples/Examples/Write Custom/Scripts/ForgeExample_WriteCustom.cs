@@ -19,8 +19,9 @@
 
 
 
-using BeardedManStudios.Network;
 using UnityEngine;
+
+using BeardedManStudios.Network;
 
 public class ForgeExample_WriteCustom : MonoBehaviour
 {

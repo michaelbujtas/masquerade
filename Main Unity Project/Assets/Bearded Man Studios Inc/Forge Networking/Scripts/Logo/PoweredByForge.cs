@@ -1,5 +1,5 @@
+﻿using UnityEngine;
 using System.Collections;
-using UnityEngine;
 using UnityEngine.UI;
 
 public class PoweredByForge : MonoBehaviour
@@ -27,6 +27,6 @@ public class PoweredByForge : MonoBehaviour
 
 		yield return new WaitForSeconds(1.5f);
 
-		BeardedManStudios.Network.Unity.UnitySceneManager.LoadScene(SceneToLoad);
+		Application.LoadLevel(SceneToLoad);
 	}
 }

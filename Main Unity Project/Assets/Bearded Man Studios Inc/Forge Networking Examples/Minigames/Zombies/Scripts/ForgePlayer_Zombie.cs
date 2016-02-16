@@ -1,6 +1,7 @@
-﻿using BeardedManStudios.Network;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using BeardedManStudios.Network;
 using UnityEngine;
+using System.Collections;
 
 public class ForgePlayer_Zombie : NetworkedMonoBehavior
 {
@@ -178,8 +179,8 @@ public class ForgePlayer_Zombie : NetworkedMonoBehavior
 		// The server NetworkingManager object controls how fast the client's times are updated
 		GUILayout.BeginArea(new Rect(Screen.width * 0.35f, Screen.height * 0.8f, Screen.width * 35f, Screen.height * 0.2f));
 		GUILayout.Label("The current server time is: " + NetworkingManager.Instance.ServerTime, blackFont);
-		GUILayout.Label("Bytes In: " + NetWorker.BandwidthIn, blackFont);
-		GUILayout.Label("Bytes Out: " + NetWorker.BandwidthOut, blackFont);
+		GUILayout.Label("Bytes In: " + OwningNetWorker.BandwidthIn, blackFont);
+		GUILayout.Label("Bytes Out: " + OwningNetWorker.BandwidthOut, blackFont);
 		GUILayout.EndArea();
 	}
 }

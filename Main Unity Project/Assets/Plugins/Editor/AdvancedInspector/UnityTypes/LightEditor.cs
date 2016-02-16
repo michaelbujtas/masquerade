@@ -100,7 +100,7 @@ namespace AdvancedInspector
 
         private IList Baking()
         {
-            return new DescriptorPair[] { new DescriptorPair(4, "Realtime", ""), new DescriptorPair(2, "Baked", ""), new DescriptorPair(1, "Mixed", "") };
+            return new DescriptionPair[] { new DescriptionPair(4, "Realtime", ""), new DescriptionPair(2, "Baked", ""), new DescriptionPair(1, "Mixed", "") };
         }
 
         public bool IsPointOrSpot()
@@ -157,34 +157,34 @@ namespace AdvancedInspector
             return false;
         }
 
-        public HelpAttribute HelpBouncedGI()
+        public HelpItem HelpBouncedGI()
         {
             if (((Light)Instances[0]).bounceIntensity > 0 && IsPointOrSpot() && m_Lightmapping.intValue != 2)
-                return new HelpAttribute(HelpType.Warning, "Currently realtime indirect bounce light shadowing for spot and point lights is not supported.");
+                return new HelpItem(HelpType.Warning, "Currently realtime indirect bounce light shadowing for spot and point lights is not supported.");
 
             return null;
         }
 
-        public HelpAttribute HelpShadowPro()
+        public HelpItem HelpShadowPro()
         {
             if (HasShadow() && IsPointOrSpot() && !UnityEditorInternal.InternalEditorUtility.HasPro())
-                return new HelpAttribute(HelpType.Warning, "Real time shadow for point and spot lights requires Unity Pro.");
+                return new HelpItem(HelpType.Warning, "Real time shadow for point and spot lights requires Unity Pro.");
 
             return null;
         }
 
-        public HelpAttribute HelpLightType()
+        public HelpItem HelpLightType()
         {
             if (IsArea() && !UnityEditorInternal.InternalEditorUtility.HasPro())
-                return new HelpAttribute(HelpType.Warning, "Area lights require Unity Pro.");
+                return new HelpItem(HelpType.Warning, "Area lights require Unity Pro.");
 
             return null;
         }
 
-        public HelpAttribute HelpSceneLighting()
+        public HelpItem HelpSceneLighting()
         {
             if (SceneView.currentDrawingSceneView != null && !SceneView.currentDrawingSceneView.m_SceneLighting)
-                return new HelpAttribute(HelpType.Warning, "One of your scene views has lighting disable, please keep this in mind when editing lighting.");
+                return new HelpItem(HelpType.Warning, "One of your scene views has lighting disable, please keep this in mind when editing lighting.");
 
             return null;
         }

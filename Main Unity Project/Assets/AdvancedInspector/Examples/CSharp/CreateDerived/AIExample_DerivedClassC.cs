@@ -8,4 +8,7 @@ public class AIExample_DerivedClassC : AIExample_BaseClass
 {
     [Inspect]
     public string myDerivedStringC;
+
+    [Inspect, CreateDerived]
+    public AIExample_BaseClass subDerived;
 }

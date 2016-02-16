@@ -60,6 +60,12 @@ public class Card : SimpleNetworkedMonoBehavior {
 		set { isFaceUp = value; }
 	}
 
+	bool isTapped = false;
+	public bool IsTapped
+	{
+		get { return isTapped; }
+		set { isTapped = value; }
+	}
 
 	[Inspect, CreateDerived]
 	public CardLogic[] logic = new CardLogic[1];
@@ -104,6 +110,8 @@ public class Card : SimpleNetworkedMonoBehavior {
 	{
 		get { return Logic != null && Logic is IActivatedAbility; }
 	}
+
+
 
 	public CardRenderer Renderer;
 	public void LinkRenderer(CardRenderer renderer)
@@ -197,6 +205,7 @@ public class Card : SimpleNetworkedMonoBehavior {
 
 	public void FlipAction()
 	{
+		IsTapped = true;
 		IsFaceUp = !IsFaceUp;
 		Sync();
 		Networking.EnsureProperFlippedness(this);
@@ -206,6 +215,7 @@ public class Card : SimpleNetworkedMonoBehavior {
 	public void AttackAction(Card defender)
 	{
 
+		IsTapped = true;
 		int attack = GetCombatAttack();
 		int defense = defender.GetCombatDefense();
 
@@ -224,6 +234,17 @@ public class Card : SimpleNetworkedMonoBehavior {
 			((IAfterAttacking)Logic).AfterAttacking(defender);
 
 	}
+
+	public void ActivateAction()
+	{
+		IsTapped = true;
+
+		if (Logic is IActivatedAbility)
+			((IActivatedAbility)Logic).ActivateAbility();
+
+	}
+
+
 
 	public void KillWithContext(Card killer, DeathContext context)
 	{
@@ -252,21 +273,42 @@ public class Card : SimpleNetworkedMonoBehavior {
 			//Sync with everybody
 			foreach (NetworkingPlayer p in OwningNetWorker.Players)
 			{
-				AuthoritativeRPC("SyncRPC", OwningNetWorker, p, false, IsFaceUp);
+				AuthoritativeRPC("SyncRPC", OwningNetWorker, p, false, IsFaceUp, IsTapped);
 			}
 		}
 		else
 		{
 			//Sync with the owner
-			AuthoritativeRPC("SyncRPC", OwningNetWorker, Owner.Player, false, IsFaceUp);
+			AuthoritativeRPC("SyncRPC", OwningNetWorker, Owner.Player, false, IsFaceUp, IsTapped);
 		}
 	}
 
 	[BRPC]
-	void SyncRPC(bool shouldBeFaceup)
+	void SyncRPC(bool shouldBeFaceup, bool shouldBeTapped)
 	{
 		IsFaceUp = shouldBeFaceup;
+		IsTapped = shouldBeTapped;
 	}
 	
+	public void ForgetHistory()
+	{
+		//Everything that can change about this card gets set back to it's default version. 
 
+		//Forget our facing
+		IsFaceUp = true;
+
+		//Forget our tappedness
+		IsTapped = false;
+
+		//Forget basically everything else
+
+		//Make sure everyone else knows who we are
+		Sync();
+		Networking.EnsureProperFlippedness(this);
+
+		//Forget our position on the board
+		Owner = null;
+		OwnerIndex = null;
+		CurrentSlot = null;
+	}
 }

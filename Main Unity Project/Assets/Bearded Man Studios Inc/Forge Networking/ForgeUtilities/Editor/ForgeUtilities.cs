@@ -1,12 +1,12 @@
-using UnityEditor;
+﻿using UnityEditor;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
 public class ForgeUtilities
 {
-	[MenuItem("Tools/Forge Networking/Chat")]
-	private static void NewMenuOption()
-	{
+    [MenuItem("Tools/Forge Networking/Chat")]
+    private static void NewMenuOption()
+    {
 		GameObject.Instantiate(Resources.Load("FN_ChatWindow"));
 
 		if (GameObject.FindObjectOfType<EventSystem>() == null)
@@ -14,9 +14,7 @@ public class ForgeUtilities
 			GameObject evt = new GameObject("Event System");
 			evt.AddComponent<EventSystem>();
 			evt.AddComponent<StandaloneInputModule>();
-#if !UNITY_5_3
 			evt.AddComponent<TouchInputModule>();
-#endif
 		}
-	}
+    }
 }

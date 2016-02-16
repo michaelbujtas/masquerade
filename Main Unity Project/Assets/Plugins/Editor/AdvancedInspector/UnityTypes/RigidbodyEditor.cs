@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Reflection;
 
 using UnityEditor;
 using UnityEngine;
@@ -51,8 +48,6 @@ namespace AdvancedInspector
 
             fields.Add(new InspectorField(type, Instances, type.GetProperty("solverIterationCount"), new InspectAttribute(InspectorLevel.Advanced),
                 new DescriptorAttribute("Solver Iteration Count", "Allows you to override the solver iteration count per rigidbody", "https://docs.unity3d.com/Documentation/ScriptReference/Rigidbody-solverIterationCount.html")));
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("useConeFriction"), new InspectAttribute(InspectorLevel.Advanced),
-                new DescriptorAttribute("Use Cone Friction", "Force cone friction to be used for this rigidbody", "https://docs.unity3d.com/Documentation/ScriptReference/Rigidbody-useConeFriction.html")));
 
             InspectorField debug = new InspectorField("Debug");
             fields.Add(debug);

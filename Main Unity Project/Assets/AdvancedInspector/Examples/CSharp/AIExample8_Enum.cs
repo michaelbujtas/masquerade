@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
-using System.Collections;
 
 using AdvancedInspector;
+using System;
 
 [AdvancedInspector]
 public class AIExample8_Enum : MonoBehaviour 

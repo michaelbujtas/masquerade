@@ -118,18 +118,15 @@ namespace BeardedManStudios.Network
 		/// Resets the internal byte array and assignes the passed byte array to it
 		/// </summary>
 		/// <param name="input">The bytes to be cloned into the internal byte array</param>
-		public BMSByte Clone(byte[] input, int count = 0)
+		public BMSByte Clone(byte[] input)
 		{
-			if (count == 0)
-				count = input.Length;
-
 			PointToStart();
 
-			if (byteArr.Length <= count)
-				Array.Resize<byte>(ref byteArr, count + 1);
+			if (byteArr.Length <= input.Length)
+				Array.Resize<byte>(ref byteArr, input.Length + 1);
 
-			Buffer.BlockCopy(input, 0, byteArr, index, count);
-			Size = count;
+			Buffer.BlockCopy(input, 0, byteArr, index, input.Length);
+			Size = input.Length;
 			PointToEnd();
 
 			return this;
@@ -521,11 +518,11 @@ namespace BeardedManStudios.Network
 			Type type = typeof(T);
 
 			if (type == typeof(sbyte))
-				return (T)(object)byteArr[start];
+				return (T)(object)byteArr[0];
 			else if (type == typeof(byte))
-				return (T)(object)byteArr[start];
+				return (T)(object)byteArr[0];
 			else if (type == typeof(char))
-				return (T)(object)byteArr[start];
+				return (T)(object)byteArr[0];
 			else if (type == typeof(short))
 				return (T)(object)BitConverter.ToInt16(byteArr, start);
 			else if (type == typeof(ushort))
@@ -557,11 +554,11 @@ namespace BeardedManStudios.Network
 		public object GetBasicType(Type type, int start)
 		{
 			if (type == typeof(sbyte))
-				return (object)byteArr[start];
+				return (object)byteArr[0];
 			else if (type == typeof(byte))
-				return (object)byteArr[start];
+				return (object)byteArr[0];
 			else if (type == typeof(char))
-				return (object)byteArr[start];
+				return (object)byteArr[0];
 			else if (type == typeof(short))
 				return (object)BitConverter.ToInt16(byteArr, start);
 			else if (type == typeof(ushort))

@@ -1,6 +1,4 @@
 ﻿using UnityEngine;
-using System;
-using System.Collections;
 
 using AdvancedInspector;
 
@@ -8,7 +6,7 @@ using AdvancedInspector;
 public class AIExample16_Help : MonoBehaviour 
 {
     // "Help Box" is a bubble of information added before or after the inspected item.
-    [Inspect, Help(HelpType.Info, "This is an help box")]
+    [Inspect, ReadOnly, Help(HelpType.Info, "This is an help box")]
     public float myFirstField;
 
     // It is possible to control where the box appear, the default being after;

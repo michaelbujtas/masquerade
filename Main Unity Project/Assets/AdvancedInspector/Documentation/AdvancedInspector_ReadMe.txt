@@ -351,6 +351,55 @@ Take a look at the video for more information. It's an example of what the AI ca
 - Fixed an exception thrown when a base class has no valid derivation while using CreateDerived.
 - Found and removed a left-over Debug.LogError in the 5.1 version.
 - Fixed an issue where none-Unity object value would not be copied properly when dragged and dropped. 
+- Fixed a issue while copying ScriptableObject. It was duplicating the object instead of copying the reference.
 
-Tested on; 4.3.4 / 4.6.1 / 5.1.0
-Unsupported; 5.0
+1.60 (Unity 5.2+):
+- Runtime Help attribute now returns a HelpItem, instead of a HelpAttribute.
+- Descriptor attribute now returns a Description object instead of itself.
+- Most attributes are now unbinded from the class in the DLL. Instead, interfaces are used, which gives you the ability to create your own attributes.
+- Fixed an issue when grouped item would be alone in tabs, making nothing showing up.
+- UniTools library have been merged with the AdvancedInspector's one and its namespace renamed. 
+- Fixed a copy/paste stack overflow when encountered nested static field of the same type. 
+- Fixed some type definition such as HingeJoint and SoftJointLimit.
+- Renamed an example material so it doesn't fail compilation on Android.
+- Fixed an issue of multiselection of layer masks of different values.
+- Removed useless CTRL+E menu item.
+- Updated numerous editor towards 5.2 definition.
+- Revision A; fixed an issue where tabs were not selectable.
+
+1.61:
+[CHANGES]
+- Removed the nicifying of dictionary keys when they are string values.
+- Added an error while trying to draw a Property Drawer from a non-serializable feature, like a dictionary or a property. 
+- Added the ADVANCED_INSPECTOR define back in the DLL, as requested.
+[FIXES]
+- Fixed that toolbars or header would fail to draw without tabs.
+- Fixed that subobject tabs would show up multiple time when combined with Display As Parent.
+- Added a catch on FieldEditor drawing so that any exception wouldn't prevent the inspector from drawing its remaining stuff.
+- Added "Use Auto Mass" property on RigidBody 2D, added in Unity 5.3x.
+
+1.62:
+[CHANGES]
+- Collection Attribute may now take a method name. This allow to manually set the name of each elements. (See example 7)
+[FIXES]
+- Compatible with 5.2 again.
+- Cleaned and update the examples.
+- Added an enum fix submitted by ldhongen1990.
+- Test if a type is generic before trying to instance it; some people forget to flag them as being abstract.
+- Fixed an issue where hiding the script type would prevent that object from being flagged dirty upon changes.
+- Fixed an initialization issue when a collection is "displayed as parent".
+
+1.63:
+[CHANGES]
+- The separator's style can now be change to a solid color, and you can also choose the highlighted color in the preference.
+[FIXES]
+- The Collection Attribute item name override wasn't working when displaying a collection in DropDown or Button mode.
+- Help boxes on a ReadOnly item doesn't get grayed out anymore.
+- Collection of GameObject no longer create new GameObject when adding indexes. 
+- IDataChanged callback wasn't invoked when using the picking tool, since it was outside the redraw scope of the inspector.
+- Rewrote the copy/paste logic, it was a mess with lot of very deep and unique issues. 
+- Rewrote how the AI gather the object's information. It should be a lot faster now, as it no longer need to test for duplicate items. Contact us if anything isn't showing properly anymore.
+- Fixed the cursor picking icon, which for some reason was the wrong one for quite some time.
+
+1.60 and above is only supported on Unity 5.2+
+You may require to disable custom Advanced Inspector if you wish to use 1.60 on 5.1x.

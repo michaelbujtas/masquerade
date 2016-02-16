@@ -19,8 +19,9 @@
 
 
 
-using BeardedManStudios.Network;
 using UnityEngine;
+
+using BeardedManStudios.Network;
 
 namespace BeardedManStudios.Forge.Examples
 {

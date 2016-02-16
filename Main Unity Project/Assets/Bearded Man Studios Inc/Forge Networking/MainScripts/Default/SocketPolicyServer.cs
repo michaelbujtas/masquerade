@@ -110,6 +110,7 @@ namespace BeardedManStudios.Network
 
 		void OnAccept(IAsyncResult ar)
 		{
+			Console.WriteLine("incoming connection");
 			Socket accepted = null;
 			try
 			{
@@ -154,6 +155,7 @@ namespace BeardedManStudios.Network
 
 				if (r.Length == request.Length)
 				{
+					Console.WriteLine("got policy request, sending response");
 					// request complete, send policy
 					socket.BeginSend(policy, 0, policy.Length, SocketFlags.None, new AsyncCallback(OnSend), socket);
 				}
@@ -208,7 +210,7 @@ namespace BeardedManStudios.Network
 
 	@"<?xml version='1.0'?>
 <cross-domain-policy>
-		<allow-access-from domain=""*"" to-ports=""*"" />
+        <allow-access-from domain=""*"" to-ports=""*"" />
 </cross-domain-policy>";
 
 		const string LocalPolicy =

@@ -6,6 +6,7 @@ using BeardedManStudios.Network;
 
 public class MasqueradePlayer {
 
+
 	public NetworkingPlayer Player
 	{
 		get;

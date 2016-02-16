@@ -12,10 +12,38 @@ namespace AdvancedInspector
     /// The Runtime version supply the type itself. Useful when the field value is null or for an unknown object picker.
     /// </summary>
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
-    public class RuntimeResolveAttribute : Attribute, IListAttribute, IRuntimeAttribute<Type>
+    public class RuntimeResolveAttribute : Attribute, IListAttribute, IRuntimeAttribute<Type>, IRuntimeType
     {
         public delegate Type RuntimeResolveDelegate();
         public delegate Type RuntimeResolveStaticDelegate(RuntimeResolveAttribute runtimeResolve, object instance, object value);
+
+        #region IReadOnly Implementation
+        public Type GetType(object[] instances, object[] values)
+        {
+            if (delegates.Count == 0)
+            {
+                for (int i = 0; i < values.Length; i++)
+                {
+                    if (values[0] == null)
+                        continue;
+
+                    return values[0].GetType();
+                }
+            }
+
+            Type type = null;
+            for (int i = 0; i < delegates.Count; i++)
+            {
+                Type next = Invoke(i, instances[i], values[i]);
+                if (type != null && type != next)
+                    return null;
+                else
+                    type = next;
+            }
+
+            return type;
+        }
+        #endregion
 
         #region IRuntime Implementation
         private string methodName = "";

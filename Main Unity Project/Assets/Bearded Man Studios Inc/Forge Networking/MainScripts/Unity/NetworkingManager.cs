@@ -1,4 +1,4 @@
-/*-----------------------------+------------------------------\
+﻿/*-----------------------------+------------------------------\
 |                                                             |
 |                        !!!NOTICE!!!                         |
 |                                                             |
@@ -19,13 +19,11 @@
 
 
 
+using UnityEngine;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
-#if UNITY_5_3
-using UnityEngine.SceneManagement;
-#endif
 
 namespace BeardedManStudios.Network
 {
@@ -52,7 +50,7 @@ namespace BeardedManStudios.Network
 		/// <summary>
 		/// The instance of the NetworkingManager
 		/// </summary>
-		public static NetworkingManager Instance { get { return instance; } }
+		public static NetworkingManager Instance { get { return instance; } private set { instance = value; } }
 
 		/// <summary>
 		/// This is a list of all of the behaviors in the scene that need to be setup on the network
@@ -86,7 +84,7 @@ namespace BeardedManStudios.Network
 		/// <summary>
 		/// The list of all setup actions for when an object is instantiated
 		/// </summary>
-		public static List<Action> setupActions = new List<Action>();
+		public static List<System.Action> setupActions = new List<System.Action>();
 
 		/// <summary>
 		/// This is a list of the players that the client can access
@@ -134,33 +132,25 @@ namespace BeardedManStudios.Network
 		/// The amount of time in seconds to update the time from the server
 		/// </summary>
 		public float updateTimeInterval = 1.0f;
-		
+
 		private static Dictionary<string, int> behaviorsAndRefCount = new Dictionary<string, int>();
 
 		private void Awake()
 		{
 			bool callInitialize = false;
-
 			if (instance != null)
 			{
 				instance.dontDestroyOnLoad = false;
 				rpcStack = instance.rpcStack;
-
-				NetWorker currentSocket = ControllingSocket;
 				Destroy(instance.gameObject);
-				
+				ControllingSocket = null;
 				ResetForScene(new List<SimpleNetworkedMonoBehavior>(new SimpleNetworkedMonoBehavior[] { this }));
 				callInitialize = true;
-
-				ControllingSocket = currentSocket;
 			}
 			else
 				Unity.UnityEventObject.onDestroy += SkipResetOnDestroy;
 
-			List<SimpleNetworkedMonoBehavior> allCurrentNetworkBehaviors = new List<SimpleNetworkedMonoBehavior>();
-
-			if (startNetworkedSceneBehaviors != null)
-				allCurrentNetworkBehaviors.AddRange(startNetworkedSceneBehaviors);
+			List<SimpleNetworkedMonoBehavior> allCurrentNetworkBehaviors = new List<SimpleNetworkedMonoBehavior>(startNetworkedSceneBehaviors);
 
 			SimpleNetworkedMonoBehavior[] behaviors = FindObjectsOfType<SimpleNetworkedMonoBehavior>().Union(allCurrentNetworkBehaviors).ToArray();
 
@@ -174,12 +164,13 @@ namespace BeardedManStudios.Network
 			startNetworkedSceneBehaviors = allCurrentNetworkBehaviors.ToArray();
 
 			instance = this;
-
 			DontDestroyOnLoad(gameObject);
-
 			dontDestroyOnLoad = true;
 
 			CreateUnityEventObject();
+
+			clientLoadedLevel += (player) => { Debug.Log(player.NetworkId + " Loaded the scene"); };
+			allClientsLoaded += () => { Debug.Log("All clients have loaded the scene"); };
 
 			if (networkInstantiates != null)
 			{
@@ -219,13 +210,13 @@ namespace BeardedManStudios.Network
 			}
 
 			if (callInitialize)
-				Initialize(ControllingSocket);
+				Initialize();
 		}
 
 		/// <summary>
 		/// This method is used to do all of the initial setup of objects
 		/// </summary>
-		public bool Populate(NetWorker socket)
+		public bool Populate()
 		{
 			List<SimpleNetworkedMonoBehavior> allBehaviors = new List<SimpleNetworkedMonoBehavior>(startNetworkedSceneBehaviors);
 			// Find all objects in the scene that have SNMB
@@ -248,7 +239,7 @@ namespace BeardedManStudios.Network
 				return false;
 			}
 
-			ControllingSocket = socket;
+			ControllingSocket = Networking.PrimarySocket != null ? Networking.PrimarySocket : Networking.Sockets.First().Value;
 			OwningNetWorker = ControllingSocket;
 
 			if (!OwningNetWorker.Connected)
@@ -277,6 +268,8 @@ namespace BeardedManStudios.Network
 
 			OwningNetWorker.AddCustomDataReadEvent(WriteCustomMapping.NETWORKING_MANAGER_POLL_PLAYERS, PollPlayersResponse, true);
 
+			// Clean up all statics when the NetWorker gets disconnected
+			OwningNetWorker.disconnected += NetworkDisconnect;
 			return true;
 		}
 
@@ -311,7 +304,7 @@ namespace BeardedManStudios.Network
 
 			if (!TryPullIdFromObject(obj, ref uniqueId))
 				return;
-			
+
 			if (Instance != null && Instance.OwningNetWorker != null)
 				Instance.RPC("NetworkInstantiate", receivers, Instance.OwningNetWorker.Uniqueidentifier, Instance.OwningNetWorker.IsServer ? uniqueId : 0, obj, position, rotation, callbackCounter);
 			else
@@ -326,7 +319,6 @@ namespace BeardedManStudios.Network
 		protected override void NetworkStart()
 		{
 			base.NetworkStart();
-
 			OwningNetWorker.AddCustomDataReadEvent(WriteCustomMapping.NETWORKING_MANAGER_PLAYER_LOADED_LEVEL, PlayerLoadedLevel, true);
 			OwningNetWorker.AddCustomDataReadEvent(WriteCustomMapping.NETWORKED_MONO_BEHAVIOR_MANUAL_PROPERTIES, DeserializeManualProperties, true);
 			OwningNetWorker.AddCustomDataReadEvent(WriteCustomMapping.TRANSPORT_OBJECT, ReadTransportObject, true);
@@ -370,7 +362,7 @@ namespace BeardedManStudios.Network
 			}
 		}
 
-		public static SimpleNetworkedMonoBehavior[] GetAllSimpleMonoBehaviors(GameObject o)
+		private static SimpleNetworkedMonoBehavior[] GetAllSimpleMonoBehaviors(GameObject o)
 		{
 			List<SimpleNetworkedMonoBehavior> behaviors = new List<SimpleNetworkedMonoBehavior>(o.GetComponents<SimpleNetworkedMonoBehavior>());
 
@@ -380,18 +372,17 @@ namespace BeardedManStudios.Network
 			return behaviors.ToArray();
 		}
 
+		private object instantiateMutex = new object();
 		[BRPC]
-		public void NetworkInstantiate(ulong ownerId, ulong startNetworkId, string name, Vector3 position, Quaternion rotation, int callbackId = 0)
+		private void NetworkInstantiate(ulong ownerId, ulong startNetworkId, string name, Vector3 position, Quaternion rotation, int callbackId = 0)
 		{
-			lock (networkedBehaviorsMutex)
+			lock (instantiateMutex)
 			{
 				if (networkedBehaviors.ContainsKey(startNetworkId))
 					return;
 
-				SimpleNetworkedMonoBehavior[] netBehaviors = null;
-
 				GameObject o = Instance.PullObject((ownerId != OwningNetWorker.Me.NetworkId ? name + "(Remote)" : name), name);
-				netBehaviors = GetAllSimpleMonoBehaviors(o);
+				SimpleNetworkedMonoBehavior[] netBehaviors = GetAllSimpleMonoBehaviors(o);
 
 				if (netBehaviors.Length == 0)
 				{
@@ -413,7 +404,7 @@ namespace BeardedManStudios.Network
 					netBehaviors[i].Setup(OwningNetWorker, OwningNetWorker.Uniqueidentifier == ownerId, startNetworkId + (ulong)i, ownerId);
 
 				if (ownerId == OwningNetWorker.Me.NetworkId)
-					Networking.RunInstantiateCallback(callbackId, netBehaviors[0].GetComponent<SimpleNetworkedMonoBehavior>());
+					Networking.RunInstantiateCallback(callbackId, netBehaviors[0].gameObject);
 			}
 		}
 
@@ -488,9 +479,9 @@ namespace BeardedManStudios.Network
 				return;
 
 			if (CurrentRPCSender == null)
-				OwningNetWorker.Me.SetName(newName);
+				OwningNetWorker.Me.Rename(newName);
 			else
-				CurrentRPCSender.SetName(newName);
+				CurrentRPCSender.Rename(newName);
 		}
 
 		[BRPC]
@@ -551,17 +542,14 @@ namespace BeardedManStudios.Network
 
 		public override void Disconnect()
 		{
+			// TODO:  Find where it is getting added to the list 2x
+			if (this == null)
+				return;
+
 			base.Disconnect();
 
 			ControllingSocket = null;
-
-			Unity.UnityEventObject.onDestroy -= SkipResetOnDestroy;
-
-			if (Threading.ThreadManagement.IsMainThread)
-				Destroy(gameObject);
-			else
-				Unity.MainThreadManager.Run(() => { Destroy(gameObject); }); // JM: make sure this is run on main thread
-
+			Destroy(gameObject);
 			instance = null;
 		}
 
@@ -572,7 +560,7 @@ namespace BeardedManStudios.Network
 			Unity.MainThreadManager.Run(() =>
 			{
 				// The level that was loaded is not the current level
-				if (levelLoaded != Unity.UnitySceneManager.GetCurrentSceneBuildIndex())
+				if (levelLoaded != Application.loadedLevel)
 					return;
 
 				if (clientLoadedLevel != null)
@@ -596,7 +584,7 @@ namespace BeardedManStudios.Network
 			if (OwningNetWorker == null)
 				loadLevelFireOnConnect = () => { TellServerLevelLoaded(level); };
 
-			Initialize(OwningNetWorker);
+			Initialize();
 		}
 
 		private void TellServerLevelLoaded(int level)
@@ -611,7 +599,7 @@ namespace BeardedManStudios.Network
 
 		private void CreateUnityEventObject()
 		{
-			new GameObject("UnityEventObject").AddComponent<Unity.UnityEventObject>();
+			new GameObject().AddComponent<Unity.UnityEventObject>();
 		}
 
 		private void SkipResetOnDestroy()

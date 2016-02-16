@@ -194,8 +194,8 @@ namespace AdvancedInspector
         private IList Projection()
         {
             List<object> list = new List<object>();
-            list.Add(new DescriptorPair(false, new DescriptorAttribute("Perspective", "")));
-            list.Add(new DescriptorPair(true, new DescriptorAttribute("Orthographic", "")));
+            list.Add(new DescriptionPair(false, new Description("Perspective", "")));
+            list.Add(new DescriptionPair(true, new Description("Orthographic", "")));
             return list;
         }
 
@@ -250,7 +250,7 @@ namespace AdvancedInspector
             return !UnityEditorInternal.InternalEditorUtility.HasPro();
         }
 
-        private HelpAttribute RenderingHelp()
+        private HelpItem RenderingHelp()
         {
             foreach (object instance in Instances)
             {
@@ -259,7 +259,7 @@ namespace AdvancedInspector
                     return null;
 
                 if (camera.renderingPath == RenderingPath.DeferredLighting && !UnityEditorInternal.InternalEditorUtility.HasPro())
-                    return new HelpAttribute(HelpType.Warning, "Deferred lighting requires Unity Pro.");
+                    return new HelpItem(HelpType.Warning, "Deferred lighting requires Unity Pro.");
             }
 
             return null;

@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
 using UnityEngine;
+
 using AdvancedInspector;
 
+[AdvancedInspector]
 public class AIExample38_Constructor : MonoBehaviour
 {
     // In some case, you may want a class to have a custom constructor.

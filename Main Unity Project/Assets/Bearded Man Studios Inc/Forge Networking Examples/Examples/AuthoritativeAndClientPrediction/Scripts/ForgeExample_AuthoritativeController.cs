@@ -1,5 +1,7 @@
-﻿using BeardedManStudios.Network;
-using UnityEngine;
+﻿using UnityEngine;
+using System.Collections;
+
+using BeardedManStudios.Network;
 
 public class ForgeExample_AuthoritativeController : NetworkedMonoBehavior
 {
@@ -96,12 +98,6 @@ public class ForgeExample_AuthoritativeController : NetworkedMonoBehavior
 			case KeyCode.LeftArrow:
 				transform.position += Vector3.left * speed * Time.deltaTime;
 				break;
-			case KeyCode.DownArrow:
-				transform.Rotate(Vector3.up, 5, Space.Self);
-				break;
-			case KeyCode.UpArrow:
-				transform.localScale += Vector3.one * speed * Time.deltaTime;
-				break;
 			case KeyCode.RightArrow:
 				transform.position += Vector3.right * speed * Time.deltaTime;
 				break;
@@ -116,9 +112,6 @@ public class ForgeExample_AuthoritativeController : NetworkedMonoBehavior
 		// Check for a left arrow down or up and request on server if changed
 		InputCheck(KeyCode.LeftArrow);
 
-		InputCheck(KeyCode.UpArrow);
-
-		InputCheck(KeyCode.DownArrow);
 		// Check for a left mouse button down or up and request on server if changed
 		//MouseCheck(0);
 	}

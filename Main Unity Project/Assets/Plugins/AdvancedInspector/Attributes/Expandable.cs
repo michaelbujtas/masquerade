@@ -6,7 +6,7 @@ namespace AdvancedInspector
     /// Redefine if a field/property can be expanded or not.
     /// </summary>
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, Inherited = true)]
-    public class ExpandableAttribute : Attribute, IListAttribute 
+    public class ExpandableAttribute : Attribute, IExpandable, IListAttribute 
     {
         private bool expanded = false;
 
@@ -42,5 +42,17 @@ namespace AdvancedInspector
             this.expanded = expanded;
             this.expandable = expandable;
         }
+
+        #region IExpandable Implementation
+        public bool IsExpanded(object[] instances, object[] values)
+        {
+            return expanded;
+        }
+        
+        public bool IsExpandable(object[] instances, object[] values)
+        {
+            return expandable;
+        }
+        #endregion
     }
 }

@@ -16,7 +16,7 @@ public class IndexActionChoiceMenu : MonoBehaviour
 	public Button back;
 
 
-	Queue<Choice> decisionQueue = new Queue<Choice>();
+	List<Choice> decisionQueue = new List<Choice>();
 
 	public delegate void HandleChoiceDelegate(CardAction choice);
 
@@ -41,9 +41,17 @@ public class IndexActionChoiceMenu : MonoBehaviour
 	}
 
 
-	public void GetChoice(byte index, HandleChoiceDelegate handle)
+	public Choice GetChoice(byte index, HandleChoiceDelegate handle)
 	{
-		decisionQueue.Enqueue(new Choice(index, handle));
+		Choice retVal = new Choice(index, handle);
+        decisionQueue.Add(retVal);
+		ShowChoice();
+		return retVal;
+	}
+
+	public void PurgeChoice(Choice choice)
+	{
+		decisionQueue.Remove(choice);
 		ShowChoice();
 	}
 
@@ -57,7 +65,7 @@ public class IndexActionChoiceMenu : MonoBehaviour
 		{
 
 			Visuals.SetActive(true);
-			Choice nextChoice = decisionQueue.Peek();
+			Choice nextChoice = decisionQueue[0];
 
 			cardRenderer.Index = nextChoice.Index;
 			cardRenderer.RefreshCardImage();
@@ -75,12 +83,13 @@ public class IndexActionChoiceMenu : MonoBehaviour
 
 	void Choose(CardAction choice)
 	{
-		Choice currentChoice = decisionQueue.Dequeue();
+		Choice currentChoice = decisionQueue[0];
+		decisionQueue.RemoveAt(0);
 		currentChoice.Handle(choice);
 		ShowChoice();
 	}
 
-	private class Choice
+	public class Choice
 	{
 
 		public Choice(byte index, HandleChoiceDelegate handle)

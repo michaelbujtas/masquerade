@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-
 using UnityEngine;
 
 namespace AdvancedInspector
@@ -10,8 +9,11 @@ namespace AdvancedInspector
     /// When affixes to a collection, prevent this collection's size to be modified by the inspector.
     /// </summary>
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
-    public class CollectionAttribute : Attribute, IListAttribute
+    public class CollectionAttribute : Attribute, IListAttribute, IRuntimeAttribute<string[]>
     {
+        public delegate string[] CollectionDelegate();
+        public delegate string[] CollectionStaticDelegate(CollectionAttribute collection, object instance, object value);
+
         private int size = -1;
 
         /// <summary>
@@ -82,8 +84,10 @@ namespace AdvancedInspector
             get { return enumType; }
             set
             {
+#if !NETFX_CORE
                 if (!value.IsEnum)
                     return;
+#endif
 
                 int index = 0;
                 foreach (object i in Enum.GetValues(value))
@@ -98,6 +102,61 @@ namespace AdvancedInspector
             }
         }
 
+        #region IRuntime Implementation
+        private string methodName = "";
+
+        public string MethodName
+        {
+            get { return methodName; }
+            set { methodName = value; }
+        }
+
+        public Type Template
+        {
+            get { return typeof(CollectionDelegate); }
+        }
+
+        public Type TemplateStatic
+        {
+            get { return typeof(CollectionStaticDelegate); }
+        }
+
+        private List<Delegate> delegates = new List<Delegate>();
+
+        public List<Delegate> Delegates
+        {
+            get { return delegates; }
+            set { delegates = value; }
+        }
+
+        public string[] Invoke(int index, object instance, object value)
+        {
+            if (delegates.Count == 0 || index >= delegates.Count)
+                return new string[0];
+
+            try
+            {
+                if (delegates[index].Target == null)
+                {
+                    return ((string[])delegates[index].DynamicInvoke(this, instance, value));
+                }
+                else
+                {
+                    return ((string[])delegates[index].DynamicInvoke());
+                }
+            }
+            catch (Exception e)
+            {
+                if (e is TargetInvocationException)
+                    e = ((TargetInvocationException)e).InnerException;
+
+                Debug.LogError(string.Format("Invoking a method to retrieve a Collection attribute failed. The exception was \"{0}\".", e.Message));
+                return new string[0];
+            }
+        }
+        #endregion
+
+        #region Compile Time Constructors
         public CollectionAttribute() { }
 
         public CollectionAttribute(int size)
@@ -109,23 +168,27 @@ namespace AdvancedInspector
         public CollectionAttribute(bool sortable)
             : this(-1, sortable) { }
 
+        public CollectionAttribute(string methodName)
+            : this(methodName, -1, true, CollectionDisplay.List) { }
+
         public CollectionAttribute(CollectionDisplay display)
-            : this(-1, true, display) { }
+            : this("", -1, true, display) { }
 
         public CollectionAttribute(int size, bool sortable)
-            : this(size, sortable, CollectionDisplay.List) { }
+            : this("", size, sortable, CollectionDisplay.List) { }
 
         public CollectionAttribute(Type enumType, bool sortable)
             : this(enumType, sortable, CollectionDisplay.List) { }
 
         public CollectionAttribute(int size, CollectionDisplay display)
-            : this(size, true, display) { }
+            : this("", size, true, display) { }
 
         public CollectionAttribute(Type enumType, CollectionDisplay display)
             : this(enumType, true, display) { }
 
-        public CollectionAttribute(int size, bool sortable, CollectionDisplay display)
+        public CollectionAttribute(string methodName, int size, bool sortable, CollectionDisplay display)
         {
+            this.methodName = methodName;
             this.size = size;
             this.sortable = sortable;
             this.display = display;
@@ -133,19 +196,32 @@ namespace AdvancedInspector
 
         public CollectionAttribute(Type enumType, bool sortable, CollectionDisplay display)
         {
-            this.EnumType = enumType;
+            this.enumType = enumType;
             this.sortable = sortable;
             this.display = display;
         }
-    }
+        #endregion
 
-    /// <summary>
-    /// None default display should only be used on collection that contain expandable objects.
-    /// </summary>
-    public enum CollectionDisplay
-    {
-        List,
-        DropDown,
-        Button
+        #region Runtime Constructor
+        public CollectionAttribute(Delegate method)
+            : this(method, -1, true, CollectionDisplay.List) { }
+
+        public CollectionAttribute(Delegate method, int size)
+            : this (method, size, true, CollectionDisplay.List) { }
+
+        public CollectionAttribute(Delegate method, bool sortable)
+            : this(method, -1, sortable, CollectionDisplay.List) { }
+
+        public CollectionAttribute(Delegate method, CollectionDisplay display)
+            : this(method, -1, true, display) { }
+
+        public CollectionAttribute(Delegate method, int size, bool sortable, CollectionDisplay display)
+        {
+            this.size = size;
+            this.sortable = sortable;
+            this.display = display;
+            this.delegates.Add(method);
+        }
+        #endregion
     }
 }

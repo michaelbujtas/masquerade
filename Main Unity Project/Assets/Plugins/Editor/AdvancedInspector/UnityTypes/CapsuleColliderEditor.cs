@@ -30,11 +30,11 @@ namespace AdvancedInspector
                 new DescriptorAttribute("Direction", "The direction of the capsule.", "http://docs.unity3d.com/ScriptReference/CapsuleCollider-direction.html")));
         }
 
-        private List<DescriptorPair> Direction()
+        private List<DescriptionPair> Direction()
         {
-            List<DescriptorPair> list = new List<DescriptorPair>();
+            List<DescriptionPair> list = new List<DescriptionPair>();
             foreach (AxisOrientation orientation in Enum.GetValues(typeof(AxisOrientation)))
-                list.Add(new DescriptorPair((int)orientation, new DescriptorAttribute(orientation.ToString(), "")));
+                list.Add(new DescriptionPair((int)orientation, new Description(orientation.ToString(), "")));
 
             return list;
         }

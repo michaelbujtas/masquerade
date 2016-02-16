@@ -2,10 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
-using System.Text;
 
 using UnityEngine;
 
@@ -14,7 +12,11 @@ namespace AdvancedInspector
     [Serializable]
     [ComVisible(false)]
     [DebuggerDisplay("Count = {Count}")]
+#if NETFX_CORE
+    public class UDictionary<TKey, TValue> : IDictionary<TKey, TValue>, ICollection<KeyValuePair<TKey, TValue>>, IEnumerable<KeyValuePair<TKey, TValue>>, IDictionary, ICollection, IEnumerable, ISerializationCallbackReceiver
+#else
     public class UDictionary<TKey, TValue> : IDictionary<TKey, TValue>, ICollection<KeyValuePair<TKey, TValue>>, IEnumerable<KeyValuePair<TKey, TValue>>, IDictionary, ICollection, IEnumerable, ISerializable, IDeserializationCallback, ISerializationCallbackReceiver
+#endif
     {
         [SerializeField]
         private List<TKey> keys = new List<TKey>();
@@ -49,21 +51,31 @@ namespace AdvancedInspector
         }
         #endregion
 
+#if !NETFX_CORE
         #region Implementation of ISerializable
         public void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             dictionary.GetObjectData(info, context);
         }
         #endregion
+#endif
 
         #region Implementation of IDeserializationCallback
+#if !NETFX_CORE
         public void OnDeserialization(object sender)
         {
             dictionary.OnDeserialization(sender);
         }
-        #endregion
+#else
+        public void OnDeserialization(Dictionary<TKey, TValue> dictionary)
+        {
+            this.dictionary = dictionary;
+            OnBeforeSerialize();
+        }
+#endif
+    #endregion
 
-        #region Implementation IDictionary
+    #region Implementation IDictionary
         public bool IsFixedSize
         {
             get { return false; }
@@ -167,9 +179,9 @@ namespace AdvancedInspector
         {
             return ((IDictionary)dictionary).GetEnumerator();
         }
-        #endregion
+#endregion
 
-        #region Implementation ICollection
+#region Implementation ICollection
         public int Count
         {
             get { return dictionary.Count; }
@@ -213,9 +225,9 @@ namespace AdvancedInspector
         {
             return dictionary.Remove(item.Key);
         }
-        #endregion
+#endregion
 
-        #region Implementation of IEnumerable
+#region Implementation of IEnumerable
         public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
         {
             return dictionary.GetEnumerator();
@@ -225,6 +237,6 @@ namespace AdvancedInspector
         {
             return dictionary.GetEnumerator();
         }
-        #endregion
+#endregion
     }
 }

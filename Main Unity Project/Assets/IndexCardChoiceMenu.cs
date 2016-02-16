@@ -8,13 +8,18 @@ using UnityEngine.UI;
 
 public class IndexCardChoiceMenu : MonoBehaviour {
 
-	//public GameObject Visuals;
+	public GameObject Visuals;
+
+	public NamedButton PassButton, CancelButton;
 
 	public List<CardRenderer> CardsInPlay = new List<CardRenderer>();
 
-	Queue<Choice> decisionQueue = new Queue<Choice>();
+	public 
+	List<Choice> decisionQueue = new List<Choice>();
 
 	public delegate void HandleChoiceDelegate(byte choice);
+
+	public delegate void HandleCancelDelegate();
 
 	public void Awake()
 	{
@@ -42,25 +47,31 @@ public class IndexCardChoiceMenu : MonoBehaviour {
 
 	}
 
-	public void GetChoice(List<byte> options, Color highlight, HandleChoiceDelegate handle)
+	public Choice GetChoice(List<byte> options, Color highlight, HandleChoiceDelegate handle, HandleCancelDelegate cancel, HandleCancelDelegate pass)
 	{
-		decisionQueue.Enqueue(new Choice(options, highlight, handle));
+		Choice choice = new Choice(options, highlight, handle, cancel, pass);
+        decisionQueue.Add(choice);
+		ShowChoice();
+		return choice;
+	}
+	public void PurgeChoice(Choice choice)
+	{
+		decisionQueue.Remove(choice);
 		ShowChoice();
 	}
-
 	public void OnAnyCardButtonUI(byte index)
 	{
 		Console.Log("Card Button Clicked.");
 		if (decisionQueue.Count > 0)
 		{
-			if (decisionQueue.Peek().Options.Contains(index))
+			if (decisionQueue[0].Options.Contains(index))
 			{
 				Choose(index);
 			}
 			else
 			{
 				Console.Log(index + " is not a valid choice.");
-				Console.Log(decisionQueue.Peek().Options.ToString());
+				Console.Log(decisionQueue[0].Options.ToString());
 			}
         }
 	}
@@ -68,21 +79,72 @@ public class IndexCardChoiceMenu : MonoBehaviour {
 
 	public void OnCancelButtonUI()
 	{
-		//Nothing yet
+		Console.Log("Cancel Button Clicked.");
+		if (decisionQueue.Count > 0)
+		{
+			if (decisionQueue[0].Cancel != null)
+			{
+				Cancel();
+			}
+			else
+			{
+				Console.Log("Can't cancel. (Why's the stinkin' button enabled then?)");
+			}
+		}
 	}
+
+	public void OnPassButtonUI()
+	{
+		Console.Log("Pass Button Clicked.");
+		if (decisionQueue.Count > 0)
+		{
+			if (decisionQueue[0].Pass != null)
+			{
+				Pass();
+			}
+			else
+			{
+				Console.Log("Can't pass. (Why's the stinkin' button enabled then?)");
+			}
+		}
+	}
+
+
 
 	void ShowChoice()
 	{
 		if (decisionQueue.Count == 0)
 		{
 			Clear();
-			//Visuals.SetActive(false);
+			Visuals.SetActive(false);
 		}
 		else
 		{
-			//Visuals.SetActive(true);
-			Choice nextChoice = decisionQueue.Peek();
-			Highlight(nextChoice.Options, nextChoice.Highlight);
+			Visuals.SetActive(true);
+			Choice nextChoice = decisionQueue[0];
+            Highlight(nextChoice.Options, nextChoice.Highlight);
+
+			if (nextChoice.Cancel != null)
+			{
+				CancelButton.Visuals.SetActive(true);
+				CancelButton.SetHighlight(Color.blue);
+			}
+			else
+			{
+				CancelButton.Visuals.SetActive(false);
+				CancelButton.ClearHighlight();
+			}
+
+			if (nextChoice.Pass != null)
+			{
+				PassButton.Visuals.SetActive(true);
+				PassButton.SetHighlight(Color.red);
+			}
+			else
+			{
+				PassButton.Visuals.SetActive(false);
+				PassButton.ClearHighlight();
+			}
 
 		}
 	}
@@ -109,22 +171,49 @@ public class IndexCardChoiceMenu : MonoBehaviour {
 	void Choose(byte choice)
 	{
 		Console.Log("Choosing Card.");
-		Choice currentChoice = decisionQueue.Dequeue();
-		currentChoice.Handle(choice);
+		Choice currentChoice = decisionQueue[0];
+		decisionQueue.Remove(currentChoice);
+        currentChoice.Handle(choice);
 		ShowChoice();
 	}
 
-	private class Choice
+	void Cancel()
+	{
+		Console.Log("Canceling.");
+		Choice currentChoice = decisionQueue[0];
+		decisionQueue.Remove(currentChoice);
+		currentChoice.Cancel();
+		ShowChoice();
+	}
+
+	void Pass()
 	{
 
-		public Choice(List<byte> options, Color highlight, HandleChoiceDelegate handle)
+		Console.Log("Pass.");
+		Choice currentChoice = decisionQueue[0];
+		decisionQueue.Remove(currentChoice);
+		currentChoice.Pass();
+		ShowChoice();
+	}
+
+	public class Choice
+	{
+
+		public Choice(List<byte> options, Color highlight, HandleChoiceDelegate handle, HandleCancelDelegate cancel, HandleCancelDelegate pass)
 		{
 			Options = options;
 			Highlight = highlight;
 			Handle = handle;
+			Cancel = cancel;
+			Pass = pass;
+			
 		}
 		public List<byte> Options;
 		public Color Highlight;
 		public HandleChoiceDelegate Handle;
+
+		public HandleCancelDelegate Cancel;
+
+		public HandleCancelDelegate Pass;
 	}
 }

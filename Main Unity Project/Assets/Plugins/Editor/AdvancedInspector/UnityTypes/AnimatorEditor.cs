@@ -98,7 +98,7 @@ namespace AdvancedInspector
             fields.Add(debug);
         }
 
-        private HelpAttribute HelpController()
+        private HelpItem HelpController()
         {
             foreach (object instance in Instances)
             {
@@ -108,7 +108,7 @@ namespace AdvancedInspector
                     continue;
 
                 if (animator.runtimeAnimatorController == null)
-                    return new HelpAttribute(HelpType.Error, "The Animator requires a controller to work.");
+                    return new HelpItem(HelpType.Error, "The Animator requires a controller to work.");
             }
 
             return null;

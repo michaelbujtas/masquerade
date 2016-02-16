@@ -129,7 +129,7 @@ namespace BeardedManStudios.Network
 
 		protected override async void SendAsync(NetworkingStream stream)
 		{
-			if (stream.Receivers == NetworkReceivers.Server || stream.Receivers == NetworkReceivers.ServerAndOwner)
+			if (stream.Receivers == NetworkReceivers.Server)
 				return;
 
 			for (int i = 0; i < Players.Count; i++)
@@ -235,8 +235,6 @@ namespace BeardedManStudios.Network
 				Connected = true;
 
 				OnConnected();
-
-				Me = new NetworkingPlayer(Uniqueidentifier, ip, socket, "SERVER");
 			}
 			catch (Exception e)
 			{

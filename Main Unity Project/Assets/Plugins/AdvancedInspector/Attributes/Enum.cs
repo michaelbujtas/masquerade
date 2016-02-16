@@ -58,11 +58,4 @@ namespace AdvancedInspector
             this.display = display;
         }
     }
-
-    public enum EnumDisplay
-    { 
-        DropDown,
-        Button,
-        Checkbox
-    }
 }
