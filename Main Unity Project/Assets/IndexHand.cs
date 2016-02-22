@@ -9,9 +9,22 @@ public class IndexHand : MonoBehaviour {
 	public List<CardRenderer> Renderers;
 	public byte PlayerNumber;
 
+
+	public bool KillSlotZero = false;
+
 	public void Awake()
 	{
 		Renderers.AddRange(GetComponentsInChildren<CardRenderer>());
+	}
+
+	public void Update()
+	{
+		if(KillSlotZero)
+		{
+			KillSlotZero = false;
+			Console.Log("Slot 0 contains #" + GetIndex(0), Color.yellow);
+			RemoveIndex(GetIndex(0));
+		}
 	}
 
 
@@ -102,7 +115,9 @@ public class IndexHand : MonoBehaviour {
 				where r.Card != null && !r.Card.IsFaceUp
 				select r.Index;
 			possibleCards.AddRange(faceDownCards);
-			return possibleCards[Random.Range(0, possibleCards.Count)];
+			if(possibleCards.Count > 0)
+				return possibleCards[Random.Range(0, possibleCards.Count)];
+			return CardIndex.EMPTY_SLOT;
 		}
 	}
 
@@ -113,7 +128,6 @@ public class IndexHand : MonoBehaviour {
 			int slot = (int)GetSlot(index);
             Renderers[slot].Index = CardIndex.EMPTY_SLOT;
 			Renderers[slot].RefreshCardImage();
-			CardsOwned.Remove(index);
 			return true;
 		}
 		return false;

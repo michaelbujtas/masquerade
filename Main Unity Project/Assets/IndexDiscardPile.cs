@@ -5,7 +5,7 @@ public class IndexDiscardPile : MonoBehaviour {
 
 	public CardRenderer Renderer;
 
-	List<byte> Contents = new List<byte>();
+	public List<byte> Contents = new List<byte>();
 
 	public void Start()
 	{

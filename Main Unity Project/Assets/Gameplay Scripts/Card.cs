@@ -6,10 +6,12 @@ using BeardedManStudios.Network;
 
 
 [AdvancedInspector]
-public class Card : SimpleNetworkedMonoBehavior {
-
+public class Card : SimpleNetworkedMonoBehavior
+{
+	//Debug junk
+	[Inspect]
+	int debugOut = 0;
 	//Networking stuff attached to the card, set dynamically
-
 	[Inspect]
 	byte? index = null;
 
@@ -23,7 +25,7 @@ public class Card : SimpleNetworkedMonoBehavior {
 		}
 		set
 		{
-			if(index == null)
+			if (index == null)
 			{
 				index = value;
 			}
@@ -43,7 +45,9 @@ public class Card : SimpleNetworkedMonoBehavior {
 	//Actual card information
 
 	[Inspect]
-    public string CardName;
+	public string CardName;
+	[Inspect, Enum(true)]
+	public CardClass CardClass;
 	[Inspect]
 	public int Attack;
 	[Inspect]
@@ -98,12 +102,12 @@ public class Card : SimpleNetworkedMonoBehavior {
 
 	public bool CanFlipDown
 	{
-		get{ return isFaceUp == true; }
+		get { return isFaceUp == true; }
 	}
 
 	public bool CanFlipUp
 	{
-		get{ return isFaceUp == false; }
+		get { return isFaceUp == false; }
 	}
 
 	public bool CanActivateAbility
@@ -160,67 +164,100 @@ public class Card : SimpleNetworkedMonoBehavior {
 
 	}
 
+	public void Update()
+	{
+		debugOut = (int)(CardClass & CardClass.KING);
+	}
 
 	public void Copy(Card newCard)
-    {
-        isFaceUp = newCard.isFaceUp;
-        Attack = newCard.Attack;
-        Defense = newCard.Defense;
-        AttackBonus = newCard.AttackBonus;
-        DefenseBonus = newCard.DefenseBonus;
-        CardName = newCard.CardName;
+	{
+		isFaceUp = newCard.isFaceUp;
+		Attack = newCard.Attack;
+		Defense = newCard.Defense;
+		AttackBonus = newCard.AttackBonus;
+		DefenseBonus = newCard.DefenseBonus;
+		CardName = newCard.CardName;
 
 
 		if (newCard.Logic != null)
 			Logic = newCard.Logic.Instantiate(gameObject, this) as CardLogic;
 
-    }
+	}
 
 
-    public int GetCombatAttack()
-    {
-        if (isFaceUp && AttackBonus == FaceUpBonus.FACE_UP ||
-           !isFaceUp && AttackBonus == FaceUpBonus.FACE_DOWN)
-            return Attack * 2;
+	public int GetCombatAttack()
+	{
+		if (isFaceUp && AttackBonus == FaceUpBonus.FACE_UP ||
+		   !isFaceUp && AttackBonus == FaceUpBonus.FACE_DOWN)
+			return Attack * 2;
 
-        return Attack;
-    }
+		return Attack;
+	}
 
-    public int GetCombatDefense()
-    {
-        if (isFaceUp && DefenseBonus == FaceUpBonus.FACE_UP ||
-           !isFaceUp && DefenseBonus == FaceUpBonus.FACE_DOWN)
-            return Defense * 2;
+	public int GetCombatDefense()
+	{
+		if (isFaceUp && DefenseBonus == FaceUpBonus.FACE_UP ||
+		   !isFaceUp && DefenseBonus == FaceUpBonus.FACE_DOWN)
+			return Defense * 2;
 
-        return Defense;
-    }
+		return Defense;
+	}
 
 	public bool FlipAction(bool shouldBeFaceUp)
 	{
-		if (IsFaceUp == shouldBeFaceUp)
-			return false;
-		FlipAction();
-		return true;
+		IsTapped = true;
+		return Flip(shouldBeFaceUp);
 	}
 
 	public void FlipAction()
 	{
 		IsTapped = true;
+		Flip();
+	}
+
+	public void Flip()
+	{
 		IsFaceUp = !IsFaceUp;
 		Sync();
 		Networking.EnsureProperFlippedness(this);
 	}
 
+	public bool Flip(bool shouldBeFaceUp)
+	{
+		if (IsFaceUp == shouldBeFaceUp)
+			return false;
+		Flip();
+		return true;
+	}
+
+	public void Untap()
+	{
+		if (isTapped)
+		{
+			isTapped = false;
+			Sync();
+		}
+	}
 
 	public void AttackAction(Card defender)
 	{
 
 		IsTapped = true;
+		Sync();
+
+		//Calculate Attack and Defense
 		int attack = GetCombatAttack();
 		int defense = defender.GetCombatDefense();
 
+
 		Console.Log(CardName + " hit " + defender.CardName + " for " + attack + ".");
 		Console.Log(defender.CardName + " blocked for " + defense + ".");
+
+		//FlipUp
+		Flip(true);
+		defender.Flip(true);
+
+		//Kill Loser
 		if (attack >= defense)
 		{
 			defender.KillWithContext(this, DeathContext.DEFENDING);
@@ -230,6 +267,7 @@ public class Card : SimpleNetworkedMonoBehavior {
 			KillWithContext(defender, DeathContext.ATTACKING);
 		}
 
+		//After Attacking
 		if (Logic is IAfterAttacking)
 			((IAfterAttacking)Logic).AfterAttacking(defender);
 
@@ -268,19 +306,25 @@ public class Card : SimpleNetworkedMonoBehavior {
 
 	public void Sync()
 	{
-		if(IsFaceUp)
+		if (IsFaceUp)
 		{
 			//Sync with everybody
-			foreach (NetworkingPlayer p in OwningNetWorker.Players)
+			foreach (MasqueradePlayer p in Networking.MasqueradePlayers)
 			{
-				AuthoritativeRPC("SyncRPC", OwningNetWorker, p, false, IsFaceUp, IsTapped);
+				AuthoritativeRPC("SyncRPC", OwningNetWorker, p.NetworkingPlayer, false, IsFaceUp, IsTapped);
 			}
 		}
 		else
 		{
 			//Sync with the owner
-			AuthoritativeRPC("SyncRPC", OwningNetWorker, Owner.Player, false, IsFaceUp, IsTapped);
+			AuthoritativeRPC("SyncRPC", OwningNetWorker, Owner.NetworkingPlayer, false, IsFaceUp, IsTapped);
 		}
+	}
+
+	public void SyncFlip()
+	{
+		Sync();
+		Networking.EnsureProperFlippedness(this);
 	}
 
 	[BRPC]
@@ -289,9 +333,11 @@ public class Card : SimpleNetworkedMonoBehavior {
 		IsFaceUp = shouldBeFaceup;
 		IsTapped = shouldBeTapped;
 	}
-	
+
 	public void ForgetHistory()
 	{
+
+		Console.Log(CardName + "is is forgetting its time on the board.");
 		//Everything that can change about this card gets set back to it's default version. 
 
 		//Forget our facing

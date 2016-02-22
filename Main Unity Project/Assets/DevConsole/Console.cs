@@ -3,10 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using DevConsole;
 using UnityEngine.UI;
+using BeardedManStudios.Network;
 
 namespace DevConsole{
 	[System.Serializable]
-	public class Console : MonoBehaviour {
+	public class Console : SimpleNetworkedMonoBehavior {
 
 		//Hacky Customization
 		public Text text;
@@ -40,9 +41,9 @@ namespace DevConsole{
 		[SerializeField]
 		GUISkin skin;									//GUISkin to use
 		[SerializeField]
-		Font font;										//Font
-		[SerializeField]
-		bool dontDestroyOnLoad;							//Sets whether it destroys on load or not
+		Font font;                                      //Font
+		//[SerializeField] //Redundant now that it's a simpleNetworkedMonoBehavior
+		//bool dontDestroyOnLoad;                         //Sets whether it destroys on load or not
 
 		static Console _singleton;						//Singleton
 		static Console Singleton{						
@@ -335,7 +336,30 @@ namespace DevConsole{
 		//=============================
 		//PRINTS
 		//=============================
+
+		#region Networked Logs
+		public static void NetworkedLog(string text, Color color)
+		{
+			if (Singleton.OwningNetWorker.Connected)
+				Singleton.RPC("NetworkedLogRPC", text, color);
+			else
+			{
+				Log("NetworkedLog while Disconnected!", Color.red);
+				Log(text, color);
+			}
+		}
+
+		[BRPC]
+		void NetworkedLogRPC(string text, Color color)
+		{
+			Log(text, color);
+		}
+
+
+		#endregion
 		#region Logs
+
+
 		/// <summary>
 		/// Logs a white text to the console.
 		/// </summary>
@@ -343,6 +367,7 @@ namespace DevConsole{
 		public static void Log(string text){
 			Singleton.BasePrint(text);
 		}
+
 		public static void Log(object obj){
 			Log (obj.ToString());
 		}

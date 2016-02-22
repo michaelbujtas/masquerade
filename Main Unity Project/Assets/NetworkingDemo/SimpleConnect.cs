@@ -71,7 +71,6 @@ public class SimpleConnect : SimpleNetworkedMonoBehavior
 	public void DisconnectButtonClickUI()
 	{
 		Networking.Disconnect();
-
 	}
 
 
@@ -82,8 +81,8 @@ public class SimpleConnect : SimpleNetworkedMonoBehavior
 		NetWorker.connected += delegate
 		{
 			Console.Log("Connection Established");
-			//joinButton.gameObject.SetActive(false);
-			//hostButton.gameObject.SetActive(false);
+			joinButton.gameObject.SetActive(false);
+			hostButton.gameObject.SetActive(false);
 			//disconnectButton.gameObject.SetActive(true);
 
 		};
@@ -91,8 +90,8 @@ public class SimpleConnect : SimpleNetworkedMonoBehavior
 		NetWorker.disconnected += delegate
 		{
 			Console.Log("Connection Closed or Lost");
-			//joinButton.gameObject.SetActive(true);
-			//hostButton.gameObject.SetActive(true);
+			joinButton.gameObject.SetActive(true);
+			hostButton.gameObject.SetActive(true);
 			//disconnectButton.gameObject.SetActive(false);
 			WeAreHost = false;
 		};
@@ -102,8 +101,8 @@ public class SimpleConnect : SimpleNetworkedMonoBehavior
 		NetWorker.serverDisconnected += delegate (string reason)
 		{
 			Console.Log("Server Disconnected for Reason: " + reason);
-			//joinButton.gameObject.SetActive(true);
-			//hostButton.gameObject.SetActive(true);
+			joinButton.gameObject.SetActive(true);
+			hostButton.gameObject.SetActive(true);
 			//disconnectButton.gameObject.SetActive(false);
 			WeAreHost = false;
 		};

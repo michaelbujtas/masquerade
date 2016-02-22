@@ -20,6 +20,7 @@ public class IndexActionChoiceMenu : MonoBehaviour
 
 	public delegate void HandleChoiceDelegate(CardAction choice);
 
+	public delegate void HandleCancelDelegate();
 
 	public void AttackButtonUI()
 	{
@@ -36,14 +37,13 @@ public class IndexActionChoiceMenu : MonoBehaviour
 
 	public void BackButtonUI()
 	{
-		//Cancel isn't supported yet
-		//Choose(CardAction.CANCEL);
+		Cancel();
 	}
 
 
-	public Choice GetChoice(byte index, HandleChoiceDelegate handle)
+	public Choice GetChoice(byte index, HandleChoiceDelegate handle, HandleCancelDelegate cancel)
 	{
-		Choice retVal = new Choice(index, handle);
+		Choice retVal = new Choice(index, handle, cancel);
         decisionQueue.Add(retVal);
 		ShowChoice();
 		return retVal;
@@ -76,7 +76,7 @@ public class IndexActionChoiceMenu : MonoBehaviour
 			flipUp.gameObject.SetActive(newCard.CanFlipUp);
 			flipDown.gameObject.SetActive(newCard.CanFlipDown);
 			ability.gameObject.SetActive(newCard.CanActivateAbility);
-			back.gameObject.SetActive(false);
+			back.gameObject.SetActive(nextChoice.Cancel != null);
 
 		}
 	}
@@ -89,16 +89,26 @@ public class IndexActionChoiceMenu : MonoBehaviour
 		ShowChoice();
 	}
 
+	void Cancel()
+	{
+		Choice currentChoice = decisionQueue[0];
+		decisionQueue.RemoveAt(0);
+		currentChoice.Cancel();
+		ShowChoice();
+	}
+
 	public class Choice
 	{
 
-		public Choice(byte index, HandleChoiceDelegate handle)
+		public Choice(byte index, HandleChoiceDelegate handle, HandleCancelDelegate cancel)
 		{
 			Index = index;
 			Handle = handle;
+			Cancel = cancel;
 		}
 		public byte Index;
 		public HandleChoiceDelegate Handle;
+		public HandleCancelDelegate Cancel;
 	}
 }
 
