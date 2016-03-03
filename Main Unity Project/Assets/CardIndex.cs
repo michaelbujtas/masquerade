@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
-using DevConsole;
 using AdvancedInspector;
 
 [AdvancedInspector]
@@ -30,7 +29,7 @@ public class CardIndex : MonoBehaviour {
 	{
 		if (!Cards.ContainsKey(index))
 		{
-			Console.LogWarning("There is no card at that index, which probably means it's too high.");
+			CustomConsole.LogWarning("There is no card at that index, which probably means it's too high.");
 			return null;
 		}
 		else
@@ -43,7 +42,7 @@ public class CardIndex : MonoBehaviour {
 			else
 			{
 
-				Console.LogWarning("Don't ask about indices over 200. They don't correspond to actual cards.");
+				CustomConsole.LogWarning("Don't ask about indices over 200. They don't correspond to actual cards.");
 				return null;
 			}
 		}
@@ -64,7 +63,7 @@ public class CardIndex : MonoBehaviour {
 			index++;
 			if(index > 200)
 			{
-				Console.LogError("Hard cap of 200 cards in a deck. Tough.");
+				CustomConsole.LogError("Hard cap of 200 cards in a deck. Tough.");
 				break;
 			}
 		}

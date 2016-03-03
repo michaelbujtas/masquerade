@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using System.Collections;
-using DevConsole;
 
 public class Player : MonoBehaviour {
 
@@ -29,8 +28,8 @@ public class Player : MonoBehaviour {
 
 	void ActionPhase()
 	{
-		
-        Console.Log(actionsLeft + " actions left.");
+
+		CustomConsole.Log(actionsLeft + " actions left.");
 		if (actionsLeft > 0)
 			Engine.Selector.Handle(new ActionRequest(this));
 		else
@@ -59,7 +58,7 @@ public class Player : MonoBehaviour {
 		}
 		else
 		{
-			Console.Log("Skipping some logic because the deck's empty.");
+			CustomConsole.Log("Skipping some logic because the deck's empty.");
 			ActionPhase();
 		}
 	}
@@ -70,7 +69,7 @@ public class Player : MonoBehaviour {
 		switch (action)
 		{
 			case CardAction.ATTACK:
-				Console.Log("Right now attacking ends the turn. I need to build a startling amount of infrastructure to fix this.");
+				CustomConsole.Log("Right now attacking ends the turn. I need to build a startling amount of infrastructure to fix this.");
 				Engine.Attack(card);
 				break;
 			case CardAction.FLIP:
@@ -80,7 +79,7 @@ public class Player : MonoBehaviour {
 					Engine.FlipUp(card);
 				break;
 			case CardAction.ACTIVATE:
-				Console.Log("No activated abilities yet");
+				CustomConsole.Log("No activated abilities yet");
 				break;
 			/*case CardAction.CANCEL:
 				actionsLeft++;

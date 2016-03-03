@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
-using DevConsole;
 using System.Linq;
 
 
@@ -22,7 +21,7 @@ public class IndexHand : MonoBehaviour {
 		if(KillSlotZero)
 		{
 			KillSlotZero = false;
-			Console.Log("Slot 0 contains #" + GetIndex(0), Color.yellow);
+			CustomConsole.Log("Slot 0 contains #" + GetIndex(0), Color.yellow);
 			RemoveIndex(GetIndex(0));
 		}
 	}
@@ -55,7 +54,7 @@ public class IndexHand : MonoBehaviour {
 			for (byte i = 0; i < Renderers.Count; i++)
 				if (Renderers[i].Index == CardIndex.EMPTY_SLOT)
 					return i;
-			Console.LogError("ArgumentOutOfRangeException: No open slots in IndexHand.");
+			CustomConsole.LogError("ArgumentOutOfRangeException: No open slots in IndexHand.");
 			throw new System.NotFiniteNumberException();
 		}
 	}

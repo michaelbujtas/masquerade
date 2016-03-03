@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
-using DevConsole;
 
 public class Deck : CardList {
 
@@ -48,7 +47,7 @@ public class Deck : CardList {
 			Cards.RemoveAt(0);
 			return retVal;
 		}
-		Console.LogError("Drew a card when there were no cards. Returning null.");
+		CustomConsole.LogError("Drew a card when there were no cards. Returning null.");
 		return null;
 	}
 	

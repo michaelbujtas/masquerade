@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using System.Collections;
-using DevConsole;
 
 public class Response<T> {
 	
@@ -47,7 +46,7 @@ public class Response<T> {
 		}
 		else
 		{
-			Console.LogError("Don't Set() responses until you Recycle() them.");
+			CustomConsole.LogError("Don't Set() responses until you Recycle() them.");
 			return false;
 		}
 	}
@@ -63,7 +62,7 @@ public class Response<T> {
 		}
 		else
 		{
-			Console.LogError("Can't Fill() a response unless it has been Set() but not yet Filled.");
+			CustomConsole.LogError("Can't Fill() a response unless it has been Set() but not yet Filled.");
 			return false;
 		}
 	}

@@ -2,7 +2,6 @@
 using System.Collections;
 using BeardedManStudios.Network;
 using UnityEngine.UI;
-using DevConsole;
 
 public class SimpleConnect : SimpleNetworkedMonoBehavior
 {
@@ -45,7 +44,7 @@ public class SimpleConnect : SimpleNetworkedMonoBehavior
 		}
 		catch (System.Exception e)
 		{
-			Console.Log("Networking.IsConnected threw execption: " + e.GetType().ToString());
+			CustomConsole.Log("Networking.IsConnected threw execption: " + e.GetType().ToString());
 			IsConnected = false;
 			//Jesus
 		}
@@ -80,7 +79,7 @@ public class SimpleConnect : SimpleNetworkedMonoBehavior
 
 		NetWorker.connected += delegate
 		{
-			Console.Log("Connection Established");
+			CustomConsole.Log("Connection Established");
 			joinButton.gameObject.SetActive(false);
 			hostButton.gameObject.SetActive(false);
 			//disconnectButton.gameObject.SetActive(true);
@@ -89,7 +88,7 @@ public class SimpleConnect : SimpleNetworkedMonoBehavior
 
 		NetWorker.disconnected += delegate
 		{
-			Console.Log("Connection Closed or Lost");
+			CustomConsole.Log("Connection Closed or Lost");
 			joinButton.gameObject.SetActive(true);
 			hostButton.gameObject.SetActive(true);
 			//disconnectButton.gameObject.SetActive(false);
@@ -100,7 +99,7 @@ public class SimpleConnect : SimpleNetworkedMonoBehavior
 
 		NetWorker.serverDisconnected += delegate (string reason)
 		{
-			Console.Log("Server Disconnected for Reason: " + reason);
+			CustomConsole.Log("Server Disconnected for Reason: " + reason);
 			joinButton.gameObject.SetActive(true);
 			hostButton.gameObject.SetActive(true);
 			//disconnectButton.gameObject.SetActive(false);

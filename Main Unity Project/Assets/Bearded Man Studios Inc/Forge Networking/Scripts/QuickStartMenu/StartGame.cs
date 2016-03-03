@@ -19,35 +19,37 @@
 
 
 
-using UnityEngine;
-using UnityEngine.UI;
-
 using BeardedManStudios.Network;
 using BeardedManStudios.Network.Unity;
+using UnityEngine;
+using UnityEngine.UI;
+using System.Net;
 
 namespace BeardedManStudios.Forge.Examples
 {
 	public class StartGame : MonoBehaviour
 	{
-		public string host = "127.0.0.1";																		// IP address
-		public int port = 15937;																				// Port number
-		public Networking.TransportationProtocolType protocolType = Networking.TransportationProtocolType.UDP;	// Communication protocol
-		public int playerCount = 31;																			// Maximum player count -- excluding this server
-		public string sceneName = "Game";																		// Scene to load
-		public string serverBrowserScene = "ForgeQuickServerBrowser";											// The server browser scene
-		public bool proximityBasedUpdates = false;																// Only send other player updates if they are within range
-		public float proximityDistance = 5.0f;																	// The range for the players to be updated within
+		public string host = "127.0.0.1";                                                                       // IP address
+		public int port = 15937;                                                                                // Port number
+		public Networking.TransportationProtocolType protocolType = Networking.TransportationProtocolType.UDP;  // Communication protocol
+		public int playerCount = 31;                                                                            // Maximum player count -- excluding this server
+		public string sceneName = "Game";                                                                       // Scene to load
+		public string serverBrowserScene = "ForgeQuickServerBrowser";                                           // The server browser scene
+		public bool proximityBasedUpdates = false;                                                              // Only send other player updates if they are within range
+		public float proximityDistance = 5.0f;                                                                  // The range for the players to be updated within
 
-		private NetWorker socket = null;																		// The initial connection socket
+		private NetWorker socket = null;                                                                        // The initial connection socket
 
-		public InputField ipAddressInput = null;																// The input label for the ip address for the client to connect to directly
+		public InputField ipAddressInput = null;                                                                // The input label for the ip address for the client to connect to directly
 
-		public float packetDropSimulationChance = 0.0f;															// A number between 0 and 1 where 0 is 0% and 1 is 100%
-		public int networkLatencySimulationTime = 0;															// The amount of time in milliseconds to simulate network latency
+		public float packetDropSimulationChance = 0.0f;                                                         // A number between 0 and 1 where 0 is 0% and 1 is 100%
+		public int networkLatencySimulationTime = 0;                                                            // The amount of time in milliseconds to simulate network latency
 
-		public string masterServerIp = string.Empty;															// If this has a value then it will register itself on the master server at this location
+		public string masterServerIp = string.Empty;                                                            // If this has a value then it will register itself on the master server at this location
 		public bool useNatHolePunching = false;
 		public bool showBandwidth = false;
+
+		private bool isBusyFindingLan = false;
 
 #if UNITY_STANDALONE_LINUX
 		public bool autoStartServer = true;
@@ -65,7 +67,7 @@ namespace BeardedManStudios.Forge.Examples
 		{
 			get
 			{
-#if UNITY_4_6
+#if UNITY_4_6 || UNITY_4_7
 				return Application.platform == RuntimePlatform.MetroPlayerARM ||
 					Application.platform == RuntimePlatform.MetroPlayerX86 ||
 					Application.platform == RuntimePlatform.MetroPlayerX64;
@@ -122,7 +124,7 @@ namespace BeardedManStudios.Forge.Examples
 
 			if (!string.IsNullOrEmpty(masterServerIp))
 			{
-				socket.connected += delegate()
+				socket.connected += delegate ()
 				{
 					ForgeMasterServer.RegisterServer(masterServerIp, (ushort)port, playerCount, "My Awesome Game Name", "Deathmatch", "Thank you for your support!", sceneName: sceneName);
 				};
@@ -136,7 +138,11 @@ namespace BeardedManStudios.Forge.Examples
 
 		public void ServerBrowser()
 		{
+#if UNITY_5_3
+			UnitySceneManager.LoadScene(serverBrowserScene);
+#else
 			Application.LoadLevel(serverBrowserScene);
+#endif
 		}
 
 		public void StartClient()
@@ -151,12 +157,24 @@ namespace BeardedManStudios.Forge.Examples
 
 			socket = Networking.Connect(host, (ushort)port, protocolType, IsWinRT, useNatHolePunching);
 
+			if (!socket.Connected)
+			{
+				socket.ConnectTimeout = 5000;
+				socket.connectTimeout += ConnectTimeout;
+			}
+
 #if !NETFX_CORE
 			if (socket is CrossPlatformUDP)
 				((CrossPlatformUDP)socket).networkLatencySimulationTime = networkLatencySimulationTime;
 #endif
 
 			Go();
+		}
+
+		private void ConnectTimeout()
+		{
+			Debug.LogWarning("Connection could not be established");
+			Networking.Disconnect();
 		}
 
 		public void TCPLocal()
@@ -167,11 +185,18 @@ namespace BeardedManStudios.Forge.Examples
 
 		public void StartClientLan()
 		{
-#if !NETFX_CORE
-			System.Net.IPEndPoint endpoint = Networking.LanDiscovery((ushort)port, 5000, protocolType, IsWinRT);
-#else
-			IPEndPointWinRT endpoint = Networking.LanDiscovery((ushort)port, 5000, protocolType, IsWinRT);
-#endif
+			if (isBusyFindingLan)
+				return;
+
+			isBusyFindingLan = true;
+			Networking.lanEndPointFound += FoundEndpoint;
+			Networking.LanDiscovery((ushort)port, 5000, protocolType, IsWinRT);
+		}
+
+		private void FoundEndpoint(IPEndPoint endpoint)
+		{
+			isBusyFindingLan = false;
+			Networking.lanEndPointFound -= FoundEndpoint;
 			if (endpoint == null)
 			{
 				Debug.Log("No server found on LAN");
@@ -185,20 +210,28 @@ namespace BeardedManStudios.Forge.Examples
 			ipAddress = endpoint.Address.ToString();
 			targetPort = (ushort)endpoint.Port;
 #else
-			ipAddress = endpoint.ipAddress;
-			targetPort = (ushort)endpoint.port;
+						ipAddress = endpoint.ipAddress;
+						targetPort = (ushort)endpoint.port;
 #endif
 
 			socket = Networking.Connect(ipAddress, targetPort, protocolType, IsWinRT, useNatHolePunching);
 			Go();
 		}
 
+		private void RemoveSocketReference()
+		{
+			socket = null;
+			Networking.networkReset -= RemoveSocketReference;
+		}
+
 		private void Go()
 		{
+			Networking.networkReset += RemoveSocketReference;
+
 			if (proximityBasedUpdates)
 				socket.MakeProximityBased(proximityDistance);
 
-			socket.serverDisconnected += delegate(string reason)
+			socket.serverDisconnected += delegate (string reason)
 			{
 				MainThreadManager.Run(() =>
 				{
@@ -219,7 +252,12 @@ namespace BeardedManStudios.Forge.Examples
 		{
 			socket.connected -= LoadScene;
 			Networking.SetPrimarySocket(socket);
+
+#if UNITY_5_3
+			UnitySceneManager.LoadScene(sceneName);
+#else
 			Application.LoadLevel(sceneName);
+#endif
 		}
 	}
 }

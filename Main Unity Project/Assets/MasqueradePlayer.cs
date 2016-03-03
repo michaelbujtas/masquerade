@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using DevConsole;
 using BeardedManStudios.Network;
 
 public class MasqueradePlayer {

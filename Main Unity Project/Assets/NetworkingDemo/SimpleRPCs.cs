@@ -2,7 +2,6 @@
 using System.Collections;
 using BeardedManStudios.Network;
 using UnityEngine.UI;
-using DevConsole;
 
 
 
@@ -20,10 +19,10 @@ public class SimpleRPCs : SimpleNetworkedMonoBehavior {
 	[BRPC]
 	void SendGarbage(byte first, byte second, byte third, byte fourth)
 	{
-		Console.Log(first, Color.magenta);
-		Console.Log(second, Color.magenta);
-		Console.Log(third, Color.magenta);
-		Console.Log(fourth, Color.magenta);
+		CustomConsole.Log(first, Color.magenta);
+		CustomConsole.Log(second, Color.magenta);
+		CustomConsole.Log(third, Color.magenta);
+		CustomConsole.Log(fourth, Color.magenta);
 	}
 
 	// Use this for initialization
@@ -49,10 +48,10 @@ public class SimpleRPCs : SimpleNetworkedMonoBehavior {
 		byte third = 9;
 		byte fourth = 205;
 
-		Console.Log(first, Color.cyan);
-		Console.Log(second, Color.cyan);
-		Console.Log(third, Color.cyan);
-		Console.Log(fourth, Color.cyan);
+		CustomConsole.Log(first, Color.cyan);
+		CustomConsole.Log(second, Color.cyan);
+		CustomConsole.Log(third, Color.cyan);
+		CustomConsole.Log(fourth, Color.cyan);
 		RPC("SendGarbage", NetworkReceivers.Server, first, second, third, fourth);
 	}
 }

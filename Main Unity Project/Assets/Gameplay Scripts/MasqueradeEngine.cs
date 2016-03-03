@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using DevConsole;
 using System.Collections;
 
 public class MasqueradeEngine : MonoBehaviour {
@@ -39,8 +38,8 @@ public class MasqueradeEngine : MonoBehaviour {
 		FlipUp(attacker);
 		FlipUp(defender);
 
-		Console.Log(attacker.CardName + " hit " + defender.CardName + " for " + attack + ".");
-		Console.Log(defender.CardName + " blocked for " + defense + ".");
+		CustomConsole.Log(attacker.CardName + " hit " + defender.CardName + " for " + attack + ".");
+		CustomConsole.Log(defender.CardName + " blocked for " + defense + ".");
 		if (attack >= defense)
 			Kill(attacker, defender);
 		else
@@ -54,7 +53,7 @@ public class MasqueradeEngine : MonoBehaviour {
 
 	public void Kill(Card killer, Card victim)
 	{
-		Console.Log(killer.CardName + " killed " + victim.CardName, Color.red);
+		CustomConsole.Log(killer.CardName + " killed " + victim.CardName, Color.red);
 		//if (victim.Logic is IOnKilled)
 		//	((IOnKilled)victim.Logic).OnKilled(killer);
 		Player1.Hand.RemoveCard(victim.Renderer);
@@ -89,7 +88,7 @@ public class MasqueradeEngine : MonoBehaviour {
 		}
 		else
 		{
-			Console.Log("Can't draw because we're out of cards.");
+			CustomConsole.Log("Can't draw because we're out of cards.");
 			return null;
 		}
 

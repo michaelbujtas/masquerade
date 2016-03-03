@@ -20,10 +20,22 @@ Platform assembly: C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_D
 Loading C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\UnityEngine.Networking.dll into Unity Child Domain
 Platform assembly: C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\UnityEngine.UI.dll (this message is harmless)
 Loading C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\UnityEngine.UI.dll into Unity Child Domain
-- Completed reload, in  0.131 seconds
+- Completed reload, in  0.119 seconds
 Platform assembly: C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\System.Core.dll (this message is harmless)
 Platform assembly: C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\System.dll (this message is harmless)
 <RI> Initializing input.
+<RI.Hid> Failed to create device file:
+ 2 The system cannot find the file specified.
+
+ 
+(Filename:  Line: 54)
+
+<RI.Hid> Failed to create device file:
+ 2 The system cannot find the file specified.
+
+ 
+(Filename:  Line: 54)
+
 <RI> Input initialized.
 desktop: 2560x1440 59Hz; virtual: 7680x1446 at -2560,-6
 <RI> Initialized touch support.
@@ -49,91 +61,41 @@ Platform assembly: C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_D
 Loading C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\UnityEngine.Networking.dll into Unity Child Domain
 Platform assembly: C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\UnityEngine.UI.dll (this message is harmless)
 Loading C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\UnityEngine.UI.dll into Unity Child Domain
-- Completed reload, in  0.047 seconds
-Platform assembly: C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\System.Core.dll (this message is harmless)
-Platform assembly: C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\System.dll (this message is harmless)
-desktop: 2560x1440 59Hz; virtual: 7680x1446 at -2560,-6
-<RI> Initializing input.
-<RI> Input initialized.
-Initialize engine version: 5.3.2f1 (e87ab445ead0)
-GfxDevice: creating device client; threaded=1
-Direct3D:
-    Version:  Direct3D 11.0 [level 11.0]
-    Renderer: NVIDIA GeForce GTX 980 Ti (ID=0x17c8)
-    Vendor:   NVIDIA
-    VRAM:     3072 MB
-Begin MonoManager ReloadAssembly
-Platform assembly: C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\UnityEngine.dll (this message is harmless)
-Loading C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\UnityEngine.dll into Unity Child Domain
-Platform assembly: C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\Assembly-CSharp-firstpass.dll (this message is harmless)
-Loading C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\Assembly-CSharp-firstpass.dll into Unity Child Domain
-Platform assembly: C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\Assembly-CSharp.dll (this message is harmless)
-Loading C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\Assembly-CSharp.dll into Unity Child Domain
-Platform assembly: C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\UnityEngine.UI.dll (this message is harmless)
-Loading C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\UnityEngine.UI.dll into Unity Child Domain
-Platform assembly: C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\UnityEngine.Networking.dll (this message is harmless)
-Loading C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\UnityEngine.Networking.dll into Unity Child Domain
-Platform assembly: C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\UnityEngine.Networking.dll (this message is harmless)
-Loading C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\UnityEngine.Networking.dll into Unity Child Domain
-Platform assembly: C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\UnityEngine.UI.dll (this message is harmless)
-Loading C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\UnityEngine.UI.dll into Unity Child Domain
-- Completed reload, in  0.038 seconds
-Platform assembly: C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\System.Core.dll (this message is harmless)
-Platform assembly: C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\System.dll (this message is harmless)
-desktop: 2560x1440 59Hz; virtual: 7680x1446 at -2560,-6
-<RI> Initializing input.
-<RI> Input initialized.
-Initialize engine version: 5.3.2f1 (e87ab445ead0)
-GfxDevice: creating device client; threaded=1
-Direct3D:
-    Version:  Direct3D 11.0 [level 11.0]
-    Renderer: NVIDIA GeForce GTX 980 Ti (ID=0x17c8)
-    Vendor:   NVIDIA
-    VRAM:     3072 MB
-Begin MonoManager ReloadAssembly
-Platform assembly: C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\UnityEngine.dll (this message is harmless)
-Loading C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\UnityEngine.dll into Unity Child Domain
-Platform assembly: C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\Assembly-CSharp-firstpass.dll (this message is harmless)
-Loading C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\Assembly-CSharp-firstpass.dll into Unity Child Domain
-Platform assembly: C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\Assembly-CSharp.dll (this message is harmless)
-Loading C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\Assembly-CSharp.dll into Unity Child Domain
-Platform assembly: C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\UnityEngine.UI.dll (this message is harmless)
-Loading C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\UnityEngine.UI.dll into Unity Child Domain
-Platform assembly: C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\UnityEngine.Networking.dll (this message is harmless)
-Loading C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\UnityEngine.Networking.dll into Unity Child Domain
-Platform assembly: C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\UnityEngine.Networking.dll (this message is harmless)
-Loading C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\UnityEngine.Networking.dll into Unity Child Domain
-Platform assembly: C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\UnityEngine.UI.dll (this message is harmless)
-Loading C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\UnityEngine.UI.dll into Unity Child Domain
-- Completed reload, in  0.044 seconds
+- Completed reload, in  0.041 seconds
 Platform assembly: C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\System.Core.dll (this message is harmless)
 Platform assembly: C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\System.dll (this message is harmless)
 <RI> Initializing input.
+<RI.Hid> Failed to create device file:
+ 2 The system cannot find the file specified.
+
+ 
+(Filename:  Line: 54)
+
+<RI.Hid> Failed to create device file:
+ 2 The system cannot find the file specified.
+
+ 
+(Filename:  Line: 54)
+
 <RI> Input initialized.
 desktop: 2560x1440 59Hz; virtual: 7680x1446 at -2560,-6
 <RI> Initialized touch support.
-UnloadTime: 0.693759 ms
+UnloadTime: 0.680959 ms
+DontDestroyOnLoad only work for root GameObjects or components on root GameObjects.
+ 
+(Filename:  Line: 367)
+
 Setting up 2 worker threads for Enlighten.
-  Thread -> id: 2700 -> priority: 1 
-  Thread -> id: 24fc -> priority: 1 
-<RI> Initialized touch support.
-UnloadTime: 0.436223 ms
+  Thread -> id: 45ac -> priority: 1 
+  Thread -> id: 5368 -> priority: 1 
+UnloadTime: 0.393471 ms
+DontDestroyOnLoad only work for root GameObjects or components on root GameObjects.
+ 
+(Filename:  Line: 367)
+
 Setting up 2 worker threads for Enlighten.
-  Thread -> id: 2e48 -> priority: 1 
-  Thread -> id: 4a24 -> priority: 1 
-<RI> Initialized touch support.
-UnloadTime: 0.449791 ms
-Setting up 2 worker threads for Enlighten.
-  Thread -> id: 2270 -> priority: 1 
-  Thread -> id: 5344 -> priority: 1 
-UnloadTime: 0.443647 ms
-Setting up 2 worker threads for Enlighten.
-  Thread -> id: 2918 -> priority: 1 
-  Thread -> id: 3d98 -> priority: 1 
-Platform assembly: C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\System.Configuration.dll (this message is harmless)
-Platform assembly: C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\System.Xml.dll (this message is harmless)
-Platform assembly: C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\System.Configuration.dll (this message is harmless)
-Platform assembly: C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\System.Xml.dll (this message is harmless)
+  Thread -> id: 5504 -> priority: 1 
+  Thread -> id: 6fb8 -> priority: 1 
 Platform assembly: C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\System.Configuration.dll (this message is harmless)
 Platform assembly: C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\System.Xml.dll (this message is harmless)
 Platform assembly: C:\Users\Lou\Git\Masquerade\Main Unity Project\Builds\build_Data\Managed\System.Configuration.dll (this message is harmless)

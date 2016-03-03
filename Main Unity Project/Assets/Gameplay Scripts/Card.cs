@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
 using AdvancedInspector;
-using DevConsole;
 using BeardedManStudios.Network;
 
 
@@ -20,7 +19,7 @@ public class Card : SimpleNetworkedMonoBehavior
 		get
 		{
 			if (index == null)
-				Console.LogError("Card index is not yet set.");
+				CustomConsole.LogError("Card index is not yet set.");
 			return index;
 		}
 		set
@@ -31,14 +30,12 @@ public class Card : SimpleNetworkedMonoBehavior
 			}
 			else
 			{
-				Console.LogError("You're trying to reindex a card. You should never have to do that.");
+				CustomConsole.LogError("You're trying to reindex a card. You should never have to do that.");
 			}
 		}
 	}
 
 	public MasqueradePlayer Owner;
-
-	public byte? OwnerIndex = null;
 
 	public byte? CurrentSlot = null;
 
@@ -71,6 +68,15 @@ public class Card : SimpleNetworkedMonoBehavior
 		set { isTapped = value; }
 	}
 
+
+	bool isAlive = false;
+	public bool IsAlive
+	{
+		get { return isAlive; }
+		set { isAlive = value; }
+	}
+
+
 	[Inspect, CreateDerived]
 	public CardLogic[] logic = new CardLogic[1];
 
@@ -82,7 +88,7 @@ public class Card : SimpleNetworkedMonoBehavior
 			if (logic != null)
 			{
 				if (logic.Length > 1)
-					Console.LogError(CardName + "has too many logics. I'm gonna use the first one, but you need to get your shit together.");
+					CustomConsole.LogError(CardName + "has too many logics. I'm gonna use the first one, but you need to get your shit together.");
 				if (logic.Length == 0)
 					return null;
 				return logic[0];
@@ -206,12 +212,14 @@ public class Card : SimpleNetworkedMonoBehavior
 	public bool FlipAction(bool shouldBeFaceUp)
 	{
 		IsTapped = true;
+		Sync();
 		return Flip(shouldBeFaceUp);
 	}
 
 	public void FlipAction()
 	{
 		IsTapped = true;
+		Sync();
 		Flip();
 	}
 
@@ -239,9 +247,9 @@ public class Card : SimpleNetworkedMonoBehavior
 		}
 	}
 
-	public void AttackAction(Card defender)
+	public IEnumerator AttackAction(Card defender, System.Action callback)
 	{
-
+		Color logColor = new Color(1, .5f, 0);
 		IsTapped = true;
 		Sync();
 
@@ -250,8 +258,8 @@ public class Card : SimpleNetworkedMonoBehavior
 		int defense = defender.GetCombatDefense();
 
 
-		Console.Log(CardName + " hit " + defender.CardName + " for " + attack + ".");
-		Console.Log(defender.CardName + " blocked for " + defense + ".");
+		CustomConsole.Log(CardName + " hit " + defender.CardName + " for " + attack + ".", logColor);
+		CustomConsole.Log(defender.CardName + " blocked for " + defense + ".", logColor);
 
 		//FlipUp
 		Flip(true);
@@ -260,6 +268,19 @@ public class Card : SimpleNetworkedMonoBehavior
 		//Kill Loser
 		if (attack >= defense)
 		{
+
+			CustomConsole.Log("Defending player owns " + networking.UsedHands[defender.Owner.PlayerIndex].CardsOwned.Count + " cards.", logColor);
+
+			if (networking.UsedHands[defender.Owner.PlayerIndex].CardsOwned.Count == 1)
+			{
+				bool BoardClearDrawFinished = false;
+
+				StartCoroutine(networking.DrawCardCOR(Owner.PlayerIndex, (coroutineReturn) => { BoardClearDrawFinished = true; }));
+
+				while (!BoardClearDrawFinished)
+					yield return null;
+			}
+			yield return null;
 			defender.KillWithContext(this, DeathContext.DEFENDING);
 		}
 		else
@@ -267,9 +288,13 @@ public class Card : SimpleNetworkedMonoBehavior
 			KillWithContext(defender, DeathContext.ATTACKING);
 		}
 
+		CustomConsole.Log("AfterAttack isAlive status " + IsAlive);
 		//After Attacking
-		if (Logic is IAfterAttacking)
-			((IAfterAttacking)Logic).AfterAttacking(defender);
+		if(IsAlive)
+			if (Logic is IAfterAttacking)
+				((IAfterAttacking)Logic).AfterAttacking(defender);
+
+		callback();
 
 	}
 
@@ -286,27 +311,29 @@ public class Card : SimpleNetworkedMonoBehavior
 
 	public void KillWithContext(Card killer, DeathContext context)
 	{
-		Console.Log(killer.CardName + " killed " + CardName + ". Context: " + context.ToString(), Color.red);
-
-		if (Logic is IOnKilled)
-			((IOnKilled)Logic).OnKilled(killer, context);
+		CustomConsole.Log(killer.CardName + " killed " + CardName + ". Context: " + context.ToString(), Color.red);
+		if(IsAlive)
+			if (Logic is IOnKilled)
+				((IOnKilled)Logic).OnKilled(killer, context);
 
 		Kill();
 	}
 
 	public void Kill()
 	{
-		Console.Log(CardName + " died.", Color.red);
+		CustomConsole.Log(CardName + " died.", Color.red);
 
-		if (Logic is IOnDeath)
-			((IOnDeath)Logic).OnDeath();
+		if (IsAlive)
+			if (Logic is IOnDeath)
+			 ((IOnDeath)Logic).OnDeath();
 
+		IsAlive = false;
 		Networking.SendToDiscard(this);
 	}
 
 	public void Sync()
 	{
-		if (IsFaceUp)
+		if (IsFaceUp || Owner == null)
 		{
 			//Sync with everybody
 			foreach (MasqueradePlayer p in Networking.MasqueradePlayers)
@@ -317,6 +344,7 @@ public class Card : SimpleNetworkedMonoBehavior
 		else
 		{
 			//Sync with the owner
+
 			AuthoritativeRPC("SyncRPC", OwningNetWorker, Owner.NetworkingPlayer, false, IsFaceUp, IsTapped);
 		}
 	}
@@ -337,7 +365,7 @@ public class Card : SimpleNetworkedMonoBehavior
 	public void ForgetHistory()
 	{
 
-		Console.Log(CardName + "is is forgetting its time on the board.");
+		CustomConsole.Log(CardName + "is is forgetting its time on the board.");
 		//Everything that can change about this card gets set back to it's default version. 
 
 		//Forget our facing
@@ -354,7 +382,6 @@ public class Card : SimpleNetworkedMonoBehavior
 
 		//Forget our position on the board
 		Owner = null;
-		OwnerIndex = null;
 		CurrentSlot = null;
 	}
 }

@@ -20,20 +20,29 @@
 
 
 using System;
-using System.Globalization;
+
+#if NETFX_CORE && !UNITY_EDITOR
+
+namespace System.Net
+{
+   public class IPEndPoint
+   {
+      public IPEndPoint(string address, int port)
+      {
+         ipAddress = address ?? string.Empty;
+         this.port = port;
+      }
+
+      public string ipAddress = string.Empty;
+      public string Address { get { return ipAddress; } }
+      public int port = 0;
+      public int Port { get { return port; } }
+   }
+}
+#endif
 
 namespace BeardedManStudios.Network
 {
-#if NETFX_CORE
-	public class IPEndPointWinRT
-	{
-		public string ipAddress = string.Empty;
-		public string Address { get { return ipAddress; } }
-		public int port = 0;
-		public int Port { get { return port; } }
-	}
-#endif
-
 	public class NetworkingPlayer : NetworkingSerialized
 	{
 		/// <summary>
@@ -116,7 +125,17 @@ namespace BeardedManStudios.Network
 		/// Set the name of this player
 		/// </summary>
 		/// <param name="name">The name to be assigned</param>
+		[Obsolete("Rename() is deprecated, please use SetName() instead.")]
 		public void Rename(string name)
+		{
+			SetName(name);
+		}
+
+		/// <summary>
+		/// Set the name of this player
+		/// </summary>
+		/// <param name="name">The name to be assigned</param>
+		public void SetName(string name)
 		{
 			Name = name;
 		}

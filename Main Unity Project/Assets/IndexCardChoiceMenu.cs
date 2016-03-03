@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using DevConsole;
 using System.Linq;
 using UnityEngine.UI;
 
@@ -61,7 +60,7 @@ public class IndexCardChoiceMenu : MonoBehaviour {
 	}
 	public void OnAnyCardButtonUI(byte index)
 	{
-		Console.Log("Card Button Clicked.");
+		CustomConsole.Log("Card Button Clicked.");
 		if (decisionQueue.Count > 0)
 		{
 			if (decisionQueue[0].Options.Contains(index))
@@ -70,8 +69,8 @@ public class IndexCardChoiceMenu : MonoBehaviour {
 			}
 			else
 			{
-				Console.Log(index + " is not a valid choice.");
-				Console.Log(decisionQueue[0].Options.ToString());
+				CustomConsole.Log(index + " is not a valid choice.");
+				CustomConsole.Log(decisionQueue[0].Options.ToString());
 			}
         }
 	}
@@ -79,7 +78,7 @@ public class IndexCardChoiceMenu : MonoBehaviour {
 
 	public void OnCancelButtonUI()
 	{
-		Console.Log("Cancel Button Clicked.");
+		CustomConsole.Log("Cancel Button Clicked.");
 		if (decisionQueue.Count > 0)
 		{
 			if (decisionQueue[0].Cancel != null)
@@ -88,14 +87,14 @@ public class IndexCardChoiceMenu : MonoBehaviour {
 			}
 			else
 			{
-				Console.Log("Can't cancel. (Why's the stinkin' button enabled then?)");
+				CustomConsole.Log("Can't cancel. (Why's the stinkin' button enabled then?)");
 			}
 		}
 	}
 
 	public void OnPassButtonUI()
 	{
-		Console.Log("Pass Button Clicked.");
+		CustomConsole.Log("Pass Button Clicked.");
 		if (decisionQueue.Count > 0)
 		{
 			if (decisionQueue[0].Pass != null)
@@ -104,7 +103,7 @@ public class IndexCardChoiceMenu : MonoBehaviour {
 			}
 			else
 			{
-				Console.Log("Can't pass. (Why's the stinkin' button enabled then?)");
+				CustomConsole.Log("Can't pass. (Why's the stinkin' button enabled then?)");
 			}
 		}
 	}
@@ -170,7 +169,7 @@ public class IndexCardChoiceMenu : MonoBehaviour {
 
 	void Choose(byte choice)
 	{
-		Console.Log("Choosing Card.");
+		CustomConsole.Log("Choosing Card.");
 		Choice currentChoice = decisionQueue[0];
 		decisionQueue.Remove(currentChoice);
         currentChoice.Handle(choice);
@@ -179,7 +178,7 @@ public class IndexCardChoiceMenu : MonoBehaviour {
 
 	void Cancel()
 	{
-		Console.Log("Canceling.");
+		CustomConsole.Log("Canceling.");
 		Choice currentChoice = decisionQueue[0];
 		decisionQueue.Remove(currentChoice);
 		currentChoice.Cancel();
@@ -189,7 +188,7 @@ public class IndexCardChoiceMenu : MonoBehaviour {
 	void Pass()
 	{
 
-		Console.Log("Pass.");
+		CustomConsole.Log("Pass.");
 		Choice currentChoice = decisionQueue[0];
 		decisionQueue.Remove(currentChoice);
 		currentChoice.Pass();
