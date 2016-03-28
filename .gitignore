@@ -1,5 +1,6 @@
 *.csproj
 *.sln
+*.pdb
 Library*/
 Temp*/
 .vs*/
