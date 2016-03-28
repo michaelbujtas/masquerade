@@ -369,8 +369,8 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 		{
 			case CardAction.FLIP:
 				CustomConsole.Log("Flipping card #" + response.Result.ActorIndex, logColor);
-				//TheCardIndex.GetCard(response.Result.ActorIndex).FlipAction();
-				TheCardIndex.GetCard(response.Result.ActorIndex).TapAction();
+				TheCardIndex.GetCard(response.Result.ActorIndex).FlipAction();
+				//TheCardIndex.GetCard(response.Result.ActorIndex).TapAction();
 				break;
 			case CardAction.ATTACK:
 				CustomConsole.Log("Card #" + response.Result.ActorIndex + " attacks Card #" + response.Result.TargetIndex, logColor);
