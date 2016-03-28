@@ -28,6 +28,8 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 
 	[Inspect]
 	public List<MasqueradePlayer> MasqueradePlayers = new List<MasqueradePlayer>();
+	[Inspect]
+	public List<PlayerIdentity> PlayerIdentities = new List<PlayerIdentity>();
 
 	[Inspect]
 	public CardIndex TheCardIndex;
@@ -74,6 +76,16 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 			}
 			return null;
 		}
+	}
+
+	public MasqueradePlayer GetPlayer(int playerIndex)
+	{
+		if (MasqueradePlayers.Count > playerIndex)
+		{
+			return MasqueradePlayers[playerIndex];
+		}
+
+		return null;
 	}
 
 
@@ -357,7 +369,8 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 		{
 			case CardAction.FLIP:
 				CustomConsole.Log("Flipping card #" + response.Result.ActorIndex, logColor);
-				TheCardIndex.GetCard(response.Result.ActorIndex).FlipAction();
+				//TheCardIndex.GetCard(response.Result.ActorIndex).FlipAction();
+				TheCardIndex.GetCard(response.Result.ActorIndex).TapAction();
 				break;
 			case CardAction.ATTACK:
 				CustomConsole.Log("Card #" + response.Result.ActorIndex + " attacks Card #" + response.Result.TargetIndex, logColor);
@@ -566,17 +579,6 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 	}
 	#endregion
 
-	public MasqueradePlayer GetPlayer(int playerIndex)
-	{
-		if (MasqueradePlayers.Count > playerIndex)
-		{
-			return MasqueradePlayers[playerIndex];
-		}
-
-		return null;
-	}
-
-
 	#region Add or Flip Card
 	public void AddCardToBoards(byte targetPlayer, byte targetIndex)
 	{
@@ -641,12 +643,17 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 		shuffledPlayers.AddRange(OwningNetWorker.Players);
 		shuffledPlayers = HelperFunctions.Shuffle(shuffledPlayers);
 
+
 		MasqueradePlayers.Clear();
 		for (byte j = 0; j < OwningNetWorker.Players.Count; j++)
 		{
-			MasqueradePlayers.Add(new MasqueradePlayer(shuffledPlayers[j], j));
+			NetworkingPlayer player = shuffledPlayers[j];
+			byte positionInTurnOrder = j;
+
+			MasqueradePlayers.Add(new MasqueradePlayer(player, positionInTurnOrder, (PlayerIdentity)player.PlayerObject));
 		}
 
+		
 
 		byte i = 0;
 		foreach (MasqueradePlayer p in MasqueradePlayers)
@@ -654,8 +661,10 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 			AuthoritativeRPC("SetPlayerNumberRPC", OwningNetWorker, p.NetworkingPlayer, false, i);
 			bool fourPlayers = OwningNetWorker.Players.Count > 2;
 			AuthoritativeRPC("ConfigureHandsRPC", OwningNetWorker, p.NetworkingPlayer, false, fourPlayers, i);
+			RPC("LinkHandIdentityRPC", p.PlayerIndex, p.Identity.PlayerNumber);
 			i++;
 		}
+		
 
 		UpdateWhoseTurn();
 
@@ -772,6 +781,20 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 
 
 		}
+
+		for (int i = 0; i < 4; i++)
+		{
+
+			UsedHands[i].AttachedIdentityRenderer.Identity = PlayerIdentities[UsedHands[i].PlayerNumber];
+		}
+	}
+
+	[BRPC]
+	public void LinkHandIdentityRPC(byte hand, int identity)
+	{
+		CustomConsole.Log("LinkHandIdentityRPC");
+		UsedHands[hand].AttachedIdentityRenderer.Identity = PlayerIdentities[identity];
+	
 	}
 
 	#endregion
@@ -837,6 +860,7 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 	#endregion
 
 
+
 	protected override void NetworkStart()
 	{
 		base.NetworkStart();
@@ -845,7 +869,6 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 		ServerControlPanel.SetActive(OwningNetWorker.IsServer);
 
 	}
-
 
 	public void Start()
 	{

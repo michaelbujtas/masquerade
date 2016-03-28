@@ -75,6 +75,10 @@ public class SimpleConnect : SimpleNetworkedMonoBehavior
 
 	public void AddListeners()
 	{
+		NetWorker.playerConnected += UpdateIdentities;
+
+
+		NetWorker.playerDisconnected += UpdateIdentities;
 
 
 		NetWorker.connected += delegate
@@ -108,6 +112,7 @@ public class SimpleConnect : SimpleNetworkedMonoBehavior
 
 	}
 
+
 	public ushort Port
 	{
 		get { return ((ushort)System.Convert.ToInt16(portField.text, 10)); }
@@ -118,5 +123,16 @@ public class SimpleConnect : SimpleNetworkedMonoBehavior
 		get { return Networking.Sockets[Port]; }
 	}
 
+	public void UpdateIdentities(NetworkingPlayer player)
+	{
+		GameplayNetworking networking = FindObjectOfType<GameplayNetworking>();
+		CustomConsole.Log("NetworkID " + player.NetworkId + " connected.");
+
+		foreach (PlayerIdentity ident in networking.PlayerIdentities)
+			ident.Clear();
+
+		for (int i = 0; i < OwningNetWorker.Players.Count; i++)
+			networking.PlayerIdentities[i].Setup(OwningNetWorker.Players[i], i);
+	}
 
 }

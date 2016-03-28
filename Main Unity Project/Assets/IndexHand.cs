@@ -7,6 +7,7 @@ public class IndexHand : MonoBehaviour {
 
 	public List<CardRenderer> Renderers;
 	public byte PlayerNumber;
+	public PlayerIdentityRenderer AttachedIdentityRenderer;
 
 
 	public bool KillSlotZero = false;

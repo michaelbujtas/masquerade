@@ -27,6 +27,7 @@ public class CardRenderer : MonoBehaviour
 
 	[Inspect]
 	public bool DummyRenderer;
+	bool dummyFacing = false;
 
 	[Inspect]
 	public Card Card
@@ -87,6 +88,7 @@ public class CardRenderer : MonoBehaviour
 
     public void SetFacing(bool isFaceUp)
     {
+		dummyFacing = isFaceUp;
         if (isFaceUp)
         {
             AttackText.color = Color.black;
@@ -105,20 +107,31 @@ public class CardRenderer : MonoBehaviour
 
     }
 
-    string FormatCombatValue(int value, FaceUpBonus bonus)
-    {
-        string retVal = value.ToString();
+	string FormatCombatValue(int value, FaceUpBonus bonus)
+	{
+		string retVal = value.ToString();
 
-        if (bonus == FaceUpBonus.FACE_UP)
-            retVal += "↑";
-        if (bonus == FaceUpBonus.FACE_DOWN)
-            retVal += "↓";
+		if (bonus == FaceUpBonus.FACE_UP)
+		{
+			if (dummyFacing)
+				retVal = "<color=#00ff00>" + retVal + "</color>";
+			else
+				retVal += "↑";
+		}
+
+		if (bonus == FaceUpBonus.FACE_DOWN)
+		{
+			if (!dummyFacing)
+				retVal = "<color=#00ff00>" + retVal + "</color>";
+			else
+				retVal += "↓";
+		}
 
         return retVal;
     }
 
 
-    public void RefreshCardImage()
+    public void RefreshCardImage(bool? forceFaceUp = null)
     {
 		if (Index == CardIndex.EMPTY_SLOT)
 		{
@@ -143,10 +156,18 @@ public class CardRenderer : MonoBehaviour
 
 				if (Card != null)
 				{
-					SetFacing(Card.IsFaceUp);
-					AttackText.text = FormatCombatValue(Card.Attack, Card.AttackBonus);
-					DefenseText.text = FormatCombatValue(Card.Defense, Card.DefenseBonus);
-					NameText.text = Card.CardName;
+					if (forceFaceUp == null)
+						SetFacing(Card.IsFaceUp);
+					else
+						SetFacing((bool)forceFaceUp);
+
+					AttackText.text = FormatCombatValue(Card.GetCombatAttack(dummyFacing), Card.AttackBonus);
+					DefenseText.text = FormatCombatValue(Card.GetCombatDefense(dummyFacing), Card.DefenseBonus);
+					
+					if(Card.IsTapped)
+						NameText.text = "<i>" + Card.CardName + "</i>";
+					else
+						NameText.text = Card.CardName;
 					name = NameText.text;
 				}
 				else
@@ -157,6 +178,7 @@ public class CardRenderer : MonoBehaviour
 					NameText.text = "NULL";
 				}
 			}
+
 		}
         
     }

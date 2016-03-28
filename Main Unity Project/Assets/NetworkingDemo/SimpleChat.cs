@@ -7,8 +7,9 @@ public class SimpleChat : SimpleNetworkedMonoBehavior
 {
 	public Text textBox;
 	public InputField input;
+	public PlayerIdentitySettings identitySettings;
 
-	string nick = string.Empty;
+
 	[BRPC]
 	void ShowString(string chat)
 	{
@@ -40,16 +41,25 @@ public class SimpleChat : SimpleNetworkedMonoBehavior
 				if (text.StartsWith("/nick"))
 				{
 					if (splits.Length > 1)
-						nick = text.Split(' ')[1];
+						identitySettings.SetName(text.Split(' ')[1]);
 					else
-						nick = string.Empty;
+						identitySettings.SetName("");
 				}
 			}
 			else
 			{
 				string chatMessage = ">";
-				if (!nick.Equals(string.Empty))
-					chatMessage += nick + ": ";
+				if (identitySettings.MyIdentity != null)
+				{
+					if (!identitySettings.MyIdentity.Name.Equals(string.Empty))
+						chatMessage += identitySettings.MyIdentity.Name + ": ";
+				}
+				else
+				{
+
+					if (!identitySettings.Name.text.Equals(string.Empty))
+						chatMessage += identitySettings.Name.text + ": ";
+				}
 				chatMessage += text;
 				chatMessage += "\n";
 				RPC("ShowString", NetworkReceivers.AllBuffered, chatMessage);

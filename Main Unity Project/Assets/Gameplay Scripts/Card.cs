@@ -191,19 +191,31 @@ public class Card : SimpleNetworkedMonoBehavior
 	}
 
 
-	public int GetCombatAttack()
+	public int GetCombatAttack(bool? hypotheticalFacing = null)
 	{
-		if (isFaceUp && AttackBonus == FaceUpBonus.FACE_UP ||
-		   !isFaceUp && AttackBonus == FaceUpBonus.FACE_DOWN)
+		bool useFacing = false;
+		if (hypotheticalFacing == null)
+			useFacing = IsFaceUp;
+		else
+			useFacing = (bool)hypotheticalFacing;
+
+		if (useFacing && AttackBonus == FaceUpBonus.FACE_UP ||
+		   !useFacing && AttackBonus == FaceUpBonus.FACE_DOWN)
 			return Attack * 2;
 
 		return Attack;
 	}
 
-	public int GetCombatDefense()
+	public int GetCombatDefense(bool? hypotheticalFacing = null)
 	{
-		if (isFaceUp && DefenseBonus == FaceUpBonus.FACE_UP ||
-		   !isFaceUp && DefenseBonus == FaceUpBonus.FACE_DOWN)
+		bool useFacing = false;
+		if (hypotheticalFacing == null)
+			useFacing = IsFaceUp;
+		else
+			useFacing = (bool)hypotheticalFacing;
+
+		if (useFacing && DefenseBonus == FaceUpBonus.FACE_UP ||
+		   !useFacing && DefenseBonus == FaceUpBonus.FACE_DOWN)
 			return Defense * 2;
 
 		return Defense;
@@ -214,6 +226,13 @@ public class Card : SimpleNetworkedMonoBehavior
 		IsTapped = true;
 		Sync();
 		return Flip(shouldBeFaceUp);
+	}
+
+	public void TapAction()
+	{
+		CustomConsole.Log("TAP ACTION!!!", Color.red);
+		IsTapped = true;
+		Sync();
 	}
 
 	public void FlipAction()

@@ -38,11 +38,9 @@ public class IndexFaceUpChoiceMenu : MonoBehaviour {
 			Choice nextChoice = decisionQueue[0];
 
 			FaceUp.Index = nextChoice.Index;
-			FaceUp.RefreshCardImage();
-			FaceUp.SetFacing(true);
+			FaceUp.RefreshCardImage(true);
 			FaceDown.Index = nextChoice.Index;
-			FaceDown.RefreshCardImage();
-			FaceDown.SetFacing(false);
+			FaceDown.RefreshCardImage(false);
 		}
 	}
 
