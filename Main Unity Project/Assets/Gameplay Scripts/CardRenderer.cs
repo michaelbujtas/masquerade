@@ -1,29 +1,43 @@
 ﻿using UnityEngine;
 using System.Collections;
-
 using UnityEngine.UI;
+using TMPro;
 
 using AdvancedInspector;
 
 [AdvancedInspector]
 public class CardRenderer : MonoBehaviour
 {
+
+
 	[Inspect]
 	public GameObject Visuals;
 
 	[Inspect]
-	public Text AttackText;
+	public TextMeshProUGUI AttackText;
 	[Inspect]
-	public Text DefenseText;
+	public TextMeshProUGUI DefenseText;
 	[Inspect]
-	public Text NameText;
+	public TextMeshProUGUI NameText;
 	[Inspect]
 	public Image Background;
 	[Inspect]
+	public Image Art;
+	[Inspect]
+	public ClassIcon ClassSeal;
+	[Inspect]
 	public Image SelectionHighlight;
+	[Inspect]
+	public Image CardBack;
 
 	CardOptionsMenu Menu;
 	CardSelector Selector;
+
+	const int upArrowIndex = 0;
+	const int downArrowIndex = 2;
+	const int shieldIndex = 1;
+	const int swordIndex = 3;
+
 
 	[Inspect]
 	public bool DummyRenderer;
@@ -95,15 +109,17 @@ public class CardRenderer : MonoBehaviour
             DefenseText.color = Color.black;
             NameText.color = Color.black;
             Background.color = Color.white;
+			Art.color = Color.white;
+
         }
         else
-        {
-
-            AttackText.color = Color.red;
+		{
+			AttackText.color = Color.red;
             DefenseText.color = Color.red;
             NameText.color = Color.red;
             Background.color = Color.gray;
-        }
+			Art.color = Color.gray;
+		}
 
     }
 
@@ -116,7 +132,7 @@ public class CardRenderer : MonoBehaviour
 			if (dummyFacing)
 				retVal = "<color=#00ff00>" + retVal + "</color>";
 			else
-				retVal += "↑";
+				retVal += "<sprite=" + upArrowIndex + ">";
 		}
 
 		if (bonus == FaceUpBonus.FACE_DOWN)
@@ -124,7 +140,7 @@ public class CardRenderer : MonoBehaviour
 			if (!dummyFacing)
 				retVal = "<color=#00ff00>" + retVal + "</color>";
 			else
-				retVal += "↓";
+				retVal += "<sprite=" + downArrowIndex + ">";
 		}
 
         return retVal;
@@ -136,34 +152,45 @@ public class CardRenderer : MonoBehaviour
 		if (Index == CardIndex.EMPTY_SLOT)
 		{
 			Visuals.SetActive(false);
+			CardBack.enabled = true;
 		}
 		else
 		{
 			Visuals.SetActive(true);
 
+			CardBack.enabled = false;
 			if (CardIndex.PLAYER_1_FACEDOWN <= Index && Index <= CardIndex.PLAYER_4_FACEDOWN)
 			{
+				//This is us drawing a card back.
 				SetFacing(false);
 				Background.color = Color.black;
-				AttackText.text = "¿";
+				Art.sprite = null;
+				Art.color = Color.clear;
+				ClassSeal.Clear();
+
+				CardBack.enabled = true;
+				AttackText.text = "?";
 				DefenseText.text = "?";
-				NameText.text = "¿" + Index + "?";
+				NameText.text = "?" + Index + "?";
 			}
 			else
 			{
-
+				//This is a card you can see, whether it's facedown or faceup.
 				Card Card = CardIndex.GetCard(Index);
 
 				if (Card != null)
 				{
+					CardBack.enabled = false;
 					if (forceFaceUp == null)
 						SetFacing(Card.IsFaceUp);
 					else
 						SetFacing((bool)forceFaceUp);
 
-					AttackText.text = FormatCombatValue(Card.GetCombatAttack(dummyFacing), Card.AttackBonus);
-					DefenseText.text = FormatCombatValue(Card.GetCombatDefense(dummyFacing), Card.DefenseBonus);
-					
+					AttackText.text = FormatCombatValue(Card.GetCombatAttack(dummyFacing), Card.AttackBonus) + "<sprite=" + swordIndex + ">";
+					DefenseText.text = "<sprite=" + shieldIndex + ">" + FormatCombatValue(Card.GetCombatDefense(dummyFacing), Card.DefenseBonus);
+					ClassSeal.Swap(Card.CardClass);
+
+					Art.sprite = Card.Art;
 					if(Card.IsTapped)
 						NameText.text = "<i>" + Card.CardName + "</i>";
 					else
@@ -172,6 +199,11 @@ public class CardRenderer : MonoBehaviour
 				}
 				else
 				{
+					//This is essentially an error message
+					CardBack.enabled = false;
+					Art.color = Color.magenta;
+					Art.sprite = null;
+					ClassSeal.Clear();
 					SetFacing(true);
 					AttackText.text = "";
 					DefenseText.text = "";

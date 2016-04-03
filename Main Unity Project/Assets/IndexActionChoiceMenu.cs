@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 public class IndexActionChoiceMenu : MonoBehaviour
 {
-	public CardIndex Index;
+	CardIndex Index;
 
 	public GameObject Visuals;
 
@@ -21,7 +21,10 @@ public class IndexActionChoiceMenu : MonoBehaviour
 	public delegate void HandleChoiceDelegate(CardAction choice);
 
 	public delegate void HandleCancelDelegate();
-
+	void Awake()
+	{
+		Index = FindObjectOfType<GameplayNetworking>().TheCardIndex;
+	}
 	public void AttackButtonUI()
 	{
 		Choose(CardAction.ATTACK);

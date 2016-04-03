@@ -1,10 +1,11 @@
 ﻿using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
+using TMPro;
 
 public class PlayerIdentityRenderer : MonoBehaviour {
 
-	public Text Name;
+	public TextMeshProUGUI Name;
 
 	public PlayerIdentity Identity;
 

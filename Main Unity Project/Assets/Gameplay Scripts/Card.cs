@@ -43,7 +43,7 @@ public class Card : SimpleNetworkedMonoBehavior
 
 	[Inspect]
 	public string CardName;
-	[Inspect, Enum(true)]
+	[Inspect, Enum(false)]
 	public CardClass CardClass;
 	[Inspect]
 	public int Attack;
@@ -53,6 +53,8 @@ public class Card : SimpleNetworkedMonoBehavior
 	public int Defense;
 	[Inspect]
 	public FaceUpBonus DefenseBonus;
+	[Inspect]
+	public Sprite Art;
 
 	bool isFaceUp = true;
 	public bool IsFaceUp

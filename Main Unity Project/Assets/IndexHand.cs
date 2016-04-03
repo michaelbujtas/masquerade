@@ -14,7 +14,8 @@ public class IndexHand : MonoBehaviour {
 
 	public void Awake()
 	{
-		Renderers.AddRange(GetComponentsInChildren<CardRenderer>());
+		if(Renderers.Count == 0)
+			Renderers.AddRange(GetComponentsInChildren<CardRenderer>());
 	}
 
 	public void Update()
