@@ -33,17 +33,6 @@ namespace AdvancedInspector
             set { showScript = value; }
         }
 
-        private bool expandable = true;
-
-        /// <summary>
-        /// Is this object expandable in a in-lined context?
-        /// </summary>
-        public bool Expandable
-        {
-            get { return expandable; }
-            set { expandable = value; }
-        }
-
         public AdvancedInspectorAttribute() { }
 
         public AdvancedInspectorAttribute(bool inspectDefaultItems)

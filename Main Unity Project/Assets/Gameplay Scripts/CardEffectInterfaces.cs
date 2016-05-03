@@ -17,7 +17,7 @@ public interface IActivatedAbility
 	void ActivateAbility();
 }
 
-public interface IStateBasedEffect
+public interface IEndOfTurn
 {
-	void OnGameStateChanged();
+	void OnEndOfTurn(MasqueradePlayer turn);
 }

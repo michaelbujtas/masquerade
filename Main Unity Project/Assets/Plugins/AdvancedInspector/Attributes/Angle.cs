@@ -18,6 +18,7 @@ namespace AdvancedInspector
         public float Snap
         {
             get { return snap; }
+            set { snap = value; }
         }
 
         public AngleAttribute() { }

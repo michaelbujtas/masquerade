@@ -1,20 +1,19 @@
 ﻿using UnityEngine;
 using UnityEditor;
 using System;
-using System.Collections;
 
 namespace AdvancedInspector
 {
     public class BoundsEditor : FieldEditor
     {
-        public override bool Expandable
-        {
-            get { return false; }
-        }
-
         public override Type[] EditedTypes
         {
             get { return new Type[] { typeof(Bounds) }; }
+        }
+
+        public override bool IsExpandable(InspectorField field)
+        {
+            return false;
         }
 
         public override void Draw(InspectorField field, GUIStyle style)

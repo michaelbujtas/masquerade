@@ -2,11 +2,10 @@
 
 using AdvancedInspector;
 
-[AdvancedInspector]
 public class AIExample11_ReadOnlyDynamic : MonoBehaviour 
 {
     // The ReadOnly attribute can also be dynamic and change at run time.
-    [Inspect, ReadOnly("IsReadOnly")]
+    [ReadOnly("IsReadOnly")]
     public bool myVariable;
 
     // The function can be private or public, it doesn't matter.

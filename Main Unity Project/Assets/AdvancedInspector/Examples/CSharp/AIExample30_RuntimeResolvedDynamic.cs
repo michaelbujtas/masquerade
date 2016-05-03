@@ -3,10 +3,8 @@ using System;
 
 using AdvancedInspector;
 
-[AdvancedInspector]
 public class AIExample30_RuntimeResolvedDynamic : MonoBehaviour 
 {
-    [Inspect]
     public Material mat;
 
     [SerializeField]

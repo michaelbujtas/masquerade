@@ -73,6 +73,17 @@ namespace AdvancedInspector
             set { maxItemsPerRow = value; }
         }
 
+        private bool expandElements = false;
+
+        /// <summary>
+        /// Collection element - if expandable - will be expanded by default.
+        /// </summary>
+        public bool ExpandElements
+        {
+            get { return expandElements; }
+            set { expandElements = value; }
+        }
+
         private Type enumType = null;
 
         /// <summary>

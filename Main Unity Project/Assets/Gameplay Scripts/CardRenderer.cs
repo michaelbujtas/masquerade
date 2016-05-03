@@ -3,31 +3,33 @@ using System.Collections;
 using UnityEngine.UI;
 using TMPro;
 
-using AdvancedInspector;
+//using AdvancedInspector;
 
-[AdvancedInspector]
+//[AdvancedInspector]
 public class CardRenderer : MonoBehaviour
 {
 
 
-	[Inspect]
+	//[Inspect]
 	public GameObject Visuals;
 
-	[Inspect]
+	//[Inspect]
 	public TextMeshProUGUI AttackText;
-	[Inspect]
+	//[Inspect]
 	public TextMeshProUGUI DefenseText;
-	[Inspect]
+	//[Inspect]
 	public TextMeshProUGUI NameText;
-	[Inspect]
+	//[Inspect]
 	public Image Background;
-	[Inspect]
+	//[Inspect]
 	public Image Art;
-	[Inspect]
+	//[Inspect]
 	public ClassIcon ClassSeal;
-	[Inspect]
+	//[Inspect]
+	public EffectIcon Nameplate;
+	//[Inspect]
 	public Image SelectionHighlight;
-	[Inspect]
+	//[Inspect]
 	public Image CardBack;
 
 	CardOptionsMenu Menu;
@@ -39,11 +41,11 @@ public class CardRenderer : MonoBehaviour
 	const int swordIndex = 3;
 
 
-	[Inspect]
+	//[Inspect]
 	public bool DummyRenderer;
 	bool dummyFacing = false;
 
-	[Inspect]
+	//[Inspect]
 	public Card Card
 	{
 		get
@@ -58,10 +60,10 @@ public class CardRenderer : MonoBehaviour
 		}
 	}
 
-	[Inspect]
+	//[Inspect]
 	public byte Index = CardIndex.EMPTY_SLOT;
 
-	[Inspect]
+	//[Inspect]
 	CardIndex CardIndex;
 
 
@@ -168,6 +170,8 @@ public class CardRenderer : MonoBehaviour
 				Art.color = Color.clear;
 				ClassSeal.Clear();
 
+				Nameplate.Swap(true);
+
 				CardBack.enabled = true;
 				AttackText.text = "?";
 				DefenseText.text = "?";
@@ -189,12 +193,19 @@ public class CardRenderer : MonoBehaviour
 					AttackText.text = FormatCombatValue(Card.GetCombatAttack(dummyFacing), Card.AttackBonus) + "<sprite=" + swordIndex + ">";
 					DefenseText.text = "<sprite=" + shieldIndex + ">" + FormatCombatValue(Card.GetCombatDefense(dummyFacing), Card.DefenseBonus);
 					ClassSeal.Swap(Card.CardClass);
-
+					Nameplate.Swap(Card.Logic != null);
 					Art.sprite = Card.Art;
-					if(Card.IsTapped)
-						NameText.text = "<i>" + Card.CardName + "</i>";
+					NameText.text = Card.CardName;
+					if (Card.IsTapped)
+					{
+						//NameText.text = "<i>" + Card.CardName + "</i>";
+						rectTransform.rotation = Quaternion.Euler(0, 0, 270);
+					}
 					else
-						NameText.text = Card.CardName;
+					{
+						rectTransform.rotation = Quaternion.identity;
+						//NameText.text = Card.CardName;
+					}
 					name = NameText.text;
 				}
 				else
@@ -204,6 +215,7 @@ public class CardRenderer : MonoBehaviour
 					Art.color = Color.magenta;
 					Art.sprite = null;
 					ClassSeal.Clear();
+					Nameplate.Clear();
 					SetFacing(true);
 					AttackText.text = "";
 					DefenseText.text = "";
@@ -243,5 +255,6 @@ public class CardRenderer : MonoBehaviour
 			Selector.CardsInPlay.Remove(this);
 		Destroy(this.gameObject);
 	}
+
 
 }

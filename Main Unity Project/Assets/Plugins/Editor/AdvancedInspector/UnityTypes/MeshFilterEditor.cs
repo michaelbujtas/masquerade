@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Reflection;
 
 using UnityEditor;
 using UnityEngine;
@@ -16,7 +13,7 @@ namespace AdvancedInspector
         {
             Type type = typeof(MeshFilter);
 
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("sharedMesh"), new ExpandableAttribute(),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("sharedMesh"), new ExpandableAttribute(),
                 new DescriptorAttribute("Mesh", "Returns the shared mesh of the mesh filter.", "http://docs.unity3d.com/ScriptReference/MeshFilter-sharedMesh.html")));
         }
     }

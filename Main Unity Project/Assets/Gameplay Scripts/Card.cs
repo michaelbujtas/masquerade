@@ -55,6 +55,10 @@ public class Card : SimpleNetworkedMonoBehavior
 	public FaceUpBonus DefenseBonus;
 	[Inspect]
 	public Sprite Art;
+	[Inspect]
+	public string RulesText = string.Empty;
+	[Inspect]
+	public string FlavorText = string.Empty;
 
 	bool isFaceUp = true;
 	public bool IsFaceUp
@@ -223,11 +227,13 @@ public class Card : SimpleNetworkedMonoBehavior
 		return Defense;
 	}
 
-	public bool FlipAction(bool shouldBeFaceUp)
+	public IEnumerator FlipAction(bool shouldBeFaceUp, System.Action callback)
 	{
 		IsTapped = true;
 		Sync();
-		return Flip(shouldBeFaceUp);
+		Flip(shouldBeFaceUp);
+		yield return null;
+		callback();
 	}
 
 	public void TapAction()
@@ -237,11 +243,15 @@ public class Card : SimpleNetworkedMonoBehavior
 		Sync();
 	}
 
-	public void FlipAction()
+	public IEnumerator FlipAction(System.Action callback)
 	{
 		IsTapped = true;
 		Sync();
 		Flip();
+
+		yield return null;
+		callback();
+
 	}
 
 	public void Flip()
@@ -319,16 +329,19 @@ public class Card : SimpleNetworkedMonoBehavior
 
 	}
 
-	public void ActivateAction()
+	public IEnumerator ActivateAction(System.Action callback)
 	{
 		IsTapped = true;
 
 		if (Logic is IActivatedAbility)
 			((IActivatedAbility)Logic).ActivateAbility();
 
+		callback();
+		return null;
+
 	}
 
-
+	
 
 	public void KillWithContext(Card killer, DeathContext context)
 	{
@@ -354,20 +367,22 @@ public class Card : SimpleNetworkedMonoBehavior
 
 	public void Sync()
 	{
-		if (IsFaceUp || Owner == null)
-		{
-			//Sync with everybody
-			foreach (MasqueradePlayer p in Networking.MasqueradePlayers)
+			if (IsFaceUp || Owner == null)
 			{
-				AuthoritativeRPC("SyncRPC", OwningNetWorker, p.NetworkingPlayer, false, IsFaceUp, IsTapped);
+				//Sync with everybody
+				foreach (MasqueradePlayer p in Networking.MasqueradePlayers)
+				{
+					AuthoritativeRPC("SyncRPC", OwningNetWorker, p.NetworkingPlayer, false, IsFaceUp, IsTapped);
+				}
 			}
-		}
-		else
-		{
-			//Sync with the owner
+			else
+			{
+				//Sync with the owner
 
-			AuthoritativeRPC("SyncRPC", OwningNetWorker, Owner.NetworkingPlayer, false, IsFaceUp, IsTapped);
-		}
+				AuthoritativeRPC("SyncRPC", OwningNetWorker, Owner.NetworkingPlayer, false, IsFaceUp, IsTapped);
+			}
+		
+		
 	}
 
 	public void SyncFlip()

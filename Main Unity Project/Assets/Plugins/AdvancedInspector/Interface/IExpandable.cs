@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace AdvancedInspector
+﻿namespace AdvancedInspector
 {
     /// <summary>
     /// Defines an attribute that override a node "expandability". 
@@ -23,5 +18,10 @@ namespace AdvancedInspector
         /// It doesn't prevent someone from closing it.
         /// </summary>
         bool IsExpanded(object[] instances, object[] values);
+
+        /// <summary>
+        /// The node is always expanded and cannot be collapsed.
+        /// </summary>
+        bool IsAlwaysExpanded(object[] instances, object[] values);
     }
 }

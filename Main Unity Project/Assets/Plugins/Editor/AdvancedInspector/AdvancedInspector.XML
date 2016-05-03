@@ -186,12 +186,6 @@
             Standard float-in-vector label width
             </summary>
         </member>
-        <member name="P:AdvancedInspector.FieldEditor.Expandable">
-            <summary>
-            Override if you want to prevent a type from being expandable at any time.
-            Override the Expandable attributes.
-            </summary>
-        </member>
         <member name="P:AdvancedInspector.FieldEditor.EditDerived">
             <summary>
             If true and no fieldeditor is found for a specific type, this fieldeditor is used for the derived type.
@@ -235,6 +229,12 @@
             The GenenicMenu is empty and can add new items in it.
             </summary>
         </member>
+        <member name="M:AdvancedInspector.FieldEditor.IsExpandable(AdvancedInspector.InspectorField)">
+            <summary>
+            Override if you want to prevent a type from being expandable at any time.
+            Override the Expandable attributes.
+            </summary>
+        </member>
         <member name="M:AdvancedInspector.FieldEditor.GetValue(AdvancedInspector.InspectorField)">
             <summary>
             Get the value of a field.
@@ -244,6 +244,11 @@
         <member name="T:AdvancedInspector.InspectorEditor">
             <summary>
             Base class of BehaviourEditor, ScriptableEditor and ExternalEditor.
+            </summary>
+        </member>
+        <member name="P:AdvancedInspector.InspectorEditor.Current">
+            <summary>
+            The currently refreshing InspectorEditor
             </summary>
         </member>
         <member name="M:AdvancedInspector.InspectorEditor.HasPreviewGUI">
@@ -266,7 +271,7 @@
             We use our own targets list because we can draw object not deriving from UnityEngine.Object.
             </summary>
         </member>
-        <member name="F:AdvancedInspector.InspectorEditor.parent">
+        <member name="P:AdvancedInspector.InspectorEditor.Parent">
             <summary>
             In case of value type, we need to know the parent.
             </summary>
@@ -336,6 +341,11 @@
         <member name="M:AdvancedInspector.InspectorEditor.OnPreviewSettings">
             <summary>
             Preview Settings
+            </summary>
+        </member>
+        <member name="M:AdvancedInspector.InspectorEditor.Refresh">
+            <summary>
+            Forces the inspector to rebuild its structure.
             </summary>
         </member>
         <member name="M:AdvancedInspector.InspectorEditor.DataChanged">
@@ -600,14 +610,14 @@
             Is this field open and displaying internal fields?
             </summary>
         </member>
+        <member name="P:AdvancedInspector.InspectorField.AlwaysExpanded">
+            <summary>
+            This field cannot be collapsed.
+            </summary>
+        </member>
         <member name="P:AdvancedInspector.InspectorField.Erased">
             <summary>
             Was this field erased?
-            </summary>
-        </member>
-        <member name="P:AdvancedInspector.InspectorField.DisplayAsParent">
-            <summary>
-            Is this object display as being part of the parent?
             </summary>
         </member>
         <member name="P:AdvancedInspector.InspectorField.CreateDerived">
@@ -1140,6 +1150,11 @@
             If true, all classes that do not have a Custom Editor are drawn by Advanced Inspector.
             </summary>
         </member>
+        <member name="P:AdvancedInspector.InspectorPreferences.ExpandableReferences">
+            <summary>
+            If true, all classes that do not have a Custom Editor are drawn by Advanced Inspector.
+            </summary>
+        </member>
         <member name="P:AdvancedInspector.InspectorPreferences.ValueScroll">
             <summary>
             The control for scrolling numbers.
@@ -1159,6 +1174,11 @@
             <summary>
             Usually to open the contextual menu, you do Right-Click.
             In some cases, people may not have access to a proper right-click, so they can do CTRL+Click for example.
+            </summary>
+        </member>
+        <member name="P:AdvancedInspector.InspectorPreferences.CollectionItemNaming">
+            <summary>
+            How collection names are displayed.
             </summary>
         </member>
         <member name="P:AdvancedInspector.InspectorPreferences.ExtraIndentation">
@@ -1229,6 +1249,41 @@
         <member name="F:AdvancedInspector.InspectorPreferences.InspectorModifierControl.Shift">
             <summary>
             Shift Key
+            </summary>
+        </member>
+        <member name="T:AdvancedInspector.InspectorPreferences.InspectorCollectionItemNaming">
+            <summary>
+            Controls how a collection displayed its indexed items.
+            </summary>
+        </member>
+        <member name="F:AdvancedInspector.InspectorPreferences.InspectorCollectionItemNaming.Index">
+            <summary>
+            Advanced Inspector default: "[4]"
+            </summary>
+        </member>
+        <member name="F:AdvancedInspector.InspectorPreferences.InspectorCollectionItemNaming.Numbered">
+            <summary>
+            "4"
+            </summary>
+        </member>
+        <member name="F:AdvancedInspector.InspectorPreferences.InspectorCollectionItemNaming.IndexedElements">
+            <summary>
+            "Element[4]"
+            </summary>
+        </member>
+        <member name="F:AdvancedInspector.InspectorPreferences.InspectorCollectionItemNaming.NumberedElements">
+            <summary>
+            Unity's default: "Element 4"
+            </summary>
+        </member>
+        <member name="F:AdvancedInspector.InspectorPreferences.InspectorCollectionItemNaming.IndexedNames">
+            <summary>
+            "ParentName[4]"
+            </summary>
+        </member>
+        <member name="F:AdvancedInspector.InspectorPreferences.InspectorCollectionItemNaming.NumberedNames">
+            <summary>
+            ParentName 4
             </summary>
         </member>
         <member name="T:AdvancedInspector.InspectorPreview">

@@ -16,21 +16,21 @@ namespace AdvancedInspector
         {
             Type type = typeof(Animator);
 
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("runtimeAnimatorController"), new HelpAttribute(new HelpAttribute.HelpDelegate(HelpController)),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("runtimeAnimatorController"), new HelpAttribute(new HelpAttribute.HelpDelegate(HelpController)),
                 new DescriptorAttribute("Controller", "The runtime representation of AnimatorController that controls the Animator.", "http://docs.unity3d.com/ScriptReference/Animator-runtimeAnimatorController.html")));
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("avatar"),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("avatar"),
                 new DescriptorAttribute("Avatar", "Gets/Sets the current Avatar.", "http://docs.unity3d.com/ScriptReference/Animator-avatar.html")));
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("applyRootMotion"),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("applyRootMotion"),
                 new DescriptorAttribute("Apply Root Motion", "Should root motion be applied?", "http://docs.unity3d.com/ScriptReference/Animator-applyRootMotion.html")));
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("updateMode"),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("updateMode"),
                 new DescriptorAttribute("Update Mode", "Specifies the update mode of the Animator.", "http://docs.unity3d.com/ScriptReference/Animator-updateMode.html")));
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("cullingMode"),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("cullingMode"),
                 new DescriptorAttribute("Culling Mode", "Controls culling of this Animator component.", "http://docs.unity3d.com/ScriptReference/Animator-cullingMode.html")));
 
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("fireEvents"), new InspectAttribute(InspectorLevel.Advanced),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("fireEvents"), new InspectAttribute(InspectorLevel.Advanced),
                 new DescriptorAttribute("Fire Events", "If true, the animation track fires their event.", "")));
 
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("logWarnings"), new InspectAttribute(InspectorLevel.Advanced),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("logWarnings"), new InspectAttribute(InspectorLevel.Advanced),
                 new DescriptorAttribute("Log Warnings", "Log Animator internal warnings.", "")));
 
             InspectorField transform = new InspectorField("Transform");
@@ -93,9 +93,9 @@ namespace AdvancedInspector
             debug.Fields.Add(new InspectorField(type, Instances, type.GetProperty("layerCount"), new InspectAttribute(InspectorLevel.Debug),
                 new DescriptorAttribute("Layer Count", "The AnimatorController layer count.", "http://docs.unity3d.com/ScriptReference/Animator-layerCount.html")));
 
-            fields.Add(transform);
-            fields.Add(feet);
-            fields.Add(debug);
+            Fields.Add(transform);
+            Fields.Add(feet);
+            Fields.Add(debug);
         }
 
         private HelpItem HelpController()

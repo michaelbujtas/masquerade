@@ -2,12 +2,11 @@
 
 using AdvancedInspector;
 
-[AdvancedInspector]
 public class AIExample10_ReadOnly : MonoBehaviour 
 {
     // There's a few ways to display an item but prevent it from being edited.
     // The first is using the ReadOnly attribute;
-    [Inspect, ReadOnly]
+    [ReadOnly]
     public float myField;
 
     // A property with only a getter is also not editable.

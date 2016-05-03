@@ -2,11 +2,10 @@
 
 using AdvancedInspector;
 
-[AdvancedInspector]
 public class AIExample17_HelpDynamic : MonoBehaviour 
 {
     // Similar to Inspect or Descriptor, the Help attribute can also be dynamic;
-    [Inspect, Help("GetHelp")]
+    [Help("GetHelp")]
     public float myField;
 
     private HelpItem GetHelp()

@@ -2,7 +2,6 @@
 
 using AdvancedInspector;
 
-[AdvancedInspector]
 public class AIExample3_InspectDynamic : MonoBehaviour 
 {
     // The inspect attribute can be binded to a function.

@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using TMPro;
 
 public class IndexActionChoiceMenu : MonoBehaviour
 {
@@ -9,6 +10,8 @@ public class IndexActionChoiceMenu : MonoBehaviour
 	public GameObject Visuals;
 
 	public CardRenderer cardRenderer;
+	public TextMeshProUGUI rulesText;
+	public TextMeshProUGUI flavorText;
 	public Button attack;
 	public Button flipUp;
 	public Button flipDown;
@@ -80,6 +83,9 @@ public class IndexActionChoiceMenu : MonoBehaviour
 			flipDown.gameObject.SetActive(newCard.CanFlipDown);
 			ability.gameObject.SetActive(newCard.CanActivateAbility);
 			back.gameObject.SetActive(nextChoice.Cancel != null);
+
+			rulesText.SetText(newCard.RulesText);
+			flavorText.SetText(newCard.FlavorText);
 
 		}
 	}

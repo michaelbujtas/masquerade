@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Reflection;
 
 using UnityEditor;
 using UnityEngine;
@@ -19,9 +16,9 @@ namespace AdvancedInspector
             base.RefreshFields();
             Type type = typeof(AnchoredJoint2D);
 
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("anchor"),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("anchor"),
                 new DescriptorAttribute("Anchor", "The joint's anchor point on the object that has the joint component.", "http://docs.unity3d.com/ScriptReference/AnchoredJoint2D-anchor.html")));
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("connectedAnchor"),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("connectedAnchor"),
                 new DescriptorAttribute("Connected Anchor", "The joint's anchor point on the second object (ie, the one which doesn't have the joint component).", "http://docs.unity3d.com/ScriptReference/AnchoredJoint2D-connectedAnchor.html")));
         }
 

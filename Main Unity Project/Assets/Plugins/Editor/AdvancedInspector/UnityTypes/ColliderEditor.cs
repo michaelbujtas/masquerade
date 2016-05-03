@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Reflection;
-
-using UnityEditor;
 using UnityEngine;
 
 namespace AdvancedInspector
@@ -17,9 +12,9 @@ namespace AdvancedInspector
         {
             Type type = typeof(Collider);
 
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("isTrigger"),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("isTrigger"),
                 new DescriptorAttribute("Is Trigger", "Is the collider a trigger?", "http://docs.unity3d.com/ScriptReference/Collider-isTrigger.html")));
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("sharedMaterial"), new InspectAttribute(new InspectAttribute.InspectDelegate(IsNotTrigger)),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("sharedMaterial"), new InspectAttribute(new InspectAttribute.InspectDelegate(IsNotTrigger)),
                 new DescriptorAttribute("Physic Material", "The shared physic material of this collider.", "http://docs.unity3d.com/ScriptReference/Collider-sharedMaterial.html")));
         }
 

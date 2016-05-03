@@ -15,14 +15,14 @@ namespace AdvancedInspector
             get { return false; }
         }
 
-        public override bool Expandable
-        {
-            get { return true; }
-        }
-
         public override Type[] EditedTypes
         {
             get { return new Type[] { typeof(RigidbodyConstraints) }; }
+        }
+
+        public override bool IsExpandable(InspectorField field)
+        {
+            return true;
         }
 
         public override void Draw(InspectorField field, GUIStyle style)

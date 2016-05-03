@@ -2,7 +2,6 @@
 
 using AdvancedInspector;
 
-[AdvancedInspector]
 public class AIExample4_InspectLevel : MonoBehaviour 
 {
     // Item can be displayed in "levels".

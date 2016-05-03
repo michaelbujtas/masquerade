@@ -3,7 +3,6 @@ using UnityEngine;
 
 using AdvancedInspector;
 
-[AdvancedInspector]
 public class AIExample38_Constructor : MonoBehaviour
 {
     // In some case, you may want a class to have a custom constructor.
@@ -11,7 +10,6 @@ public class AIExample38_Constructor : MonoBehaviour
     [Serializable]
     public class CustomConstructor
     {
-        [Inspect]
         public string value;
 
         public CustomConstructor(string text)

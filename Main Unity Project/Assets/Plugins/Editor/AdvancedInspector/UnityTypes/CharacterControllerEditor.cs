@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 
 using UnityEditor;
 using UnityEngine;
@@ -26,28 +23,28 @@ namespace AdvancedInspector
 
             SerializedObject so = new SerializedObject(Instances.Cast<UnityEngine.Object>().ToArray());
 
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("slopeLimit"),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("slopeLimit"),
                 new DescriptorAttribute("Slope Limit", "The character controllers slope limit in degrees.", "http://docs.unity3d.com/ScriptReference/CharacterController-slopeLimit.html")));
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("stepOffset"),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("stepOffset"),
                 new DescriptorAttribute("Step Offset", "The character controllers step offset in meters.", "http://docs.unity3d.com/ScriptReference/CharacterController-stepOffset.html")));
-            fields.Add(new InspectorField(type, Instances, so.FindProperty("m_SkinWidth"),
+            Fields.Add(new InspectorField(type, Instances, so.FindProperty("m_SkinWidth"),
                 new DescriptorAttribute("Skin Width", "The thickness of the interpenetration of this capsule.", "")));
-            fields.Add(new InspectorField(type, Instances, so.FindProperty("m_MinMoveDistance"),
+            Fields.Add(new InspectorField(type, Instances, so.FindProperty("m_MinMoveDistance"),
                 new DescriptorAttribute("Min Move Distance", "The smallest distance required for the character to move.", "")));
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("center"),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("center"),
                 new DescriptorAttribute("Center", "The center of the character's capsule relative to the transform's position.", "http://docs.unity3d.com/ScriptReference/CharacterController-center.html")));
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("radius"),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("radius"),
                 new DescriptorAttribute("Radius", "The radius of the character's capsule.", "http://docs.unity3d.com/ScriptReference/CharacterController-radius.html")));
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("height"),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("height"),
                 new DescriptorAttribute("Height", "The height of the character's capsule.", "http://docs.unity3d.com/ScriptReference/CharacterController-height.html")));
 
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("detectCollisions"), new InspectAttribute(InspectorLevel.Advanced),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("detectCollisions"), new InspectAttribute(InspectorLevel.Advanced),
                 new DescriptorAttribute("Detect Collisions", "Determines whether other rigidbodies or character controllers collide with this character controller (by default this is always enabled).", "http://docs.unity3d.com/ScriptReference/CharacterController-detectCollisions.html")));
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("isGrounded"), new InspectAttribute(InspectorLevel.Advanced),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("isGrounded"), new InspectAttribute(InspectorLevel.Advanced),
                 new DescriptorAttribute("Is Grounded", "Was the CharacterController touching the ground during the last move?", "http://docs.unity3d.com/ScriptReference/CharacterController-isGrounded.html")));
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("collisionFlags"), new InspectAttribute(InspectorLevel.Advanced),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("collisionFlags"), new InspectAttribute(InspectorLevel.Advanced),
                 new DescriptorAttribute("Collision Flags", "What part of the capsule collided with the environment during the last CharacterController.Move call.", "http://docs.unity3d.com/ScriptReference/CharacterController-collisionFlags.html")));
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("velocity"), new InspectAttribute(InspectorLevel.Advanced),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("velocity"), new InspectAttribute(InspectorLevel.Advanced),
                 new DescriptorAttribute("Velocity", "The current relative velocity of the Character (see notes).", "http://docs.unity3d.com/ScriptReference/CharacterController-velocity.html")));
         }
 

@@ -2,7 +2,6 @@
 
 using AdvancedInspector;
 
-[AdvancedInspector]
 public class AIExample39_DynamicStatic : MonoBehaviour
 {
     // A Runtime Dynamic attribute can also recieve the path towards a static method declared in any type.
@@ -20,7 +19,7 @@ public class AIExample39_DynamicStatic : MonoBehaviour
         displayItem = !displayItem;
     }
 
-    [Inspect, Help(HelpAttribute.IsNull, HelpType.Error, "Should not be null!")]
+    [Help(HelpAttribute.IsNull, HelpType.Error, "Should not be null!")]
     public Camera nullField;
 }
 

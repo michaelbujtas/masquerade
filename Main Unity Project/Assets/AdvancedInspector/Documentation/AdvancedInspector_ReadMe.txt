@@ -401,5 +401,39 @@ Take a look at the video for more information. It's an example of what the AI ca
 - Rewrote how the AI gather the object's information. It should be a lot faster now, as it no longer need to test for duplicate items. Contact us if anything isn't showing properly anymore.
 - Fixed the cursor picking icon, which for some reason was the wrong one for quite some time.
 
+1.64:
+[CHANGES]
+- DisplayAsParent now have a property named "Hide Parent". When false, the parent field is displayed as a title.
+- Expandable attribute now have a property named "Always Expanded", which force an object to be expanded, and prevent it from being collapsible.
+[FIXES]
+- MeshRenderer and SkinnedMeshRenderer now properly display reflection probes in range and the probe blending option.
+- Updated the TerrainCollider to better follow latest Unity's inspector changes.
+- IDataChanged event is now handled on subclass, not only the inspector entry point.
+- Preventing a type from being expandable from the AdvancedInspector attribute had been broken for a while. Now, Expandable attribute can be placed on class/struct.
+- Fixed a visual lining issue with deep nesting.
+- Trap "ExitGUIException" from being thrown by Unity for no reason. Should prevent them from showing up in the console.
+- Double-clicking labels was ignoring the mass child expand/collapse feature.
+- Expand/Collapse child is now more intuitive as it doesn't expand or collapse the parent, allowing you to see the result.
+- Fixed an issue with Copy/Paste where constant field be attempted to be pasted on.
+
+1.65:
+[CHANGES]
+- New option in the preferences; ability to disable the expansion of references. The exception being ComponentMonoBehaviour.
+- New option in the preferences; ability to change the naming pattern of collection. 
+- Selected tabs are now persistent. 
+[FIXES]
+- Clean up all the example to remove most of the [AdvancedInspector] attributes or redundant [Inspect]
+- Hide the ComponentMonoBehaviour's owner. It wasn't supposed to be displayed in the inspector.
+- Make float written with a "," automatically convert to "."
+- Fixed an issue when Inspect Default Items is false, and the inspector would remember some item as being expanded.
+- Fixed issue with Collection in DropDown or Button mode while displaying value type.
+
+1.66:
+[FIXES]
+- Removed Light shadow warning about Unity Pro.
+- Removed HDR limitation on camera, it's no longer valid.
+- Performance issue fixed on the Selection Tracker while duplicating large selection of GameObject.
+- Performance issue when entering/exiting play and reloading context.
+
 1.60 and above is only supported on Unity 5.2+
 You may require to disable custom Advanced Inspector if you wish to use 1.60 on 5.1x.

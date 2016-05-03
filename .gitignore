@@ -3,5 +3,6 @@
 *.pdb
 Library*/
 Temp*/
+Builds*/
 .vs*/
 Main Unity Project/Builds/build_Data/output_log.txt

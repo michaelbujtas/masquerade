@@ -2,7 +2,6 @@
 
 using AdvancedInspector;
 
-[AdvancedInspector]
 public class AIExample9_Method : MonoBehaviour 
 {
     // They show up as a button.

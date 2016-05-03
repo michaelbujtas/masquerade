@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 
 using UnityEditor;
 using UnityEngine;
@@ -26,74 +24,72 @@ namespace AdvancedInspector
 
             SerializedObject so = new SerializedObject(Instances.Cast<UnityEngine.Object>().ToArray());
 
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("type"),
-                new HelpAttribute(new HelpAttribute.HelpDelegate(HelpLightType)),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("type"),
                 new DescriptorAttribute("Type", "The type of the light.", "http://docs.unity3d.com/ScriptReference/Light-type.html")));
 
             m_Lightmapping = so.FindProperty("m_Lightmapping");
-            fields.Add(new InspectorField(type, Instances, m_Lightmapping,
+            Fields.Add(new InspectorField(type, Instances, m_Lightmapping,
                 new InspectAttribute(new InspectAttribute.InspectDelegate(IsNotArea)),
                 new RestrictAttribute(new RestrictAttribute.RestrictDelegate(Baking)),
                 new DescriptorAttribute("Baking", "How the light is handled versus lightmaps.")));
 
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("range"),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("range"),
                 new InspectAttribute(new InspectAttribute.InspectDelegate(IsPointOrSpot)),
                 new DescriptorAttribute("Range", "The range of the light.", "http://docs.unity3d.com/ScriptReference/Light-range.html")));
 
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("spotAngle"),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("spotAngle"),
                 new InspectAttribute(new InspectAttribute.InspectDelegate(IsSpot)),
                 new DescriptorAttribute("Spot Angle", "The angle of the light's spotlight cone in degrees.", "http://docs.unity3d.com/ScriptReference/Light-spotAngle.html")));
 
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("areaSize"),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("areaSize"),
                 new InspectAttribute(new InspectAttribute.InspectDelegate(IsArea)),
                 new DescriptorAttribute("Area Size", "The size of the area light. Editor only.", "http://docs.unity3d.com/ScriptReference/Light-areaSize.html")));
 
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("color"),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("color"),
                 new DescriptorAttribute("Color", "The color of the light.", "http://docs.unity3d.com/ScriptReference/Light-color.html")));
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("intensity"),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("intensity"),
                 new RangeValueAttribute(0f, 8f),
                 new DescriptorAttribute("Intensity", "The Intensity of a light is multiplied with the Light color.", "http://docs.unity3d.com/ScriptReference/Light-intensity.html")));
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("bounceIntensity"),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("bounceIntensity"),
                 new RangeValueAttribute(0f, 8f), new HelpAttribute(new HelpAttribute.HelpDelegate(HelpBouncedGI)),
                 new DescriptorAttribute("Bounce Intensity", "The multiplier that defines the strength of the bounce lighting.", "http://docs.unity3d.com/ScriptReference/Light-bounceIntensity.html")));
 
 
 
             //Acts like a group
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("shadows"),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("shadows"),
                 new InspectAttribute(new InspectAttribute.InspectDelegate(IsNotArea)),
-                new HelpAttribute(new HelpAttribute.HelpDelegate(HelpShadowPro)),
                 new DescriptorAttribute("Shadow Type", "How this light casts shadows", "http://docs.unity3d.com/ScriptReference/Light-shadows.html")));
 
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("shadowStrength"),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("shadowStrength"),
                 new InspectAttribute(new InspectAttribute.InspectDelegate(HasShadow)),
                 new DescriptorAttribute("Strength", "How this light casts shadows.", "http://docs.unity3d.com/ScriptReference/Light-shadowStrength.html")));
-            fields.Add(new InspectorField(type, Instances, so.FindProperty("m_Shadows.m_Resolution"),
+            Fields.Add(new InspectorField(type, Instances, so.FindProperty("m_Shadows.m_Resolution"),
                 new InspectAttribute(new InspectAttribute.InspectDelegate(HasShadow)),
                 new DescriptorAttribute("Resolution", "The shadow's resolution.")));
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("shadowBias"),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("shadowBias"),
                 new InspectAttribute(new InspectAttribute.InspectDelegate(HasShadow)),
                 new DescriptorAttribute("Bias", "Shadow mapping bias.", "http://docs.unity3d.com/ScriptReference/Light-shadowBias.html")));
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("shadowNormalBias"),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("shadowNormalBias"),
                 new InspectAttribute(new InspectAttribute.InspectDelegate(HasShadow)),
                 new DescriptorAttribute("Normal Bias", "Shadow mapping normal-based bias.", "http://docs.unity3d.com/ScriptReference/Light-shadowNormalBias.html")));
 
-            fields.Add(new InspectorField(type, Instances, so.FindProperty("m_DrawHalo"),
+            Fields.Add(new InspectorField(type, Instances, so.FindProperty("m_DrawHalo"),
                 new DescriptorAttribute("Draw Halo", "Draw a halo around the light. Now work with the Halo class.")));
 
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("cookie"),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("cookie"),
                 new DescriptorAttribute("Cookie", "The cookie texture projected by the light.", "http://docs.unity3d.com/ScriptReference/Light-cookie.html")));
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("cookieSize"),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("cookieSize"),
                 new InspectAttribute(new InspectAttribute.InspectDelegate(IsDirectional)),
                 new DescriptorAttribute("Cookie Size", "The size of a directional light's cookie.", "http://docs.unity3d.com/ScriptReference/Light-cookieSize.html")));
 
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("flare"),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("flare"),
                 new DescriptorAttribute("Flare", "The flare asset to use for this light.", "http://docs.unity3d.com/ScriptReference/Light-flare.html")));
 
-            fields.Add(new InspectorField(type, Instances, so.FindProperty("m_RenderMode"),
+            Fields.Add(new InspectorField(type, Instances, so.FindProperty("m_RenderMode"),
                 new DescriptorAttribute("Render Mode", "The rendering path for the lights.")));
 
-            fields.Add(new InspectorField(type, Instances, so.FindProperty("m_CullingMask"),
+            Fields.Add(new InspectorField(type, Instances, so.FindProperty("m_CullingMask"),
                 new HelpAttribute(new HelpAttribute.HelpDelegate(HelpSceneLighting)),
                 new DescriptorAttribute("Culling Mask", "The object that are affected or ignored by the light.")));
         }
@@ -161,22 +157,6 @@ namespace AdvancedInspector
         {
             if (((Light)Instances[0]).bounceIntensity > 0 && IsPointOrSpot() && m_Lightmapping.intValue != 2)
                 return new HelpItem(HelpType.Warning, "Currently realtime indirect bounce light shadowing for spot and point lights is not supported.");
-
-            return null;
-        }
-
-        public HelpItem HelpShadowPro()
-        {
-            if (HasShadow() && IsPointOrSpot() && !UnityEditorInternal.InternalEditorUtility.HasPro())
-                return new HelpItem(HelpType.Warning, "Real time shadow for point and spot lights requires Unity Pro.");
-
-            return null;
-        }
-
-        public HelpItem HelpLightType()
-        {
-            if (IsArea() && !UnityEditorInternal.InternalEditorUtility.HasPro())
-                return new HelpItem(HelpType.Warning, "Area lights require Unity Pro.");
 
             return null;
         }
@@ -284,11 +264,11 @@ namespace AdvancedInspector
             GUI.changed |= changed;
             if (!handlesOnly)
             {
-                Handles.DrawLine(position, (Vector3)((position + (forward * r)) + (up * angle)));
-                Handles.DrawLine(position, (Vector3)((position + (forward * r)) - (up * angle)));
-                Handles.DrawLine(position, (Vector3)((position + (forward * r)) + (right * angle)));
-                Handles.DrawLine(position, (Vector3)((position + (forward * r)) - (right * angle)));
-                Handles.DrawWireDisc(position + ((Vector3)(r * forward)), forward, angle);
+                Handles.DrawLine(position, (position + (forward * r)) + (up * angle));
+                Handles.DrawLine(position, (position + (forward * r)) - (up * angle));
+                Handles.DrawLine(position, (position + (forward * r)) + (right * angle));
+                Handles.DrawLine(position, (position + (forward * r)) - (right * angle));
+                Handles.DrawWireDisc(position + r * forward, forward, angle);
             }
 
             return new Vector2(x, y);
@@ -296,9 +276,9 @@ namespace AdvancedInspector
 
         private Vector2 RectHandles(Quaternion rotation, Vector3 position, Vector2 size)
         {
-            Vector3 forward = (Vector3)(rotation * Vector3.forward);
-            Vector3 up = (Vector3)(rotation * Vector3.up);
-            Vector3 right = (Vector3)(rotation * Vector3.right);
+            Vector3 forward = rotation * Vector3.forward;
+            Vector3 up = rotation * Vector3.up;
+            Vector3 right = rotation * Vector3.right;
 
             float radiusX = 0.5f * size.x;
             float radiusY = 0.5f * size.y;

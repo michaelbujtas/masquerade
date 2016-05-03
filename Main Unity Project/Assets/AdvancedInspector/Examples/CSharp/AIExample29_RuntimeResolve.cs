@@ -2,7 +2,6 @@
 
 using AdvancedInspector;
 
-[AdvancedInspector]
 public class AIExample29_RuntimeResolve : MonoBehaviour 
 {
     public bool myBoolean;
@@ -15,6 +14,7 @@ public class AIExample29_RuntimeResolve : MonoBehaviour
     // In this case, there is no editor for "object", but there's one for bool, float and string.
     // By default the Advanced Inspector uses the editor related to the declared type, not the current object type.
     // The RuntimeResolve forces it to seek the proper editor for the current type.
+    // Resolving editors every refresh has an impact of performance. Use it with care.
     [Inspect, RuntimeResolve]
     public object MyProperty
     {

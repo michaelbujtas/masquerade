@@ -189,6 +189,9 @@ namespace AdvancedInspector
                         result = EditorGUILayout.TextField(result.ToString(), style, options);
                     else
                         result = EditorGUILayout.TextField(result.ToString(), options);
+
+                    string text = result.ToString();
+                    result = text.Replace(',', '.');
                 }
             }
 

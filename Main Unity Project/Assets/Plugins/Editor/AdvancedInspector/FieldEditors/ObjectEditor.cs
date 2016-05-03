@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 using UnityEditor;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 
@@ -48,6 +47,11 @@ namespace AdvancedInspector
             get { return new Type[] { typeof(UnityEngine.Object) }; }
         }
 
+        public override bool IsExpandable(InspectorField field)
+        {
+            return InspectorPreferences.ExpandableReferences || typeof(ComponentMonoBehaviour).IsAssignableFrom(field.Type);
+        }
+
         public override void Draw(InspectorField field, GUIStyle style)
         {
             IPicker picker = field.GetAttribute<IPicker>();
@@ -66,9 +70,6 @@ namespace AdvancedInspector
 
                 return;
             }
-
-            if (field.DisplayAsParent)
-                return;
 
             if (validator == null)
                 validator = typeof(EditorGUI).GetNestedType("ObjectFieldValidator", BindingFlags.NonPublic);

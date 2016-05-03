@@ -2,7 +2,6 @@
 
 using AdvancedInspector;
 
-[AdvancedInspector]
 public class AIExample24_Tabs : MonoBehaviour
 {
     // Tabs work in a manner similar to groups.

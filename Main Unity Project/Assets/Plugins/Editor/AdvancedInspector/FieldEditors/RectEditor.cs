@@ -7,14 +7,14 @@ namespace AdvancedInspector
 {
     public class RectEditor : FieldEditor
     {
-        public override bool Expandable
-        {
-            get { return false; }
-        }
-
         public override Type[] EditedTypes
         {
             get { return new Type[] { typeof(Rect), typeof(RectOffset) }; }
+        }
+
+        public override bool IsExpandable(InspectorField field)
+        {
+            return false;
         }
 
         public override void Draw(InspectorField field, GUIStyle style)

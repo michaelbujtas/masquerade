@@ -68,6 +68,8 @@ public class ClassIcon : MonoBehaviour {
 				return true;
 
 		}
+
+		CustomConsole.LogWarning("I guess you added a class to the enum but didn't add it to classIcon? Fix that.");
 		return false;
 
 	}

@@ -28,13 +28,23 @@ public class MasqueradePlayer {
 		private set;
 	}
 
-	public MasqueradePlayer(NetworkingPlayer netWorker, byte index, PlayerIdentity identity)
+	[Inspect]
+	public IndexHand Hand
+	{
+		get;
+		private set;
+	}
+
+	public MasqueradePlayer(NetworkingPlayer netWorker, byte index, PlayerIdentity identity, IndexHand hand)
 	{
 		PlayerIndex = index;
 
 		NetworkingPlayer = netWorker;
 
 		Identity = identity;
+
+		Hand = hand;
+	
 		
 	}
 }

@@ -4,13 +4,12 @@ using System.Collections.Generic;
 
 using AdvancedInspector;
 
-[AdvancedInspector]
 public class AIExample19_Restrict : MonoBehaviour 
 {
     // Unlike other "dynamic" attributes, the Restrict attribute can only work in "dynamic" mode.
     // The restrict attribute limits - or restrict - the data that can be input in a field.
     // This is quite useful when you want to limit what can be selected. 
-    [Inspect, Restrict("ValidFloats")]
+    [Restrict("ValidFloats")]
     public float[] myFloat;
 
     private IList ValidFloats()
@@ -20,7 +19,7 @@ public class AIExample19_Restrict : MonoBehaviour
 
     // The restrict attribute can display the choices as a drop down list, a collection of button, or a toolbox popup
     // The toolbox popup is quite useful when you have a high number of choices and you want the user to search in them.
-    [Inspect, Restrict("ValidStrings", RestrictDisplay.Toolbox)]
+    [Restrict("ValidStrings", RestrictDisplay.Toolbox)]
     public string myString;
 
     private IList ValidStrings()
@@ -32,7 +31,7 @@ public class AIExample19_Restrict : MonoBehaviour
     // If you have ScriptableObject, you can do Resources.LoadAll and return a list of those.
     // Or you can do FindAll for a specific type.
     // Note that you can also add "null" in your collection for the user to "unselect" an object.
-    [Inspect, Restrict("GetObjects")]
+    [Restrict("GetObjects")]
     public MonoBehaviour[] myObjects;
 
     private IList GetObjects()

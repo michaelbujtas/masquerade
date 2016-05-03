@@ -23,49 +23,49 @@ namespace AdvancedInspector
         protected override void RefreshFields()
         {
             Type type = typeof(Camera);
-            
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("clearFlags"),
+
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("clearFlags"),
                 new DescriptorAttribute("Clear Flag", "How the camera clears the background.", "http://docs.unity3d.com/ScriptReference/Camera-clearFlags.html")));
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("backgroundColor"), new InspectAttribute(new InspectAttribute.InspectDelegate(ShowBackground)),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("backgroundColor"), new InspectAttribute(new InspectAttribute.InspectDelegate(ShowBackground)),
                 new DescriptorAttribute("Background Color", "The color with which the screen will be cleared.", "http://docs.unity3d.com/ScriptReference/Camera-backgroundColor.html")));
 
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("cullingMask"), new FieldEditorAttribute("LayerMaskEditor"),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("cullingMask"), new FieldEditorAttribute("LayerMaskEditor"),
                 new DescriptorAttribute("Culling Mask", "This is used to render parts of the scene selectively.", "http://docs.unity3d.com/ScriptReference/Camera-cullingMask.html")));
 
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("orthographic"), new RestrictAttribute(new RestrictAttribute.RestrictDelegate(Projection)),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("orthographic"), new RestrictAttribute(new RestrictAttribute.RestrictDelegate(Projection)),
                 new DescriptorAttribute("Orthographic", "Is the camera orthographic (true) or perspective (false)?", "http://docs.unity3d.com/ScriptReference/Camera-orthographic.html")));
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("orthographicSize"), new InspectAttribute(new InspectAttribute.InspectDelegate(IsOrthographic)),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("orthographicSize"), new InspectAttribute(new InspectAttribute.InspectDelegate(IsOrthographic)),
                 new DescriptorAttribute("Size", "Camera's half-size when in orthographic mode.", "http://docs.unity3d.com/ScriptReference/Camera-orthographicSize.html")));
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("fieldOfView"), new InspectAttribute(new InspectAttribute.InspectDelegate(IsFieldOfView)),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("fieldOfView"), new InspectAttribute(new InspectAttribute.InspectDelegate(IsFieldOfView)),
                 new RangeValueAttribute(1, 179), new DescriptorAttribute("Field Of View", "The field of view of the camera in degrees.", "http://docs.unity3d.com/ScriptReference/Camera-fieldOfView.html")));
 
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("nearClipPlane"),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("nearClipPlane"),
                 new DescriptorAttribute("Near Clip", "The near clipping plane distance.", "http://docs.unity3d.com/ScriptReference/Camera-nearClipPlane.html")));
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("farClipPlane"),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("farClipPlane"),
                 new DescriptorAttribute("Far Clip", "The far clipping plane distance.", "http://docs.unity3d.com/ScriptReference/Camera-farClipPlane.html")));
 
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("rect"),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("rect"),
                 new DescriptorAttribute("Viewport Rect", "Where on the screen is the camera rendered in normalized coordinates.", "http://docs.unity3d.com/ScriptReference/Camera-rect.html")));
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("depth"),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("depth"),
                 new DescriptorAttribute("Depth", "Camera's depth in the camera rendering order.", "http://docs.unity3d.com/ScriptReference/Camera-depth.html")));
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("renderingPath"), new HelpAttribute(new HelpAttribute.HelpDelegate(RenderingHelp)),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("renderingPath"), new HelpAttribute(new HelpAttribute.HelpDelegate(RenderingHelp)),
                 new DescriptorAttribute("Rendering Path", "Rendering path.", "http://docs.unity3d.com/ScriptReference/Camera-renderingPath.html")));
 
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("targetTexture"),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("targetTexture"),
                 new DescriptorAttribute("Render Texture", "Destination render texture (Unity Pro only).", "http://docs.unity3d.com/ScriptReference/Camera-targetTexture.html")));
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("useOcclusionCulling"),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("useOcclusionCulling"),
                 new DescriptorAttribute("Occlusion Culling", "Whether or not the Camera will use occlusion culling during rendering.", "http://docs.unity3d.com/ScriptReference/Camera-useOcclusionCulling.html")));
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("hdr"), new ReadOnlyAttribute(new ReadOnlyAttribute.ReadOnlyDelegate(IsHDRAvailable)),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("hdr"),
                 new DescriptorAttribute("HDR", "High dynamic range rendering.", "http://docs.unity3d.com/ScriptReference/Camera-hdr.html")));
 
-            fields.Add(new InspectorField(null, new UnityEngine.Object[] { this }, new object[] { this }, this.GetType().GetMethod("TakeScreenshot"),
+            Fields.Add(new InspectorField(null, new UnityEngine.Object[] { this }, new object[] { this }, this.GetType().GetMethod("TakeScreenshot"),
                 new Attribute[] { new InspectAttribute(InspectorLevel.Advanced) }));
-            fields.Add(new InspectorField(null, new UnityEngine.Object[] { this }, new object[] { this }, null, this.GetType().GetField("screenshotResolution"), false,
+            Fields.Add(new InspectorField(null, new UnityEngine.Object[] { this }, new object[] { this }, null, this.GetType().GetField("screenshotResolution"), false,
                 new Attribute[] { new InspectAttribute(InspectorLevel.Advanced) }));
 
             // Debug
             InspectorField debug = new InspectorField("Debug");
-            fields.Add(debug);
+            Fields.Add(debug);
 
             debug.Fields.Add(new InspectorField(type, Instances, type.GetProperty("aspect"), new InspectAttribute(InspectorLevel.Debug), new ReadOnlyAttribute(),
                 new DescriptorAttribute("Aspect Ratio", "The aspect ratio (width divided by height).", "http://docs.unity3d.com/ScriptReference/Camera-aspect.html")));
@@ -243,11 +243,6 @@ namespace AdvancedInspector
             }
 
             return true;
-        }
-
-        private bool IsHDRAvailable()
-        {
-            return !UnityEditorInternal.InternalEditorUtility.HasPro();
         }
 
         private HelpItem RenderingHelp()

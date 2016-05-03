@@ -55,11 +55,6 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 	[Inspect]
 	public NamedValueField ActionsRemainingDisplay;
 
-	[Inspect]
-	public int DiscardThisIndex = CardIndex.EMPTY_SLOT;
-
-	[Inspect]
-	public bool DiscardItNow = false;
 
 	ResponseStore<bool> facingRequestResponses = new ResponseStore<bool>();
 	ResponseStore<ActionDescriptor> actionRequestResponses = new ResponseStore<ActionDescriptor>();
@@ -80,6 +75,11 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 
 	public MasqueradePlayer GetPlayer(int playerIndex)
 	{
+		while(MasqueradePlayers.Count <= playerIndex)
+		{
+			playerIndex -= MasqueradePlayers.Count;
+		}
+
 		if (MasqueradePlayers.Count > playerIndex)
 		{
 			return MasqueradePlayers[playerIndex];
@@ -88,6 +88,9 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 		return null;
 	}
 
+
+	//This is currently our only state variable
+	bool gameIsOver = false;
 
 	#region UIClicks
 	public void RequestButtonClickUI() //Server
@@ -223,7 +226,24 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 		}
 
 		//Cleanup
-		bool retVal = false;
+
+		for(int i = 0; i < MasqueradePlayers.Count; i++)
+		{
+			IndexHand apnapHand = GetPlayer(PlaceInTurnOrder + i).Hand;
+			foreach(byte b in apnapHand.CardsOwned)
+			{
+				Card c = TheCardIndex.GetCard(b);
+				if(c.Logic is IEndOfTurn)
+				{
+					((IEndOfTurn)c.Logic).OnEndOfTurn(CurrentPlayer);
+				}
+			}
+		}
+
+		if (returnIndex != null)
+			coroutineReturns.Responses[(byte)returnIndex].Fill(false); //this return isn't used for anything anymore
+
+		/*bool retVal = false;
 
 		var KingsInTheDiscard =
 			from b in TheDiscardPile.Contents
@@ -236,7 +256,7 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 
 		if (returnIndex != null)
 			coroutineReturns.Responses[(byte)returnIndex].Fill(retVal); //Returning true will end the game
-
+		*/
 	}
 	#endregion
 
@@ -365,12 +385,18 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 			yield return null;
 		}
 		CustomConsole.Log("Got a response.", logColor);
+
 		switch (response.Result.Type)
 		{
 			case CardAction.FLIP:
 				CustomConsole.Log("Flipping card #" + response.Result.ActorIndex, logColor);
-				TheCardIndex.GetCard(response.Result.ActorIndex).FlipAction();
-				//TheCardIndex.GetCard(response.Result.ActorIndex).TapAction();
+				Card cardToFlip = TheCardIndex.GetCard(response.Result.ActorIndex);
+
+
+				bool actionFinished = false;
+				StartCoroutine(cardToFlip.FlipAction(() => { actionFinished = true; }));
+				while (!actionFinished)
+					yield return null;
 				break;
 			case CardAction.ATTACK:
 				CustomConsole.Log("Card #" + response.Result.ActorIndex + " attacks Card #" + response.Result.TargetIndex, logColor);
@@ -393,7 +419,7 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 
 				if (attacker.Owner != defender.Owner)
 				{
-					bool actionFinished = false;
+					actionFinished = false;
 					StartCoroutine(attacker.AttackAction(defender, ()=> { actionFinished = true; }));
 					while (!actionFinished)
 						yield return null;
@@ -402,7 +428,11 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 				break;
 			case CardAction.ACTIVATE:
 				CustomConsole.Log("Activating card #" + response.Result.ActorIndex, logColor);
-				TheCardIndex.GetCard(response.Result.ActorIndex).ActivateAction();
+
+				actionFinished = false;
+				StartCoroutine(TheCardIndex.GetCard(response.Result.ActorIndex).ActivateAction(() => { actionFinished = true; }));
+				while (!actionFinished)
+					yield return null;
 				break;
 			case CardAction.PASS:
 				CustomConsole.Log("Passing Turn.", logColor);
@@ -650,21 +680,24 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 			NetworkingPlayer player = shuffledPlayers[j];
 			byte positionInTurnOrder = j;
 
-			MasqueradePlayers.Add(new MasqueradePlayer(player, positionInTurnOrder, (PlayerIdentity)player.PlayerObject));
+			MasqueradePlayers.Add(new MasqueradePlayer(player, positionInTurnOrder, (PlayerIdentity)player.PlayerObject, UsedHands[j]));
 		}
 
 		
 
 		byte i = 0;
+		bool fourPlayers = OwningNetWorker.Players.Count > 2;
 		foreach (MasqueradePlayer p in MasqueradePlayers)
 		{
-			AuthoritativeRPC("SetPlayerNumberRPC", OwningNetWorker, p.NetworkingPlayer, false, i);
-			bool fourPlayers = OwningNetWorker.Players.Count > 2;
 			AuthoritativeRPC("ConfigureHandsRPC", OwningNetWorker, p.NetworkingPlayer, false, fourPlayers, i);
-			RPC("LinkHandIdentityRPC", p.PlayerIndex, p.Identity.PlayerNumber);
 			i++;
 		}
-		
+
+		foreach (MasqueradePlayer p in MasqueradePlayers)
+		{
+			RPC("LinkHandIdentityRPC", p.PlayerIndex, p.Identity.PlayerNumber);
+		}
+
 
 		UpdateWhoseTurn();
 
@@ -703,7 +736,6 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 			c.SyncFlip();
 
 
-		bool gameIsOver = false;
 
 		while (!gameIsOver)
 		{
@@ -714,28 +746,23 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 			while (turnResponse.FlagWaiting)
 				yield return null;
 
-			gameIsOver = turnResponse.Result;
+			//gameIsOver = turnResponse.Result;
 			turnResponse.Recycle();
 
 			if (!gameIsOver)
 				AdvanceTurn();
 		}
 
-		CustomConsole.Log("Game over! Player " + CurrentPlayer.PlayerIndex + " won! (Probably!)", Color.yellow);
+		CustomConsole.Log("Game over!", Color.yellow);
 
 	}
 
-	[BRPC]
-	public void SetPlayerNumberRPC(byte number)
-	{
-		MyPlayerNumber = number;
-		CustomConsole.Log("Setting my player number. I'm #" + MyPlayerNumber);
-	}
 
 	[BRPC]
 	public void ConfigureHandsRPC(bool fourPlayers, byte playerNumber)
 	{
 		CustomConsole.Log("Configuring hands. I'm playerNumber " + playerNumber);
+		MyPlayerNumber = playerNumber;
 		UsedHands.Clear();
 		if (fourPlayers)
 		{
@@ -782,11 +809,14 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 
 		}
 
+		/*
 		for (int i = 0; i < 4; i++)
 		{
 
 			UsedHands[i].AttachedIdentityRenderer.Identity = PlayerIdentities[UsedHands[i].PlayerNumber];
+			//ClockwiseHands[i].AttachedIdentityRenderer.Identity = MasqueradePlayers[ClockwiseHands[i].PlayerNumber].Identity;
 		}
+		*/
 	}
 
 	[BRPC]
@@ -795,6 +825,12 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 		CustomConsole.Log("LinkHandIdentityRPC");
 		UsedHands[hand].AttachedIdentityRenderer.Identity = PlayerIdentities[identity];
 	
+	}
+
+	public void EndGame(MasqueradePlayer winner)
+	{
+		CustomConsole.Log("EndGame hit. " + winner.Identity.name + " wins!");
+		gameIsOver = true;
 	}
 
 	#endregion
@@ -880,14 +916,6 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 
 	}
 
-	public void Update()
-	{
-		if (DiscardItNow)
-		{
-			DiscardItNow = false;
-			SendToDiscard(TheCardIndex.GetCard((byte)DiscardThisIndex));
-		}
-	}
-
+	
 
 }

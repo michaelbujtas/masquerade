@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
 
 using UnityEditor;
 using UnityEngine;
@@ -20,13 +18,13 @@ namespace AdvancedInspector
 
             base.RefreshFields();
 
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("center"),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("center"),
                 new DescriptorAttribute("Center", "The center of the capsule, measured in the object's local space.", "http://docs.unity3d.com/ScriptReference/CapsuleCollider-center.html")));
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("height"),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("height"),
                 new DescriptorAttribute("Height", "The height of the capsule meased in the object's local space.", "http://docs.unity3d.com/ScriptReference/CapsuleCollider-height.html")));
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("radius"),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("radius"),
                 new DescriptorAttribute("Radius", "The radius of the sphere, measured in the object's local space.", "http://docs.unity3d.com/ScriptReference/CapsuleCollider-radius.html")));
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("direction"), new RestrictAttribute(new RestrictAttribute.RestrictDelegate(Direction)),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("direction"), new RestrictAttribute(new RestrictAttribute.RestrictDelegate(Direction)),
                 new DescriptorAttribute("Direction", "The direction of the capsule.", "http://docs.unity3d.com/ScriptReference/CapsuleCollider-direction.html")));
         }
 

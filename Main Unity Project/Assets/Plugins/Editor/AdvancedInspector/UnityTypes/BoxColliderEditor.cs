@@ -31,9 +31,9 @@ namespace AdvancedInspector
 
             base.RefreshFields();
 
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("center"),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("center"),
                 new DescriptorAttribute("Center", "The center of the box, measured in the object's local space.", "http://docs.unity3d.com/ScriptReference/BoxCollider-center.html")));
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("size"),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("size"),
                 new DescriptorAttribute("Size", "The size of the box, measured in the object's local space.", "http://docs.unity3d.com/ScriptReference/BoxCollider-size.html")));
         }
 

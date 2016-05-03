@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Reflection;
 
 using UnityEditor;
 using UnityEngine;
@@ -20,9 +17,9 @@ namespace AdvancedInspector
         {
             Type type = typeof(Joint2D);
 
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("enableCollision"),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("enableCollision"),
                 new DescriptorAttribute("Enable Collision", "Should rigid bodies connected with this joint collide?", "http://docs.unity3d.com/ScriptReference/Joint2D-enableCollision.html")));
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("connectedBody"),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("connectedBody"),
                 new DescriptorAttribute("Connected Body", "The Rigidbody2D object to which the other end of the joint is attached (ie, the object without the joint component).", "http://docs.unity3d.com/ScriptReference/Joint2D-connectedBody.html")));
         }
 

@@ -2,12 +2,11 @@
 
 using AdvancedInspector;
 
-[AdvancedInspector]
 public class AIExample23_Space : MonoBehaviour 
 {
     // For readability, it is often useful to add empty space between items.
     // The Space attribute allows you to add empty space before or after an item.
-    [Inspect, Spacing(Before = 10)]
+    [Spacing(Before = 10)]
     public float myField;
 
     // Because Unity now has a UnityEngine.Space type, you have to declare it as AdvancedInspector.Space

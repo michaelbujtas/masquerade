@@ -37,23 +37,23 @@ namespace AdvancedInspector
 
             SerializedObject so = new SerializedObject(Instances.Cast<UnityEngine.Object>().ToArray());
 
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("clip"),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("clip"),
                 new DescriptorAttribute("Animation", "The default animation.", "http://docs.unity3d.com/ScriptReference/Animation-clip.html")));
-            fields.Add(new InspectorField(type, Instances, so.FindProperty("m_Animations"),
+            Fields.Add(new InspectorField(type, Instances, so.FindProperty("m_Animations"),
                 new DescriptorAttribute("Animations", "")));
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("playAutomatically"),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("playAutomatically"),
                 new DescriptorAttribute("Play Automatically", "Should the default animation clip (Animation.clip) automatically start playing on startup.", "http://docs.unity3d.com/ScriptReference/Animation-playAutomatically.html")));
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("animatePhysics"),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("animatePhysics"),
                 new DescriptorAttribute("Animate Physic", "When turned on, animations will be executed in the physics loop. This is only useful in conjunction with kinematic rigidbodies.", "http://docs.unity3d.com/ScriptReference/Animation-animatePhysics.html")));
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("cullingType"),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("cullingType"),
                 new DescriptorAttribute("Culling Type", "Controls culling of this Animation component.", "http://docs.unity3d.com/ScriptReference/Animation-cullingType.html")));
 
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("isPlaying"), new InspectAttribute(InspectorLevel.Advanced),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("isPlaying"), new InspectAttribute(InspectorLevel.Advanced),
                 new DescriptorAttribute("Is Playing", "Are we playing any animations?", "http://docs.unity3d.com/ScriptReference/Animation-isPlaying.html")));
 
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("localBounds"), new InspectAttribute(InspectorLevel.Advanced),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("localBounds"), new InspectAttribute(InspectorLevel.Advanced),
                 new DescriptorAttribute("Bounds", "AABB of this Animation animation component in local space.", "http://docs.unity3d.com/ScriptReference/Animation-localBounds.html")));
-            fields.Add(new InspectorField(type, Instances, type.GetProperty("wrapMode"), new InspectAttribute(InspectorLevel.Advanced),
+            Fields.Add(new InspectorField(type, Instances, type.GetProperty("wrapMode"), new InspectAttribute(InspectorLevel.Advanced),
                 new DescriptorAttribute("Wrap Mode", "How should time beyond the playback range of the clip be treated?", "http://docs.unity3d.com/ScriptReference/Animation-wrapMode.html")));
 
         }

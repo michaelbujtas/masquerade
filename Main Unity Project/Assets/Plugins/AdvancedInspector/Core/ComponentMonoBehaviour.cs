@@ -21,10 +21,9 @@ namespace AdvancedInspector
     /// If the parent is destroyed, the subcomponent is destroyed too.
     /// If a subcomponent is found without a parent, it's destroyed too.
     /// </summary>
-    [AdvancedInspector]
     public abstract class ComponentMonoBehaviour : MonoBehaviour
     {
-        [SerializeField]
+        [SerializeField, HideInInspector]
         private MonoBehaviour owner;
 
         /// <summary>

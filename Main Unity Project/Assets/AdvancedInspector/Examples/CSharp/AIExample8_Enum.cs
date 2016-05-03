@@ -3,22 +3,19 @@
 using AdvancedInspector;
 using System;
 
-[AdvancedInspector]
 public class AIExample8_Enum : MonoBehaviour 
 {
-    [Inspect]
     public MyEnum normalEnum;
 
     // The enum attribute is used to control how an enum is displayed.
     // The first parameter is a switch between a normal 1-choice enum, and a masked enum.
-    [Inspect, Enum(true)]
+    [Enum(true)]
     public MyEnum maskedEnum;
 
     // An enum can also be display as checkboxes or buttons
-    [Inspect, Enum(EnumDisplay.Checkbox)]
+    [Enum(EnumDisplay.Checkbox)]
     public MyEnum checkboxEnum;
 
-    [Inspect]
     public ByteEnum byteEnum;
 }
 
