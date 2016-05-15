@@ -200,11 +200,11 @@ public class CardRenderer : MonoBehaviour
 					if (Card.IsTapped)
 					{
 						//NameText.text = "<i>" + Card.CardName + "</i>";
-						rectTransform.rotation = Quaternion.Euler(0, 0, 270);
+						Visuals.GetComponent<RectTransform>().rotation = Quaternion.Euler(0, 0, transform.parent.GetComponent<RectTransform>().rotation.eulerAngles.z + 270);
 					}
 					else
 					{
-						rectTransform.rotation = Quaternion.identity;
+						Visuals.GetComponent<RectTransform>().rotation = Quaternion.Euler(0, 0, transform.parent.GetComponent<RectTransform>().rotation.eulerAngles.z);
 						//NameText.text = Card.CardName;
 					}
 					name = NameText.text;

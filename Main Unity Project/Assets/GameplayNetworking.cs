@@ -89,7 +89,7 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 	}
 
 
-	//This is currently our only state variable
+	//This and Place in Turn Order are our only state variables
 	bool gameIsOver = false;
 
 	#region UIClicks
@@ -495,9 +495,8 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 
 			if (!passed)
 			{
-				//firstCardChoice = CardChoiceMenu.GetChoice(ClockwiseHands[MyPlayerNumber].UntappedCards, Color.green,
-				//USEDHANDS
-				firstCardChoice = CardChoiceMenu.GetChoice(UsedHands[MyPlayerNumber].UntappedCards, Color.green,
+
+				firstCardChoice = CardChoiceMenu.GetChoice(UsedHands[MyPlayerNumber].UntappedCards, Color.blue,
 				delegate (byte choice)
 				{
 					CustomConsole.Log("Got an actor. #" + choice);
@@ -552,17 +551,13 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 
 
 					List<byte> potentialTargets = new List<byte>();
-					//for (int i = 0; i < ClockwiseHands.Count; i++)
-					//USEDHANDS
 
 					for (int i = 0; i < UsedHands.Count; i++)
 					{
 						if (i != MyPlayerNumber)
 							potentialTargets.AddRange(UsedHands[i].CardsOpenToAttack);
-						//potentialTargets.AddRange(ClockwiseHands[i].CardsOpenToAttack);
-						//USEDHANDS
 					}
-					secondCardChoice = CardChoiceMenu.GetChoice(potentialTargets, Color.red,
+					secondCardChoice = CardChoiceMenu.GetChoice(potentialTargets, Color.yellow,
 					   delegate (byte choice)
 					   {
 						   CustomConsole.Log("Got a target. #" + choice);
