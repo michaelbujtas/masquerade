@@ -22,12 +22,22 @@ public class PlayerIdentity : NetworkedMonoBehavior {
 
 
 	PlayerIdentitySettings localSettingsObject;
-	
-
-	void Awake()
+	PlayerIdentitySettings LocalSettingsObject
 	{
-		localSettingsObject = FindObjectOfType<PlayerIdentitySettings>();
+		get
+		{
+			if(localSettingsObject == null)
+			{
+				localSettingsObject = FindObjectOfType<PlayerIdentitySettings>();
+			}
+			return localSettingsObject;
+		}
+		set
+		{
+			localSettingsObject = value;
+		}
 	}
+	
 
 
 	public void Setup(NetworkingPlayer owner, int number)
@@ -44,8 +54,8 @@ public class PlayerIdentity : NetworkedMonoBehavior {
 	[BRPC]
 	public void ConnectSettingsObjectRPC()
 	{
-		localSettingsObject.MyIdentity = this;
-		localSettingsObject.RefreshSettings();
+		LocalSettingsObject.MyIdentity = this;
+		LocalSettingsObject.RefreshSettings();
 	}
 
 	public void SetName(string name)
