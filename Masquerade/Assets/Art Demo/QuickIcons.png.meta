@@ -1,0 +1,336 @@
+fileFormatVersion: 2
+guid: 5b67b43e8418cd54a9fb71b9b044a0ae
+timeCreated: 1459639335
+licenseType: Free
+TextureImporter:
+  fileIDToRecycleName:
+    21300000: Inline Attack
+    21300002: Inline Faceup
+    21300004: Inline FaceDown
+    21300006: Inline Shield
+    21300008: Nameplate Silver
+    21300010: Seal Common
+    21300012: Nameplate Gold
+    21300014: Seal Noble
+    21300016: Seal Queen
+    21300018: Seal King
+    21300020: Seal Assassin
+    21300022: Seal Soldier
+    21300024: Action Icon
+  serializedVersion: 2
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 1
+    linearTexture: 0
+    correctGamma: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+  isReadable: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 0
+  cubemapConvolution: 0
+  cubemapConvolutionSteps: 7
+  cubemapConvolutionExponent: 1.5
+  seamlessCubemap: 0
+  textureFormat: -3
+  maxTextureSize: 2048
+  textureSettings:
+    filterMode: -1
+    aniso: 16
+    mipBias: -1
+    wrapMode: 1
+  nPOTScale: 0
+  lightmap: 0
+  rGBM: 0
+  compressionQuality: 50
+  allowsAlphaSplitting: 0
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spritePixelsToUnits: 300
+  alphaIsTransparency: 1
+  textureType: 8
+  buildTargetSettings: []
+  spriteSheet:
+    sprites:
+    - name: Inline Attack
+      rect:
+        serializedVersion: 2
+        x: 250
+        y: 1060
+        width: 44
+        height: 142
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -9, y: 71}
+        - {x: -22, y: 46}
+        - {x: -22, y: 28}
+        - {x: -13, y: -36}
+        - {x: -5, y: -71}
+        - {x: 11, y: -71}
+        - {x: 22, y: 13}
+        - {x: 22, y: 51}
+        - {x: 8, y: 71}
+    - name: Inline Faceup
+      rect:
+        serializedVersion: 2
+        x: 345
+        y: 1073
+        width: 50
+        height: 131
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -1, y: 65.5}
+        - {x: -4, y: 62.5}
+        - {x: -25, y: 30.5}
+        - {x: -25, y: -21.5}
+        - {x: -16, y: -65.5}
+        - {x: 16, y: -65.5}
+        - {x: 25, y: 4.5}
+        - {x: 25, y: 18.5}
+        - {x: 2, y: 65.5}
+    - name: Inline FaceDown
+      rect:
+        serializedVersion: 2
+        x: 661
+        y: 1069
+        width: 50
+        height: 131
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -16, y: 65.5}
+        - {x: -25, y: -5.5}
+        - {x: -25, y: -21.5}
+        - {x: -3, y: -65.5}
+        - {x: 4, y: -65.5}
+        - {x: 25, y: -32.5}
+        - {x: 25, y: 37.5}
+        - {x: 21, y: 65.5}
+    - name: Inline Shield
+      rect:
+        serializedVersion: 2
+        x: 765
+        y: 1073
+        width: 76
+        height: 120
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -38, y: 60}
+        - {x: -38, y: -43}
+        - {x: -15, y: -60}
+        - {x: 29, y: -60}
+        - {x: 34, y: -59}
+        - {x: 38, y: -32}
+        - {x: 38, y: 55}
+        - {x: 9, y: 60}
+    - name: Nameplate Silver
+      rect:
+        serializedVersion: 2
+        x: 370
+        y: 839
+        width: 690
+        height: 112
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -345, y: 56}
+        - {x: -345, y: -56}
+        - {x: 345, y: -56}
+        - {x: 345, y: 56}
+    - name: Seal Common
+      rect:
+        serializedVersion: 2
+        x: 124
+        y: 639
+        width: 200
+        height: 200
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: 89, y: 72}
+        - {x: 41, y: 100}
+        - {x: -40, y: 100}
+        - {x: -85, y: 69}
+        - {x: -100, y: 36}
+        - {x: -100, y: -34}
+        - {x: -86, y: -70}
+        - {x: -45, y: -100}
+        - {x: 39, y: -100}
+        - {x: 87, y: -71}
+        - {x: 100, y: -43}
+        - {x: 100, y: 41}
+    - name: Nameplate Gold
+      rect:
+        serializedVersion: 2
+        x: 383
+        y: 625
+        width: 690
+        height: 112
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -345, y: 56}
+        - {x: -345, y: -56}
+        - {x: 345, y: -56}
+        - {x: 345, y: 56}
+    - name: Seal Noble
+      rect:
+        serializedVersion: 2
+        x: 28
+        y: 363
+        width: 200
+        height: 200
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: 89, y: 72}
+        - {x: 41, y: 100}
+        - {x: -40, y: 100}
+        - {x: -85, y: 69}
+        - {x: -100, y: 36}
+        - {x: -100, y: -34}
+        - {x: -86, y: -70}
+        - {x: -45, y: -100}
+        - {x: 39, y: -100}
+        - {x: 87, y: -71}
+        - {x: 100, y: -43}
+        - {x: 100, y: 41}
+    - name: Seal Queen
+      rect:
+        serializedVersion: 2
+        x: 270
+        y: 339
+        width: 200
+        height: 200
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: 89, y: 72}
+        - {x: 41, y: 100}
+        - {x: -40, y: 100}
+        - {x: -85, y: 69}
+        - {x: -100, y: 36}
+        - {x: -100, y: -34}
+        - {x: -86, y: -70}
+        - {x: -45, y: -100}
+        - {x: 39, y: -100}
+        - {x: 87, y: -71}
+        - {x: 100, y: -43}
+        - {x: 100, y: 41}
+    - name: Seal King
+      rect:
+        serializedVersion: 2
+        x: 500
+        y: 341
+        width: 200
+        height: 200
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: 89, y: 72}
+        - {x: 41, y: 100}
+        - {x: -40, y: 100}
+        - {x: -85, y: 69}
+        - {x: -100, y: 36}
+        - {x: -100, y: -34}
+        - {x: -86, y: -70}
+        - {x: -45, y: -100}
+        - {x: 39, y: -100}
+        - {x: 87, y: -71}
+        - {x: 100, y: -43}
+        - {x: 100, y: 41}
+    - name: Seal Assassin
+      rect:
+        serializedVersion: 2
+        x: 122
+        y: 86
+        width: 200
+        height: 200
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: 89, y: 72}
+        - {x: 41, y: 100}
+        - {x: -40, y: 100}
+        - {x: -85, y: 69}
+        - {x: -100, y: 36}
+        - {x: -100, y: -34}
+        - {x: -86, y: -70}
+        - {x: -45, y: -100}
+        - {x: 39, y: -100}
+        - {x: 87, y: -71}
+        - {x: 100, y: -43}
+        - {x: 100, y: 41}
+    - name: Seal Soldier
+      rect:
+        serializedVersion: 2
+        x: 401
+        y: 88
+        width: 200
+        height: 200
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: 84, y: 66}
+        - {x: 47, y: 95}
+        - {x: 32, y: 100}
+        - {x: -32, y: 100}
+        - {x: -49, y: 98}
+        - {x: -100, y: 49}
+        - {x: -100, y: -47}
+        - {x: -84, y: -70}
+        - {x: -47, y: -100}
+        - {x: 45, y: -100}
+        - {x: 67, y: -92}
+        - {x: 100, y: -46}
+        - {x: 100, y: 38}
+    - name: Action Icon
+      rect:
+        serializedVersion: 2
+        x: 858
+        y: 124
+        width: 150
+        height: 150
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -46, y: 75}
+        - {x: -75, y: 35}
+        - {x: -75, y: -65}
+        - {x: -42, y: -75}
+        - {x: 59, y: -75}
+        - {x: 75, y: -48}
+        - {x: 75, y: 61}
+        - {x: 44, y: 75}
+    outline: []
+  spritePackingTag: QuickIcons
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
