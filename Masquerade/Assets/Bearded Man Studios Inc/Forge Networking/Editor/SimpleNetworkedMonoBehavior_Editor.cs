@@ -27,7 +27,7 @@ using BeardedManStudios.Network;
 [CustomEditor(typeof(SimpleNetworkedMonoBehavior), true), CanEditMultipleObjects]
 public class SNMB_Parent_Editor : Editor
 {
-	//[MenuItem("Window/Forge Networking/Compile Scene")]
+	[MenuItem("Window/Forge Networking/Compile Scene")]
 	private void CompileScene()
 	{
 		int id = 0;

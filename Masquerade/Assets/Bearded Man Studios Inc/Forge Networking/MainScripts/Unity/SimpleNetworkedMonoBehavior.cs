@@ -665,15 +665,23 @@ namespace BeardedManStudios.Network
 		/// </remarks>
 		public static void SetupObjects(SimpleNetworkedMonoBehavior[] behaviors, NetWorker owningSocket)
 		{
-			if (ObjectCounter == 0)
-				GenerateUniqueId();
+			try
+			{
+				if (ObjectCounter == 0)
+					GenerateUniqueId();
 
-			NetworkingManager.Instance.Setup(owningSocket, owningSocket.IsServer, 0, 0);
+				NetworkingManager.Instance.Setup(owningSocket, owningSocket.IsServer, 0, 0);
 
-			// TODO:  Got through all objects in NetworkingManager stack and set them up
-			foreach (SimpleNetworkedMonoBehavior behavior in behaviors)
-				if (!(behavior is NetworkingManager) && behavior != null)
-					behavior.Setup(owningSocket, owningSocket.IsServer, GenerateUniqueId(), 0, true);
+				// TODO:  Got through all objects in NetworkingManager stack and set them up
+				foreach (SimpleNetworkedMonoBehavior behavior in behaviors)
+					if (!(behavior is NetworkingManager) && behavior != null)
+						behavior.Setup(owningSocket, owningSocket.IsServer, GenerateUniqueId(), 0, true);
+			}
+			catch (Exception e)
+			{
+				Debug.LogError("Something went wrong in SetupObjects: " + e);
+			}
+			
 		}
 
 		/// <summary>
@@ -693,58 +701,75 @@ namespace BeardedManStudios.Network
 		public virtual void Setup(NetWorker owningSocket, bool isOwner, ulong NetworkId, ulong ownerId, bool isSceneObject = false)
 #endif
 		{
-			Reflect();
+			try
+			{
+				Reflect();
 
-			if (owningSocket == null)
-				ThrowNetworkerException();
+				if (owningSocket == null)
+					ThrowNetworkerException();
 
-			int count = 0;
+				int count = 0;
 #if BARE_METAL
 			while (!(this is NetworkingManager) && !NetworkingManager.Instance.IsSetup)
 #else
-			while (NetworkingManager.Instance != this && !NetworkingManager.Instance.IsSetup)
+				while (NetworkingManager.Instance != this && !NetworkingManager.Instance.IsSetup)
 #endif
-			{
+				{
 #if NetFX_CORE
 				await Task.Delay(TimeSpan.FromMilliseconds(25));
 #else
-				System.Threading.Thread.Sleep(25);
+					System.Threading.Thread.Sleep(25);
 #endif
 
-				if (++count == 20)
-					throw new NetworkException("The NetworkingManager could not be found");
-			}
+					if (++count == 20)
+						throw new NetworkException("The NetworkingManager could not be found");
+				}
 
-			OwningNetWorker = owningSocket;
-			IsOwner = isOwner;
-			OwnerId = ownerId;
+				OwningNetWorker = owningSocket;
+				IsOwner = isOwner;
+				OwnerId = ownerId;
 
-			if (!isSceneObject || sceneNetworkedId == 0)
-				NetworkedId = NetworkId;
-			else
-				NetworkedId = (ulong)sceneNetworkedId;
+				//if (!isSceneObject || sceneNetworkedId == 0)
+					NetworkedId = NetworkId;
+				//else
+				//	NetworkedId = (ulong)sceneNetworkedId;
 
-			if (NetworkedId != 0 || !NetworkedBehaviors.ContainsKey(0))
-				NetworkedBehaviors.Add(NetworkedId, this);
-
-			if (OwningNetWorker.Me != null && ownerId == OwningNetWorker.Me.NetworkId)
-				OwningPlayer = OwningNetWorker.Me;
-			else if (OwningNetWorker.IsServer)
-			{
-				foreach (NetworkingPlayer player in OwningNetWorker.Players)
+				try
 				{
-					if (ownerId == player.NetworkId)
+					if (NetworkedId != 0 || !NetworkedBehaviors.ContainsKey(0))
+						NetworkedBehaviors.Add(NetworkedId, this);
+				}
+				catch (Exception e)
+				{
+					Debug.LogError("Something went wrong adding network behaviors. NetworkedId is: " + NetworkedId + " Exception is: " + e);
+
+					Debug.LogError("In dictionary: " + NetworkedBehaviors[NetworkedId] + " This: " + this);
+				}
+
+				if (OwningNetWorker.Me != null && ownerId == OwningNetWorker.Me.NetworkId)
+					OwningPlayer = OwningNetWorker.Me;
+				else if (OwningNetWorker.IsServer)
+				{
+					foreach (NetworkingPlayer player in OwningNetWorker.Players)
 					{
-						OwningPlayer = player;
-						break;
+						if (ownerId == player.NetworkId)
+						{
+							OwningPlayer = player;
+							break;
+						}
 					}
 				}
+
+				if (OwningPlayer != null && OwningNetWorker.IsServer && this is NetworkedMonoBehavior)
+					OwningPlayer.SetMyBehavior((NetworkedMonoBehavior)this);
+
+				NetworkStart();
 			}
-
-			if (OwningPlayer != null && OwningNetWorker.IsServer && this is NetworkedMonoBehavior)
-				OwningPlayer.SetMyBehavior((NetworkedMonoBehavior)this);
-
-			NetworkStart();
+			catch (Exception e)
+			{
+				Debug.LogError("Something went wrong in Setup: " + e.ToString());
+			}
+			
 		}
 
 		public void BareMetalUpdate()
@@ -1274,6 +1299,13 @@ namespace BeardedManStudios.Network
 		private void _RPC(string methodName, NetWorker socket, NetworkReceivers receivers, bool reliable, params object[] arguments)
 		{
 			int rpcId = GetStreamRPC(methodName, receivers, arguments);
+
+            if (receivers == NetworkReceivers.Owner)
+            {
+                MethodInfo selfRPC = GetRPC(rpcId);
+                selfRPC.Invoke(this, arguments);
+                return;
+            }
 
 			// JM: offline fix
 			if (NetworkingManager.IsOnline)

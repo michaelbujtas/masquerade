@@ -46,12 +46,25 @@ public class IndexCardChoiceMenu : MonoBehaviour {
 
 	}
 
-	public Choice GetChoice(List<byte> options, Color highlight, HandleChoiceDelegate handle, HandleCancelDelegate cancel, HandleCancelDelegate pass)
+	public Choice GetChoice(List<byte> options, Color highlight, HandleChoiceDelegate handle, HandleCancelDelegate cancel, HandleCancelDelegate pass, long expirationTicks)
 	{
-		Choice choice = new Choice(options, highlight, handle, cancel, pass);
+		Choice choice = new Choice(options, highlight, handle, cancel, pass, expirationTicks);
         decisionQueue.Add(choice);
 		ShowChoice();
 		return choice;
+	}
+
+	public void Update()
+	{
+		long ticksNow = System.DateTime.UtcNow.Ticks;
+		for (int i = 0; i < decisionQueue.Count; i++)
+		{
+			if (decisionQueue[i].ExpirationTicks < ticksNow)
+			{
+				PurgeChoice(decisionQueue[i]);
+				i--;
+			}
+		}
 	}
 	public void PurgeChoice(Choice choice)
 	{
@@ -198,13 +211,14 @@ public class IndexCardChoiceMenu : MonoBehaviour {
 	public class Choice
 	{
 
-		public Choice(List<byte> options, Color highlight, HandleChoiceDelegate handle, HandleCancelDelegate cancel, HandleCancelDelegate pass)
+		public Choice(List<byte> options, Color highlight, HandleChoiceDelegate handle, HandleCancelDelegate cancel, HandleCancelDelegate pass, long expirationTicks)
 		{
 			Options = options;
 			Highlight = highlight;
 			Handle = handle;
 			Cancel = cancel;
 			Pass = pass;
+			ExpirationTicks = expirationTicks;
 			
 		}
 		public List<byte> Options;
@@ -214,5 +228,6 @@ public class IndexCardChoiceMenu : MonoBehaviour {
 		public HandleCancelDelegate Cancel;
 
 		public HandleCancelDelegate Pass;
+		public long ExpirationTicks;
 	}
 }

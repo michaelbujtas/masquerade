@@ -27,10 +27,13 @@ using System.Collections.Generic;
 using UnityEngine;
 
 #if !NetFX_CORE
-#if !UNITY_WEBGL
+#if !UNITY_WEBGL && !UNITY_WEBPLAYER
 using System.Net;
 using System.Net.Sockets;
 using System.Net.NetworkInformation;
+#elif UNITY_WEBPLAYER
+using System.Net;
+using System.Net.Sockets;
 #endif
 #if !UNITY_WEBPLAYER
 #endif

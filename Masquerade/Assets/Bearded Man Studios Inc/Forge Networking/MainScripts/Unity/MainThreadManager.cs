@@ -118,7 +118,14 @@ namespace BeardedManStudios.Network.Unity
 				}
 
 				foreach (Action action in copiedActions)
-					action();
+					try
+					{
+						action();
+					}
+					catch (Exception e)
+					{
+						Debug.LogError("Something went wrong in HandleActions: " + e.ToString());
+					}
 			}
 
 			// If there are any buffered actions then move them to the main list
@@ -131,12 +138,19 @@ namespace BeardedManStudios.Network.Unity
 
 		private void Update()
 		{
-			// JM: added support for actions to be handled in fixed loop
-			if (!Networking.UseFixedUpdate) 
-				HandleActions();
+			try
+			{
+				// JM: added support for actions to be handled in fixed loop
+				if (!Networking.UseFixedUpdate)
+					HandleActions();
 
-			if (unityUpdate != null)
-				unityUpdate();
+				if (unityUpdate != null)
+					unityUpdate();
+			}
+			catch (Exception e)
+			{
+				Debug.LogError("Something broke in the main thread manager: " + e.ToString());
+			}
 		}
 
 		private void FixedUpdate()
