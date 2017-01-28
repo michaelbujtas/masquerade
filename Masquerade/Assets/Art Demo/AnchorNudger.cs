@@ -8,9 +8,15 @@ using UnityEngine.UI;
 public class AnchorNudger : MonoBehaviour {
 
 
+	public bool zeroOffset = false;
 	public bool centerHorizontally = false;
 	public bool centerVertically = false;
 	public bool flipHorizontally = false;
+	public bool setAspect = false;
+	public float toRatio = 1;
+
+	public float panSpeed = 1;
+	public Vector2 pan;
 
 	[System.NonSerialized]
 	private RectTransform m_Rect;
@@ -35,6 +41,7 @@ public class AnchorNudger : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
+		//rectTransform.anchorMin = new Vector2(.1f, .337f);
 		if (centerVertically)
 		{
 			float anchorHeight = rectTransform.anchorMax.x - rectTransform.anchorMin.x;
@@ -62,6 +69,30 @@ public class AnchorNudger : MonoBehaviour {
 			rectTransform.anchorMax = new Vector2(1 - oldMin.x, oldMax.y);
 
 
+		}
+		if(setAspect)
+		{
+			setAspect = false;
+			float anchorWidth = rectTransform.anchorMax.x - rectTransform.anchorMin.x;
+			float anchorHeight = anchorWidth * toRatio;
+			float currentCenter = (rectTransform.anchorMax.y + rectTransform.anchorMin.y) / 2;
+			rectTransform.anchorMin = new Vector2(rectTransform.anchorMin.x, currentCenter - (anchorHeight / 2));
+			rectTransform.anchorMax = new Vector2(rectTransform.anchorMax.x, currentCenter + (anchorHeight / 2));
+		}
+		if(zeroOffset)
+		{
+			rectTransform.offsetMax = Vector2.zero;
+			rectTransform.offsetMin = Vector2.zero;
+
+		}
+		if(pan != Vector2.zero)
+		{
+			Vector2 adjust = pan * (panSpeed / 100);
+
+			rectTransform.anchorMin += adjust;
+			rectTransform.anchorMax += adjust;
+
+			pan = Vector2.zero;
 		}
 
 	}

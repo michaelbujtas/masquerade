@@ -62,6 +62,8 @@ public class MultiWidthDriver : MonoBehaviour {
 		foreach (RectTransform t in drivenTransforms)
 		{
 			t.sizeDelta = new Vector2(height * aspectRatio, height);
+			t.anchoredPosition = t.anchoredPosition.normalized * EdgePadding;
+
 		}
 			
 	

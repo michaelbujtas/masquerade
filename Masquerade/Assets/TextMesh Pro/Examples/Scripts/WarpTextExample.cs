@@ -20,6 +20,9 @@ namespace TMPro.Examples
         public float SpeedMultiplier = 1.0f;
         public float CurveScale = 1.0f;
 
+		public bool ForceReset = false;
+
+
         void Awake()
         {
             m_TextComponent = gameObject.GetComponent<TMP_Text>();
@@ -41,6 +44,19 @@ namespace TMPro.Examples
             return newCurve;
         }
 
+		void Update()
+		{
+			if(ForceReset)
+			{
+				ForceReset = false;
+				m_TextComponent.havePropertiesChanged = true;
+			}
+			else
+			{
+				ForceReset = true;
+			}
+		}
+
 
         /// <summary>
         ///  Method to curve text along a Unity animation curve.
@@ -57,14 +73,15 @@ namespace TMPro.Examples
             Vector3[] vertices;
             Matrix4x4 matrix;
 
-            m_TextComponent.havePropertiesChanged = true; // Need to force the TextMeshPro Object to be updated.
-            CurveScale *= 10;
+            //CurveScale *= 10; //WTF
             float old_CurveScale = CurveScale;
             AnimationCurve old_curve = CopyAnimationCurve(VertexCurve);
 
-            while (true)
+			m_TextComponent.havePropertiesChanged = true; // Need to force the TextMeshPro Object to be updated.
+			while (true)
             {
-                if (!m_TextComponent.havePropertiesChanged && old_CurveScale == CurveScale && old_curve.keys[1].value == VertexCurve.keys[1].value)
+
+				if (!m_TextComponent.havePropertiesChanged && old_CurveScale == CurveScale && old_curve.keys[1].value == VertexCurve.keys[1].value)
                 {
                     yield return null;
                     continue;
