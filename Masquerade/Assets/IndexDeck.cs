@@ -1,21 +1,28 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using AdvancedInspector;
 
+[AdvancedInspector]
 public class IndexDeck : MonoBehaviour {
 
-
-	public List<byte> Indices = new List<byte>();
-
-
-	// Use this for initialization
-	void Start () {
-		Indices.AddRange(FindObjectOfType<CardIndex>().AllCardIndices);
-		Shuffle();
 	
-	}
-	
-	// Update is called once per frame
-	void Update () {
+
+public List<byte> Indices = new List<byte>();
+
+
+	[Inspect]
+	public bool ShouldStack = false;
+
+	[Inspect]
+	public List<string> StackNames;
+
+	CardIndex cardIndex;
+
+	public void SetIndex(CardIndex index)
+	{
+		Indices.Clear();
+		cardIndex = index;
+		Indices.AddRange(cardIndex.AllCardIndices);
 
 	}
 
@@ -29,6 +36,23 @@ public class IndexDeck : MonoBehaviour {
 			Indices.RemoveAt(randomIndex);
 		}
 		Indices = newOrder;
+	}
+
+	public void Stack()
+	{
+		for (int i = 0; i < StackNames.Count; i++)
+		{
+			string name = StackNames[i];
+			for (int j = 0; j < Indices.Count; j++)
+			{
+				if (cardIndex.GetCard(Indices[j]).CardName == name)
+				{
+					byte foundIndex = Indices[j];
+					Indices.Remove(foundIndex);
+					Indices.Insert(i, foundIndex);
+				}
+			}
+		}
 	}
 
 	public byte Draw()

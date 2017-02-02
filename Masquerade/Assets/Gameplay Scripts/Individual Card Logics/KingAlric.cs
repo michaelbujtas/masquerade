@@ -1,18 +1,19 @@
 ﻿
-public class KingAlric : CardLogic, IOnKilled, IEndOfTurn
+public class KingAlric : CardLogic, IOnKilled, IEndPhase
 {
 	void IOnKilled.OnKilled(Card killer, DeathContext context)
 	{
-
 		CustomConsole.LogNetworked(killer.Owner.Identity.Name + " has killed the King! They win!", UnityEngine.Color.yellow);
+		Card.Networking.EndGame(killer.Owner);
 	}
 	
 
-	void IEndOfTurn.OnEndOfTurn(MasqueradePlayer turn)
+	void IEndPhase.OnEndPhase(MasqueradePlayer turn)
 	{
 		if(Card.Networking.TheDeck.CardsRemaining == 0)
 		{
 			CustomConsole.LogNetworked("The deck has run out of cards. " + Card.Owner.Identity.Name + " controls the King! They win!" , UnityEngine.Color.yellow);
+			Card.Networking.EndGame(Card.Owner);
 		}
 
 		if(Card.IsFaceUp)

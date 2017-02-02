@@ -32,8 +32,6 @@ public class CardRenderer : MonoBehaviour
 	//[Inspect]
 	public Image CardBack;
 
-	CardOptionsMenu Menu;
-	CardSelector Selector;
 
 	const int upArrowIndex = 0;
 	const int downArrowIndex = 2;
@@ -235,25 +233,12 @@ public class CardRenderer : MonoBehaviour
 
     public void ShowFullMenu()
     {
-        if (Selector != null)
-        {
-            if (Selector.wantsASelection)
-            {
-                Selector.OnRendererClick(this);
-            }
-            else
-            {
-                //Menu.SetTarget(this);
-                //Menu.ShowMenu();
-            }
-        }
+        
     }
 
 	public void Destroy()
 	{
 		Card.Renderer = null;
-		if(!DummyRenderer && Selector != null)
-			Selector.CardsInPlay.Remove(this);
 		Destroy(this.gameObject);
 	}
 

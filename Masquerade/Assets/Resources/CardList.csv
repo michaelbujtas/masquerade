@@ -1,0 +1,67 @@
+Name,Class,Attack,AttackBonus,Defense,DefenseBonus,RulesText,FlavorText,Set,ArtPath
+King Alric Dacre,King,0,,8,,"When the King is killed, the player who killed him wins the game.
+When a player ends their turn and there are no cards left in the deck, you win the game.
+When you control both the King and Queen face-up, you win the game.
+The King cannot be discarded.","In this time of celebration, we must look to our friends and laugh.",Rulers of Avalot,KingAlric
+Queen Beatrice Dacre,Queen,0,,1,down,"When the Queen is killed, the player who killed her gives you all cards they control.","Behind every great man, there's a woman who's really controlling the throne.",Rulers of Avalot,QueenBeatrice
+The Avatar of Festivals,Noble,0,,1,,"When this card is flipped up, discard it, then shuffle all cards in play and deal them out as you would at the start of the game, starting with you. ","Eat, drink, dance! Tis a time of merriment and leisure!",Noble Guests,AvatarOfFestivals
+Lady Beatrice Serell,Noble,0,,4,,"Beatrice can't be face-down.
+During your start phase, discard a card you control other than Beatrice and give her to a player of your choice.","I want this… And that… And, oh! I want that one too!",The Main Cast,BeatriceSorrel
+Count Jop Carnell,Noble,6,,2,up,,"There is nothing more valuable than information, my friend.",The Main Cast,CountJop
+Lord Snivellous Feck,Noble,1,,1,,"If Feck would be killed, you may instead choose a random card you control. That card is killed instead.","Now, now boys… I'm sure we can work something out.",Noble Guests,SnivelousFeck
+Arl Henry Stonebrooke,Noble,5,,2,,,"There goes Arl Stonebrooke… If he asks to dance with, politely decline.",Noble Guests,HenryStonebrooke
+Barbarian Lord Jaric,Noble,3,,3,up,,Food good here!,The Main Cast,BarbarianLordJaric
+Dante Anderson the Stud,Noble,3,,1,,"If there is another Noble face-up, Dante gains +3 attack and can't be killed.","Oh your majesty, you are one fiesty little tigress.",Noble Guests,TerryTheStud
+Sorcerer Theodoric Whitemane,Noble,3,,3,,"During your start phase, you may discard a card you control. If you do, Theodoric gets +5 attack and defense until the start of your next turn (this doesn't count as an action).",Magic is used to benefit the worthy and burn the stupid.,Foreign Powers,Whitemane
+Countess Ida Ermintrade,Noble,4,up,3,down,,"She's normally harmless, but watch out if you disturb the Countess's dinner.",Noble Guests,CountessIda
+Baron Van Cole,Noble,1,up,6,,,"The older you get, the longer it takes for your body to get in the swing of things.",The Main Cast,BaronVanCole
+Prince Hugh Drago,Noble,4,up,1,up,,"The prince is beloved by all, especially his father.",Noble Guests,PrinceHughDrago
+Bishop Cornellous Shepard,Noble,0,,2,up,"When Cornellus is flipped up, choose another card from the discard pile and put it into play face-up.",To the faithful come the spoils.,Noble Guests,BishopCornelliusShephard
+Gossip Lady Anneliese,Noble,0,,2,,"When Annelise is flipped up, flip up all cards in play.","Did you hear about what she did? I know, right!?",Noble Guests,GossipLadyAvelyn
+Advisor Simon Ernest,Noble,0,,2,down,"When Simon is flipped up, each player gives you all Assassins they control.","Behind every throne, there's a schemer.",Assassin's Guild,SimonErnest
+Baron Radolf Maynard,Noble,2,,3,,"After Radolf attacks, draw a card.",Every kingdom needs its royal accountant.,The Main Cast,BaronMaynard
+Duke Walter the Brave,Noble,3,up,3,up,,"Why, my boy, you are looking at a man who single handedly took on an army of- Eck! A mouse!",Assassin's Guild,DukeWalterBrave
+Raz the Shiv,Assassin,1,up,1,,"After Raz attacks a card, kill that card at the beginning of its controller's next start phase.",Every rose has its prick.,Assassin's Guild,MaryTheShiv
+"""Ghost"" the Silent Killer",Assassin,5,down,1,,,…,Assassin's Guild,Ghost
+"""Two Strikes"" Thomas",Assassin,3,down,2,,,And a one and a two!,Assassin's Guild,TwoStrikesThomas
+Sampson the Sneak,Assassin,3,down,2,,,We were hired to kill the king by some fancy rich bloke.,The Main Cast,SampsonTheSneak
+Novice Ralf Hicket,Assassin,0,,1,,Ralf's attack is equal to twice the number of cards you control.,"Like most novices, he's only as good as those around him.",Assassin's Guild,RalfHicket
+Court Assassin Timm,Assassin,2,down,2,,"After Timm attacks, flip him face-down.",There's an advantage of being the noble's pet killer.,Noble Guests,CourtAssassinTimm
+Anfroy of the Exotic Blades,Assassin,3,down,2,,,Even the strongest defense is no match for something never seen before.,Foreign Powers,AnfroyofBlades
+Ourri the Nobleslayer,Assassin,6,down,1,,"Ourri can only kill Nobles, Kings, and Queens.",I'm the boogeyman of every land owner's dreams.,Noble Guests,OurriNobleslayer
+Looys the Copycat,Assassin,0,,5,down,,I don't think you quite grasp the art of mimicry.,Foreign Powers,LooystheCopycat
+Guildmaster le Blanc,Assassin,5,down,1,,,"The target he is, how you say, est mort.",Assassin's Guild,GuildmasterLeBlanc
+"Nickie ""the Shredder"" Dickens",Assassin,3,,1,,Ignore all face-up and face-down bonuses of cards Nickie is attacking.,I like to kill things. Why haven't you figured that out by now?,Foreign Powers,NickieDickens
+The Black Widow,Assassin,1,,1,,"After a card attacks The Black Widow, kill that card.",Beware the black spider of death.,Assassin's Guild,BlackWidow
+Poisoner Roger Baldwin,Assassin,1,up,1,,"After Roger attacks a card, kill that card at the beginning of its controller's next start phase.","They say poison  is a coward's tool, but cowards don't end up dead.",Foreign Powers,RogerBaldwin
+Princess Isolda Drago,Assassin,1,,1,,"When Isolda is flipped up, kill a face-up Noble or Soldier of your choice.","Shh, don't tell my father, please.",Assassin's Guild,PrincessIsolda
+Rollin Hodgkin,Assassin,6,down,1,,"Rollin can't be killed while face-down. After Rollin attacks, discard him.",There's only purpose in life for me now.,The Main Cast,Hodgkin
+Sir Olaf the Glutton,Soldier,1,,6,,"At the beginning of your start phase, draw a card.",More food!,The Main Cast,SirOlaf
+"Sir Ymbert ""Limper"" Garthas",Soldier,0,,4,up,,Wanna know why they call me Limper?,Assassin's Guild,Limper
+Dame Sela Tankcreed,Soldier,3,up,3,up,,A woman can do anything a man can. I'm proof of it.,Foreign Powers,DameSela
+Sir Oddo the Deranged,Soldier,5,,2,,,Who's crazy? I'm not crazy! Die!,Assassin's Guild,SirOddo
+Barbarian Bodyguard Ogg,Soldier,4,up,4,up,"After Ogg attacks, he loses 1 attack and 1 defense permanently (before face-up or face-down bonuses).",Ogg get tired fast. Ogg take nap.,Foreign Powers,Ogg
+Captain Gunter Newgate,Soldier,4,up,4,up,,I serve ONLY his majesty.,The Main Cast,CaptainGunterNewgate
+War Hero Hal Lancelot,Soldier,4,,4,,,"I think ""War Hero"" best describes someone who was smart enough to keep his head down.",Noble Guests,WarHeroLancelot
+Sergeant Warrin Oldman,Soldier,1,,3,,"When Warrin is flipped up, each player gives you all face-up Soldiers they control.","Ten Hut! Get back into line, you idiots!",Foreign Powers,WarrenOldman
+Sir Arthur Mourne,Soldier,4,,2,,The King can't be killed as long as Arthur is face-up.,I joined the army because that's what my mother wanted me to do.,The Main Cast,SirArthur
+Sir Richard Leowulf,Soldier,4,,2,up,,Some shady fella asked me to look the other way at this party…,Foreign Powers,RichardLeowulf
+Sir Bartholomew Theodorothaniel,Soldier,4,,2,up,,"I'm actually the third Bartholomew in my family, but the Sergeant told me to stop being an idiot.",Noble Guests,SirLongname
+Sir Arthur Stout,Soldier,0,,4,up,,"There's a difference between fat and stout, my friend.",Foreign Powers,ArthurStout
+Guardsman Terric Illbert,Soldier,1,,2,,"After Terric attacks, all cards the defending player controls are flipped up.","I was posted at the front door, what a boring gig.",Assassin's Guild,TerricIllbert
+Gravekeeper Anathema,Commoner,1,,4,,"As an action, you may discard a card you control to choose another card from the discard pile and put it into play.",Even a lowly gravekeeper can be a skilled doctor…,The Main Cast,Anathema
+Wench Helga,Commoner,1,,1,,"After a card attacks Helga, kill that card.",Only a fool attacks the wench while the barkeeper is around.,Noble Guests,WenchHelga
+Chef Steven Michaelson,Commoner,4,up,1,,,"The way to a man's heart is through his stomach, all good assassins know this.",Foreign Powers,ChefGilbert
+Serving Girl Emma,Commoner,3,up,2,,,"If you smile while you serve them the drinks, they tend to not try and grope you.",Noble Guests,ServingGirlEmma
+Lance Wymund,Noble,1,,2,down,"If a King or Queen is face-up in play, Lance gets +7 attack.","I will never step on the people beneath me, unlike the others.",The Main Cast,LanceWymund
+Mistress Eva,Commoner,2,,1,,"After Eva attacks, choose a card the defending player controls. That player gives that card to you. If Eva is still in play, give her to that player.","Be a good boy and hurt him for me, would you?",Assassin's Guild,MistressEva
+Job the Butler,Commoner,2,,2,,"At the end of each player's turn, if that player controls fewer than three cards, that player draws cards equal to the difference and plays them face-up.","I was told to help everyone at the party, and that's what I intend to do.",Foreign Powers,JobTheButler
+Court Jester Foolset,Commoner,1,,1,,"After Court Jester Foolset attacks, each player discards a card of their choice.","Behind the smiling grin, a jester's soul is usually morbid.",Assassin's Guild,CourtJester
+Henry the Bard,Commoner,4,,4,,,"I used to carry a flute until one noble stuck it up my… Well, let's just say I'd rather sing now.",Foreign Powers,HenryTheBard
+Blacksmith Roger Norman,Commoner,1,,2,,"While Roger is face-up, cards you control get +2 attack after facing bonuses.","Fire and steel, that's all I can smell at the end of the day.",Assassin's Guild,BlacksmithRoger
+Nan the Disgruntled,Commoner,1,,6,,,"You can only take so many ""wench"" comments before you just snap.",The Main Cast,NanTheDisgruntled
+Squire Terry Wynne,Commoner,3,up,2,,,"I try my best to be helpful, sire!",The Main Cast,SquireTerry
+Alchemist Leon Brewster,Commoner,2,,1,,"While Leon is face-up, cards you control get +2 defense after facing bonuses.",The last batch I made caused a tree to grow out of the man's ears… Less wolfbane maybe...,Foreign Powers,AlchemistDucan
+Dancer Isabella Pascoe,Commoner,1,,2,,"After Isabella attacks, shuffle the attacked card into the deck.","Dancing is like an art, do it well and it can capitivate anyone.",Foreign Powers,DancerIsabella
+Doctor Pestilence ,Assassin,2,,6,,"If Doctor Pestilence is face-up, instead of drawing a card during your draw phase, look at the top two cards of the deck. You may discard both cards. If you don't, give one of them to the player of your choice face-down and draw the other one.",The only disease is life itself... and all must be cured of it's corruption…,Assassin's Guild,DrPestilence
+Mary the Mute,Commoner,1,,2,,"While Mary is face-up, all other non-King cards lose all abilities.",,The Main Cast,MaryTheMute

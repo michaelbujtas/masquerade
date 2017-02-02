@@ -7,12 +7,12 @@ using System;
 using BeardedManStudios.Network;
 
 public class GameTimer : SimpleNetworkedMonoBehavior {
+	[Inspect]
+	public float GracePeriod = 1;
 
 	[Inspect]
 	public float MainTimer;
 
-	[Inspect]
-	public long TargetTicks;
 
 	bool timeDone = false;
 
@@ -31,34 +31,18 @@ public class GameTimer : SimpleNetworkedMonoBehavior {
 	// Update is called once per frame
 	void Update() {
 
-		long TicksLeft = TargetTicks - DateTime.UtcNow.Ticks;
 
-		if(TicksLeft > 0)
-		{
-			MainTimer = (float)TicksLeft / 10000000;
-		}
-		else
-		{
-			MainTimer = 0;
-			if(!timeDone)
-			{
-				timeDone = true;
-				if (mainTimerDelegate != null)
-					mainTimerDelegate();
-			}
-		}
-
-
-		/*if (MainTimer > 0)
+		if (MainTimer > 0 && !timeDone)
 		{
 			MainTimer -= Time.deltaTime;
 			if (MainTimer <= 0)
 			{
 				MainTimer = 0;
+				timeDone = true;
 				if (mainTimerDelegate != null)
 					mainTimerDelegate();
 			}
-		}*/
+		}
 
 		if (MainTimer < 10)
 		{
@@ -86,13 +70,13 @@ public class GameTimer : SimpleNetworkedMonoBehavior {
 	{
 
 		timeDone = false;
-		TargetTicks = DateTime.UtcNow.AddSeconds(value).Ticks;
 		if (OwningNetWorker.IsServer)
 		{
+			
 			foreach(NetworkingPlayer p in OwningNetWorker.Players)
-				AuthoritativeRPC("SyncMainTimerDisplay", OwningNetWorker, p, false, TargetTicks);
+				AuthoritativeRPC("SyncMainTimerDisplay", OwningNetWorker, p, false, value);
 		}
-		MainTimer = value;
+		MainTimer = value + GracePeriod;
 		mainTimerDelegate = onEnd;
 
 	}
@@ -109,9 +93,10 @@ public class GameTimer : SimpleNetworkedMonoBehavior {
 	}
 
 	[BRPC]
-	public void SyncMainTimerDisplay(long targetTicks)
+	public void SyncMainTimerDisplay(float duration)
 	{
-		TargetTicks = targetTicks;
+		timeDone = false;
+		MainTimer = duration;
 	}
 
 }

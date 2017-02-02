@@ -17,7 +17,12 @@ public interface IActivatedAbility
 	void ActivateAbility();
 }
 
-public interface IEndOfTurn
+public interface IEndPhase
 {
-	void OnEndOfTurn(MasqueradePlayer turn);
+	void OnEndPhase(MasqueradePlayer turn);
+}
+
+public interface IStartPhase
+{
+	void OnStartPhase(MasqueradePlayer turn, Response<bool> response);
 }

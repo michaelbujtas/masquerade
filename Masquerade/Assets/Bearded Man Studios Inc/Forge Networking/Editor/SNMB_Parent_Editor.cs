@@ -17,16 +17,59 @@
 |                                                             |
 \------------------------------+-----------------------------*/
 
-
 using UnityEditor;
-
+using System.Collections.Generic;
 using BeardedManStudios.Network;
 
 [CustomEditor(typeof(SimpleNetworkedMonoBehavior), true), CanEditMultipleObjects]
-public class SimpleNetworkedMonoBehavior_Editor : SNMB_Parent_Editor
+public class SNMB_Parent_Editor : Editor
 {
-	protected override void OnEnable()
+	[MenuItem("Window/Forge Networking/Compile Scene")]
+	private void CompileScene()
 	{
-		base.OnEnable();
+		int id = 0;
+
+		List<SimpleNetworkedMonoBehavior> behaviors = new List<SimpleNetworkedMonoBehavior>();
+		NetworkingManager manager = FindObjectOfType<NetworkingManager>();
+
+		if (manager != null)
+		{
+			behaviors.Add(manager);
+
+			if (manager.startNetworkedSceneBehaviors != null)
+			{
+				foreach (SimpleNetworkedMonoBehavior behavior in manager.startNetworkedSceneBehaviors)
+				{
+					if (behavior == null)
+						continue;
+
+					if (!behaviors.Contains(behavior))
+						behaviors.Add(behavior);
+				}
+			}
+			else
+				manager.startNetworkedSceneBehaviors = new SimpleNetworkedMonoBehavior[0];
+		}
+		else
+			id++;
+
+		foreach (SimpleNetworkedMonoBehavior behavior in FindObjectsOfType<SimpleNetworkedMonoBehavior>())
+		{
+			if (!behaviors.Contains(behavior))
+				behaviors.Add(behavior);
+		}
+
+		foreach (SimpleNetworkedMonoBehavior behavior in behaviors)
+			behavior.SetSceneNetworkedId(id++);
+	}
+
+	protected virtual void OnEnable()
+	{
+		CompileScene();
+	}
+
+	private void OnDisable()
+	{
+		CompileScene();
 	}
 }

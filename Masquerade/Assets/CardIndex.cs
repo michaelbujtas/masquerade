@@ -11,8 +11,16 @@ public class CardIndex : MonoBehaviour {
 	public const byte PLAYER_4_FACEDOWN = 204;
 	public const byte EMPTY_SLOT = 205;
 
+
 	[Inspect]
-	public List<GameObject> Sets = new List<GameObject>();
+	public string Path = "Assets\\Resources\\CardList.csv";
+
+	[Inspect]
+	public List<string> SetNames = new List<string>();
+
+
+	/*[Inspect]
+	public List<GameObject> Sets = new List<GameObject>();*/
 
 	[Inspect]
 	Dictionary<byte, Card> Cards = new Dictionary<byte, Card>();
@@ -53,15 +61,33 @@ public class CardIndex : MonoBehaviour {
 		}
 	}
 
-	void Awake () {
+	public void Awake () {
 		byte index = 0;
-		ScrapeCardsFromGameObject(gameObject, index);
+
+
+		List<GameObject> generated = new List<GameObject>();
+
+		for (int i = 0; i < SetNames.Count; i++)
+		{
+			generated.Add( GenerateCardsFromFile(Path, SetNames[i], ref index) );
+		}
+		
+		/*ScrapeCardsFromGameObject(gameObject, index);
 
 		foreach(GameObject s in Sets)
 		{
 			index = ScrapeCardsFromGameObject(s, index);
-		}
+		}*/
 	
+	}
+
+	GameObject GenerateCardsFromFile(string path, string set, ref byte startingIndex)
+	{
+		CsvCardLoader.OpenPath(path);
+		GameObject cardObject = CsvCardLoader.GenerateCardObjects(set);
+		cardObject.transform.parent = transform;
+		startingIndex = ScrapeCardsFromGameObject(cardObject, startingIndex);
+		return cardObject;
 	}
 
 	public byte ScrapeCardsFromGameObject(GameObject source, byte startingIndex)

@@ -5,7 +5,7 @@ using BeardedManStudios.Network;
 
 
 [AdvancedInspector]
-public class Card : SimpleNetworkedMonoBehavior
+public class Card : MonoBehaviour
 {
 	//Debug junk
 	[Inspect]
@@ -60,6 +60,7 @@ public class Card : SimpleNetworkedMonoBehavior
 	[Inspect]
 	public string FlavorText = string.Empty;
 
+	[Inspect]
 	bool isFaceUp = true;
 	public bool IsFaceUp
 	{
@@ -142,18 +143,7 @@ public class Card : SimpleNetworkedMonoBehavior
 		Logic.Card = this;
 	}
 
-	MasqueradeEngine engine;
-
-	public MasqueradeEngine Engine
-	{
-		get
-		{
-			if (engine == null)
-				engine = FindObjectOfType<MasqueradeEngine>();
-			return engine;
-		}
-	}
-
+	
 	GameplayNetworking networking;
 
 	public GameplayNetworking Networking
@@ -192,7 +182,8 @@ public class Card : SimpleNetworkedMonoBehavior
 
 
 		if (newCard.Logic != null)
-			Logic = newCard.Logic.Instantiate(gameObject, this) as CardLogic;
+			CustomConsole.LogError("We can't copy cards with logics right now.");
+				//	Logic = newCard.Logic.Instantiate(gameObject, this) as CardLogic;
 
 	}
 
@@ -230,7 +221,7 @@ public class Card : SimpleNetworkedMonoBehavior
 	public IEnumerator FlipAction(bool shouldBeFaceUp, System.Action callback)
 	{
 		IsTapped = true;
-		Sync();
+		Networking.SyncCard(this);
 		Flip(shouldBeFaceUp);
 		yield return null;
 		callback();
@@ -240,13 +231,13 @@ public class Card : SimpleNetworkedMonoBehavior
 	{
 		CustomConsole.Log("TAP ACTION!!!", Color.red);
 		IsTapped = true;
-		Sync();
+		Networking.SyncCard(this);
 	}
 
 	public IEnumerator FlipAction(System.Action callback)
 	{
 		IsTapped = true;
-		Sync();
+		Networking.SyncCard(this);
 		Flip();
 
 		yield return null;
@@ -257,7 +248,7 @@ public class Card : SimpleNetworkedMonoBehavior
 	public void Flip()
 	{
 		IsFaceUp = !IsFaceUp;
-		Sync();
+		Networking.SyncCard(this);
 		Networking.EnsureProperFlippedness(this);
 	}
 
@@ -274,7 +265,7 @@ public class Card : SimpleNetworkedMonoBehavior
 		if (isTapped)
 		{
 			isTapped = false;
-			Sync();
+			Networking.SyncCard(this);
 		}
 	}
 
@@ -282,7 +273,7 @@ public class Card : SimpleNetworkedMonoBehavior
 	{
 		Color logColor = new Color(1, .5f, 0);
 		IsTapped = true;
-		Sync();
+		Networking.SyncCard(this);
 
 		//Calculate Attack and Defense
 		int attack = GetCombatAttack();
@@ -291,6 +282,7 @@ public class Card : SimpleNetworkedMonoBehavior
 
 		CustomConsole.Log(CardName + " hit " + defender.CardName + " for " + attack + ".", logColor);
 		CustomConsole.Log(defender.CardName + " blocked for " + defense + ".", logColor);
+
 
 		//FlipUp
 		Flip(true);
@@ -316,10 +308,11 @@ public class Card : SimpleNetworkedMonoBehavior
 		}
 		else
 		{
-			KillWithContext(defender, DeathContext.ATTACKING);
+			this.KillWithContext(defender, DeathContext.ATTACKING);
 		}
 
 		CustomConsole.Log("AfterAttack isAlive status " + IsAlive);
+
 		//After Attacking
 		if(IsAlive)
 			if (Logic is IAfterAttacking)
@@ -353,6 +346,7 @@ public class Card : SimpleNetworkedMonoBehavior
 		Kill();
 	}
 
+
 	public void Kill()
 	{
 		CustomConsole.Log(CardName + " died.", Color.red);
@@ -365,43 +359,21 @@ public class Card : SimpleNetworkedMonoBehavior
 		Networking.SendToDiscard(this);
 	}
 
-	public void Sync()
-	{
-			if (IsFaceUp || Owner == null)
-			{
-				//Sync with everybody
-				foreach (MasqueradePlayer p in Networking.MasqueradePlayers)
-				{
-					AuthoritativeRPC("SyncRPC", OwningNetWorker, p.NetworkingPlayer, false, IsFaceUp, IsTapped);
-				}
-			}
-			else
-			{
-				//Sync with the owner
 
-				AuthoritativeRPC("SyncRPC", OwningNetWorker, Owner.NetworkingPlayer, false, IsFaceUp, IsTapped);
-			}
-		
-		
-	}
+
+
 
 	public void SyncFlip()
 	{
-		Sync();
+		Networking.SyncCard(this);
 		Networking.EnsureProperFlippedness(this);
 	}
 
-	[BRPC]
-	void SyncRPC(bool shouldBeFaceup, bool shouldBeTapped)
-	{
-		IsFaceUp = shouldBeFaceup;
-		IsTapped = shouldBeTapped;
-	}
 
 	public void ForgetHistory()
 	{
 
-		CustomConsole.Log(CardName + "is is forgetting its time on the board.");
+		CustomConsole.Log(CardName + "is forgetting its time on the board.");
 		//Everything that can change about this card gets set back to it's default version. 
 
 		//Forget our facing
@@ -413,7 +385,7 @@ public class Card : SimpleNetworkedMonoBehavior
 		//Forget basically everything else
 
 		//Make sure everyone else knows who we are
-		Sync();
+		Networking.SyncCard(this);
 		Networking.EnsureProperFlippedness(this);
 
 		//Forget our position on the board

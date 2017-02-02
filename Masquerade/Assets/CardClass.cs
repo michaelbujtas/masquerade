@@ -9,4 +9,5 @@ public enum CardClass
 	SOLDIER = 8,
 	QUEEN = 16,
 	KING = 32
+
 }

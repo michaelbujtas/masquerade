@@ -1,11 +1,12 @@
 ﻿using UnityEngine;
 using System.Collections;
-using AdvancedInspector;
+//using AdvancedInspector;
 
-[AdvancedInspector]
-public class CardLogic : ComponentMonoBehaviour {
+//[AdvancedInspector]
+public class CardLogic //: ComponentMonoBehaviour
+{
 
-	[Inspect]
+	//[Inspect]
 	public Card Card;
 
 	public void LinkCard(Card card)

@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 
 public class IndexCardChoiceMenu : MonoBehaviour {
-
+	public GameTimer gameTimer;
 	public GameObject Visuals;
 
 	public NamedButton PassButton, CancelButton;
@@ -22,6 +22,7 @@ public class IndexCardChoiceMenu : MonoBehaviour {
 
 	public void Awake()
 	{
+		gameTimer = FindObjectOfType<GameTimer>();
 
 		var notDummyCardRenderers =
 			from r in FindObjectsOfType<CardRenderer>()
@@ -46,26 +47,22 @@ public class IndexCardChoiceMenu : MonoBehaviour {
 
 	}
 
-	public Choice GetChoice(List<byte> options, Color highlight, HandleChoiceDelegate handle, HandleCancelDelegate cancel, HandleCancelDelegate pass, long expirationTicks)
+	public Choice GetChoice(List<byte> options, Color highlight, HandleChoiceDelegate handle, HandleCancelDelegate cancel, HandleCancelDelegate pass)
 	{
-		Choice choice = new Choice(options, highlight, handle, cancel, pass, expirationTicks);
-        decisionQueue.Add(choice);
+		Choice choice = new Choice(options, highlight, handle, cancel, pass);
+
+		gameTimer.AddMainTimerDelegate(
+			delegate
+			{
+				PurgeChoice(choice);
+			});
+
+		decisionQueue.Add(choice);
 		ShowChoice();
 		return choice;
 	}
 
-	public void Update()
-	{
-		long ticksNow = System.DateTime.UtcNow.Ticks;
-		for (int i = 0; i < decisionQueue.Count; i++)
-		{
-			if (decisionQueue[i].ExpirationTicks < ticksNow)
-			{
-				PurgeChoice(decisionQueue[i]);
-				i--;
-			}
-		}
-	}
+	
 	public void PurgeChoice(Choice choice)
 	{
 		decisionQueue.Remove(choice);
@@ -211,14 +208,13 @@ public class IndexCardChoiceMenu : MonoBehaviour {
 	public class Choice
 	{
 
-		public Choice(List<byte> options, Color highlight, HandleChoiceDelegate handle, HandleCancelDelegate cancel, HandleCancelDelegate pass, long expirationTicks)
+		public Choice(List<byte> options, Color highlight, HandleChoiceDelegate handle, HandleCancelDelegate cancel, HandleCancelDelegate pass)
 		{
 			Options = options;
 			Highlight = highlight;
 			Handle = handle;
 			Cancel = cancel;
 			Pass = pass;
-			ExpirationTicks = expirationTicks;
 			
 		}
 		public List<byte> Options;
@@ -228,6 +224,5 @@ public class IndexCardChoiceMenu : MonoBehaviour {
 		public HandleCancelDelegate Cancel;
 
 		public HandleCancelDelegate Pass;
-		public long ExpirationTicks;
 	}
 }

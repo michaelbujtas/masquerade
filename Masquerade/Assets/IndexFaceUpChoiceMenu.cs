@@ -3,32 +3,30 @@ using System.Collections.Generic;
 
 public class IndexFaceUpChoiceMenu : MonoBehaviour {
 
+	public GameTimer gameTimer;
 	public GameObject Visuals;
 	public CardRenderer FaceUp, FaceDown;
 
 	List<Choice> decisionQueue = new List<Choice>();
 
 	public delegate void HandleChoiceDelegate(bool choice);
-	public Choice GetChoice(byte index, long expirationTicks, HandleChoiceDelegate handle)
+	void Awake()
 	{
-		Choice retVal = new Choice(index, expirationTicks, handle);
-        decisionQueue.Add(retVal);
+		gameTimer = FindObjectOfType<GameTimer>();
+	}
+	public Choice GetChoice(byte index, HandleChoiceDelegate handle)
+	{
+		Choice retVal = new Choice(index, handle);
+		gameTimer.AddMainTimerDelegate(
+		   delegate
+		   {
+			   PurgeChoice(retVal);
+		   });
+		decisionQueue.Add(retVal);
 		ShowChoice();
 		return retVal;
 	}
 
-	public void Update()
-	{
-		long ticksNow = System.DateTime.UtcNow.Ticks;
-		for(int i = 0; i < decisionQueue.Count; i++)
-		{
-			if (decisionQueue[i].ExpirationTicks < ticksNow)
-			{
-				PurgeChoice(decisionQueue[i]);
-				i--;
-			}
-		}
-	}
 
 	public void OnFaceUpButtonUI()
 	{
@@ -77,14 +75,12 @@ public class IndexFaceUpChoiceMenu : MonoBehaviour {
 	public class Choice
 	{
 
-		public Choice(byte index, long expirationTicks, HandleChoiceDelegate handle)
+		public Choice(byte index, HandleChoiceDelegate handle)
 		{
 			Index = index;
-			ExpirationTicks = expirationTicks;
 			Handle = handle;
 		}
 		public byte Index;
-		public long ExpirationTicks;
 		public HandleChoiceDelegate Handle;
 
 	}

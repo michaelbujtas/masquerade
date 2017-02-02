@@ -5,6 +5,7 @@ using TMPro;
 
 public class IndexActionChoiceMenu : MonoBehaviour
 {
+	public GameTimer gameTimer;
 	public CardIndex Index;
 
 	public GameObject Visuals;
@@ -24,9 +25,11 @@ public class IndexActionChoiceMenu : MonoBehaviour
 	public delegate void HandleChoiceDelegate(CardAction choice);
 
 	public delegate void HandleCancelDelegate();
+
 	void Awake()
 	{
-		//Index = FindObjectOfType<GameplayNetworking>().TheCardIndex;
+		Index = FindObjectOfType<GameplayNetworking>().TheCardIndex;
+		gameTimer = FindObjectOfType<GameTimer>();
 	}
 	public void AttackButtonUI()
 	{
@@ -47,25 +50,18 @@ public class IndexActionChoiceMenu : MonoBehaviour
 	}
 
 
-	public Choice GetChoice(byte index, long expirationTicks, HandleChoiceDelegate handle, HandleCancelDelegate cancel)
+	public Choice GetChoice(byte index, HandleChoiceDelegate handle, HandleCancelDelegate cancel)
 	{
-		Choice retVal = new Choice(index, expirationTicks, handle, cancel);
-        decisionQueue.Add(retVal);
+		Choice retVal = new Choice(index, handle, cancel);
+		gameTimer.AddMainTimerDelegate(
+			delegate
+			{
+				PurgeChoice(retVal);
+			});
+
+		decisionQueue.Add(retVal);
 		ShowChoice();
 		return retVal;
-	}
-
-	public void Update()
-	{
-		long ticksNow = System.DateTime.UtcNow.Ticks;
-		for (int i = 0; i < decisionQueue.Count; i++)
-		{
-			if (decisionQueue[i].ExpirationTicks < ticksNow)
-			{
-				PurgeChoice(decisionQueue[i]);
-				i--;
-			}
-		}
 	}
 
 	public void PurgeChoice(Choice choice)
@@ -122,16 +118,14 @@ public class IndexActionChoiceMenu : MonoBehaviour
 	public class Choice
 	{
 
-		public Choice(byte index, long expirationTicks, HandleChoiceDelegate handle, HandleCancelDelegate cancel)
+		public Choice(byte index, HandleChoiceDelegate handle, HandleCancelDelegate cancel)
 		{
 			Index = index;
-			ExpirationTicks = expirationTicks;
 			Handle = handle;
 			Cancel = cancel;
 		}
 
 		public byte Index;
-		public long ExpirationTicks;
 		public HandleChoiceDelegate Handle;
 		public HandleCancelDelegate Cancel;
 	}
