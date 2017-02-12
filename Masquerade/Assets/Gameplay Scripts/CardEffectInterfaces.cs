@@ -26,3 +26,14 @@ public interface IStartPhase
 {
 	void OnStartPhase(MasqueradePlayer turn, Response<bool> response);
 }
+
+public interface ISpecialStats
+{
+	int GetBaseAttack();
+	int GetBaseDefense();
+}
+
+public interface IStaticEffect
+{
+	void StaticEffect();
+}

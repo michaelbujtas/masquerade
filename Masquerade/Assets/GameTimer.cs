@@ -14,7 +14,7 @@ public class GameTimer : SimpleNetworkedMonoBehavior {
 	public float MainTimer;
 
 
-	bool timeDone = false;
+	public bool MainTimerDone = false;
 
 	[Inspect]
 	public NamedValueField TimerText;
@@ -32,13 +32,13 @@ public class GameTimer : SimpleNetworkedMonoBehavior {
 	void Update() {
 
 
-		if (MainTimer > 0 && !timeDone)
+		if (MainTimer > 0 && !MainTimerDone)
 		{
 			MainTimer -= Time.deltaTime;
 			if (MainTimer <= 0)
 			{
 				MainTimer = 0;
-				timeDone = true;
+				MainTimerDone = true;
 				if (mainTimerDelegate != null)
 					mainTimerDelegate();
 			}
@@ -69,7 +69,7 @@ public class GameTimer : SimpleNetworkedMonoBehavior {
 	public void SetMainTimer(float value, MainTimerDelegate onEnd)
 	{
 
-		timeDone = false;
+		MainTimerDone = false;
 		if (OwningNetWorker.IsServer)
 		{
 			
@@ -84,6 +84,10 @@ public class GameTimer : SimpleNetworkedMonoBehavior {
 	public MainTimerDelegate AddMainTimerDelegate(MainTimerDelegate onEnd)
 	{
 		mainTimerDelegate += onEnd;
+
+		if (MainTimer == 0)
+			onEnd();
+
 		return onEnd;
 	}
 
@@ -95,7 +99,7 @@ public class GameTimer : SimpleNetworkedMonoBehavior {
 	[BRPC]
 	public void SyncMainTimerDisplay(float duration)
 	{
-		timeDone = false;
+		MainTimerDone = false;
 		MainTimer = duration;
 	}
 

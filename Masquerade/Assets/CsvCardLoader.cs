@@ -12,10 +12,14 @@ public static class CsvCardLoader{
 	static string ArtFolder = "Full Size Character Portraits\\";
 	static Dictionary<string, List<record>> allRecords = new Dictionary<string, List<record>>();
 
-	public static void OpenPath(string path)
+	public static void OpenCSV(string path, bool openPath)
 	{
 		allRecords = new Dictionary<string, List<record>>();
-		TextReader textReader = File.OpenText(path);
+		TextReader textReader;
+		if (openPath)
+			textReader = File.OpenText(path);
+		else
+			textReader = new StreamReader(path);
 
 		var csv = new CsvReader(textReader);
 

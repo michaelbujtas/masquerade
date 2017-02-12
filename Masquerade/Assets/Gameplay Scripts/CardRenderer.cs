@@ -117,7 +117,7 @@ public class CardRenderer : MonoBehaviour
 
     }
 
-	string FormatCombatValue(int value, FaceUpBonus bonus)
+	string FormatCombatValue(int value, FaceUpBonus bonus, int buffs)
 	{
 		string retVal = value.ToString();
 
@@ -132,7 +132,7 @@ public class CardRenderer : MonoBehaviour
 				retVal = "<color=#ff0000>" + retVal + "</color>";
 			}
 		}
-		if (bonus == FaceUpBonus.FACE_DOWN)
+		else if (bonus == FaceUpBonus.FACE_DOWN)
 		{
 			if (dummyFacing)
 			{
@@ -142,6 +142,10 @@ public class CardRenderer : MonoBehaviour
 			{
 				retVal = "<color=#00ff00>" + retVal + "</color>";
 			}
+		}
+		else if (buffs != 0)
+		{ 
+				retVal = "<color=#ff00ff>" + retVal + "</color>";
 		}
 
         return retVal;
@@ -189,8 +193,8 @@ public class CardRenderer : MonoBehaviour
 					else
 						SetFacing((bool)forceFaceUp);
 
-					AttackText.text = FormatCombatValue(Card.GetCombatAttack(dummyFacing), Card.AttackBonus);
-					DefenseText.text = FormatCombatValue(Card.GetCombatDefense(dummyFacing), Card.DefenseBonus);
+					AttackText.text = FormatCombatValue(Card.GetCombatAttack(dummyFacing), Card.AttackBonus, Card.TotalAttackBuff);
+					DefenseText.text = FormatCombatValue(Card.GetCombatDefense(dummyFacing), Card.DefenseBonus, Card.TotalDefenseBuff);
 					ClassSeal.Swap(Card.CardClass);
 					Nameplate.Swap(Card.Logic != null);
 					Art.sprite = Card.Art;

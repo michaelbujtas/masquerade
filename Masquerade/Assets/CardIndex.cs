@@ -10,6 +10,7 @@ public class CardIndex : MonoBehaviour {
 	public const byte PLAYER_3_FACEDOWN = 203;
 	public const byte PLAYER_4_FACEDOWN = 204;
 	public const byte EMPTY_SLOT = 205;
+	public const byte CANCEL_CHOICE = 206;
 
 
 	[Inspect]
@@ -83,7 +84,9 @@ public class CardIndex : MonoBehaviour {
 
 	GameObject GenerateCardsFromFile(string path, string set, ref byte startingIndex)
 	{
-		CsvCardLoader.OpenPath(path);
+		TextAsset csv = Resources.Load(path) as TextAsset;
+
+		CsvCardLoader.OpenCSV(path, false);
 		GameObject cardObject = CsvCardLoader.GenerateCardObjects(set);
 		cardObject.transform.parent = transform;
 		startingIndex = ScrapeCardsFromGameObject(cardObject, startingIndex);

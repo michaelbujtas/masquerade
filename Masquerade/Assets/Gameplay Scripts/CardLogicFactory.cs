@@ -8,6 +8,8 @@ public class CardLogicFactory {
 	{
 		switch(name.ToLower())
 		{
+			case "debug dude":
+				return new OlafTheGlutton();
 			case "court assassin timm":
 				return new Timm();
 			case "king alric dacre":
@@ -18,6 +20,10 @@ public class CardLogicFactory {
 				return new BlackWidow();
 			case "wench helga":
 				return new BlackWidow();
+			case "sorcerer theodoric whitemane":
+				return new SorcerorWhitemane();
+			case "lance wymund":
+				return new LanceWymund();
 		}
 
 		return null;

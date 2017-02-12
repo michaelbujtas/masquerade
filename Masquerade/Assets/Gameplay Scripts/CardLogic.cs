@@ -14,5 +14,9 @@ public class CardLogic //: ComponentMonoBehaviour
 		card.LinkLogic(this);
 	}
 
+	public virtual bool TriggerIsPlausible(MasqueradePlayer currentPlayer)
+	{
+		return false;
+	}
 	
 }

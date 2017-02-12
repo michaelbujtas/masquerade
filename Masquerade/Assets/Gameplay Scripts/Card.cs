@@ -2,7 +2,7 @@
 using System.Collections;
 using AdvancedInspector;
 using BeardedManStudios.Network;
-
+using System.Collections.Generic;
 
 [AdvancedInspector]
 public class Card : MonoBehaviour
@@ -84,7 +84,10 @@ public class Card : MonoBehaviour
 	}
 
 
-	[Inspect, CreateDerived]
+	public List<Buff> Buffs = new List<Buff>();
+
+
+	[Inspect]
 	public CardLogic[] logic = new CardLogic[1];
 
 	public CardLogic Logic
@@ -143,7 +146,7 @@ public class Card : MonoBehaviour
 		Logic.Card = this;
 	}
 
-	
+
 	GameplayNetworking networking;
 
 	public GameplayNetworking Networking
@@ -155,6 +158,8 @@ public class Card : MonoBehaviour
 			return networking;
 		}
 	}
+
+
 
 
 	public void Start()
@@ -183,7 +188,7 @@ public class Card : MonoBehaviour
 
 		if (newCard.Logic != null)
 			CustomConsole.LogError("We can't copy cards with logics right now.");
-				//	Logic = newCard.Logic.Instantiate(gameObject, this) as CardLogic;
+		//	Logic = newCard.Logic.Instantiate(gameObject, this) as CardLogic;
 
 	}
 
@@ -196,11 +201,21 @@ public class Card : MonoBehaviour
 		else
 			useFacing = (bool)hypotheticalFacing;
 
+		int modifiedAttack = Attack;
+
+		foreach (Buff b in Buffs)
+			if(b.BeforeBonus)
+				modifiedAttack += b.Attack;
+
 		if (useFacing && AttackBonus == FaceUpBonus.FACE_UP ||
 		   !useFacing && AttackBonus == FaceUpBonus.FACE_DOWN)
-			return Attack * 2;
+				modifiedAttack *= 2;
 
-		return Attack;
+		foreach (Buff b in Buffs)
+			if (!b.BeforeBonus)
+				modifiedAttack += b.Attack;
+
+		return modifiedAttack;
 	}
 
 	public int GetCombatDefense(bool? hypotheticalFacing = null)
@@ -210,6 +225,12 @@ public class Card : MonoBehaviour
 			useFacing = IsFaceUp;
 		else
 			useFacing = (bool)hypotheticalFacing;
+
+
+		int modifiedDefense = Defense;
+
+		foreach (Buff b in Buffs)
+			modifiedDefense += b.Defense;
 
 		if (useFacing && DefenseBonus == FaceUpBonus.FACE_UP ||
 		   !useFacing && DefenseBonus == FaceUpBonus.FACE_DOWN)
@@ -250,6 +271,7 @@ public class Card : MonoBehaviour
 		IsFaceUp = !IsFaceUp;
 		Networking.SyncCard(this);
 		Networking.EnsureProperFlippedness(this);
+		Networking.StaticEffects();
 	}
 
 	public bool Flip(bool shouldBeFaceUp)
@@ -298,7 +320,7 @@ public class Card : MonoBehaviour
 			{
 				bool BoardClearDrawFinished = false;
 
-				StartCoroutine(networking.DrawCardCOR(Owner.PlayerIndex, (coroutineReturn) => { BoardClearDrawFinished = true; }));
+				StartCoroutine(networking.DrawCardCOR(Owner.PlayerIndex, 1, (coroutineReturn) => { BoardClearDrawFinished = true; }));
 
 				while (!BoardClearDrawFinished)
 					yield return null;
@@ -314,7 +336,7 @@ public class Card : MonoBehaviour
 		CustomConsole.Log("AfterAttack isAlive status " + IsAlive);
 
 		//After Attacking
-		if(IsAlive)
+		if (IsAlive)
 			if (Logic is IAfterAttacking)
 				((IAfterAttacking)Logic).AfterAttacking(defender);
 
@@ -334,12 +356,12 @@ public class Card : MonoBehaviour
 
 	}
 
-	
+
 
 	public void KillWithContext(Card killer, DeathContext context)
 	{
 		CustomConsole.Log(killer.CardName + " killed " + CardName + ". Context: " + context.ToString(), Color.red);
-		if(IsAlive)
+		if (IsAlive)
 			if (Logic is IOnKilled)
 				((IOnKilled)Logic).OnKilled(killer, context);
 
@@ -353,7 +375,7 @@ public class Card : MonoBehaviour
 
 		if (IsAlive)
 			if (Logic is IOnDeath)
-			 ((IOnDeath)Logic).OnDeath();
+				((IOnDeath)Logic).OnDeath();
 
 		IsAlive = false;
 		Networking.SendToDiscard(this);
@@ -383,6 +405,7 @@ public class Card : MonoBehaviour
 		IsTapped = false;
 
 		//Forget basically everything else
+		Buffs.Clear();
 
 		//Make sure everyone else knows who we are
 		Networking.SyncCard(this);
@@ -391,5 +414,68 @@ public class Card : MonoBehaviour
 		//Forget our position on the board
 		Owner = null;
 		CurrentSlot = null;
+	}
+
+	public Buff AddBuff(int attack, int defense, bool permanent, bool beforeBonus)
+	{
+		Buff buff = new Buff(attack, defense, permanent, beforeBonus);
+
+		Buffs.Add(buff);
+
+		Networking.SyncCard(this);
+		return buff;
+	}
+
+	public void CleanupBuffs()
+	{
+		for (int i = 0; i < Buffs.Count; i++)
+		{
+			if (!Buffs[i].Permanent)
+			{
+				Buffs.RemoveAt(i);
+				i--;
+			}
+		}
+	}
+
+	public int TotalAttackBuff
+	{
+		get
+		{
+			int retVal = 0;
+			for (int i = 0; i < Buffs.Count; i++)
+			{
+				retVal += Buffs[i].Attack;
+			}
+			return retVal;
+		}
+	}
+
+	public int TotalDefenseBuff
+	{
+		get
+		{
+			int retVal = 0;
+			for (int i = 0; i < Buffs.Count; i++)
+			{
+				retVal += Buffs[i].Defense;
+			}
+			return retVal;
+		}
+	}
+
+	public class Buff
+	{
+		public Buff(int attack, int defense, bool permanent, bool beforeBonus)
+		{
+			Attack = attack;
+			Defense = defense;
+			Permanent = permanent;
+			BeforeBonus = beforeBonus;
+		}
+		public int Attack;
+		public int Defense;
+		public bool Permanent;
+		public bool BeforeBonus;
 	}
 }

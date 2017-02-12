@@ -45,7 +45,7 @@ public List<byte> Indices = new List<byte>();
 			string name = StackNames[i];
 			for (int j = 0; j < Indices.Count; j++)
 			{
-				if (cardIndex.GetCard(Indices[j]).CardName == name)
+				if (cardIndex.GetCard(Indices[j]).CardName.ToLower() == name.ToLower())
 				{
 					byte foundIndex = Indices[j];
 					Indices.Remove(foundIndex);
