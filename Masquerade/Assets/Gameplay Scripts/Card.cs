@@ -35,6 +35,7 @@ public class Card : MonoBehaviour
 		}
 	}
 
+
 	public MasqueradePlayer Owner;
 
 	public byte? CurrentSlot = null;
@@ -113,7 +114,7 @@ public class Card : MonoBehaviour
 
 	public bool CanAttack
 	{
-		get { return Attack > 0; }
+		get { return GetCombatAttack() > 0; }
 	}
 
 	public bool CanFlipDown
@@ -230,13 +231,20 @@ public class Card : MonoBehaviour
 		int modifiedDefense = Defense;
 
 		foreach (Buff b in Buffs)
-			modifiedDefense += b.Defense;
+			if (b.BeforeBonus)
+				modifiedDefense += b.Defense;
 
 		if (useFacing && DefenseBonus == FaceUpBonus.FACE_UP ||
 		   !useFacing && DefenseBonus == FaceUpBonus.FACE_DOWN)
-			return Defense * 2;
+			 modifiedDefense *= 2;
 
-		return Defense;
+
+
+		foreach (Buff b in Buffs)
+			if (!b.BeforeBonus)
+				modifiedDefense += b.Defense;
+
+		return modifiedDefense;
 	}
 
 	public IEnumerator FlipAction(bool shouldBeFaceUp, System.Action callback)
@@ -297,9 +305,13 @@ public class Card : MonoBehaviour
 		IsTapped = true;
 		Networking.SyncCard(this);
 
+
+
 		//Calculate Attack and Defense
 		int attack = GetCombatAttack();
 		int defense = defender.GetCombatDefense();
+
+
 
 
 		CustomConsole.Log(CardName + " hit " + defender.CardName + " for " + attack + ".", logColor);
@@ -357,15 +369,32 @@ public class Card : MonoBehaviour
 	}
 
 
+	public bool CanBeKilledBy(Card other)
+	{
+		if (HasKeyword(Keyword.CANT_BE_KILLED))
+			return false;
+
+		return true;
+	}
+
+	public bool CanKill(Card other)
+	{
+		return true;
+	}
 
 	public void KillWithContext(Card killer, DeathContext context)
 	{
-		CustomConsole.Log(killer.CardName + " killed " + CardName + ". Context: " + context.ToString(), Color.red);
-		if (IsAlive)
-			if (Logic is IOnKilled)
-				((IOnKilled)Logic).OnKilled(killer, context);
+		//Check Context
+		if(killer.CanKill(this) && this.CanBeKilledBy(killer))
+		{
+			if (IsAlive)
+				if (Logic is IOnKilled)
+					((IOnKilled)Logic).OnKilled(killer, context);
 
-		Kill();
+			Kill();
+			CustomConsole.Log(killer.CardName + " killed " + CardName + ". Context: " + context.ToString(), Color.red);
+		}
+
 	}
 
 
@@ -383,6 +412,10 @@ public class Card : MonoBehaviour
 
 
 
+	public void Sync()
+	{
+		Networking.SyncCard(this);
+	}
 
 
 	public void SyncFlip()
@@ -422,11 +455,18 @@ public class Card : MonoBehaviour
 
 		Buffs.Add(buff);
 
-		Networking.SyncCard(this);
+		Sync();
 		return buff;
 	}
 
-	public void CleanupBuffs()
+	public bool RemoveBuff(Buff buff)
+	{
+		bool retVal = Buffs.Remove(buff);
+		Sync();
+		return retVal;
+	}
+
+	public void CleanupBuffsEOT()
 	{
 		for (int i = 0; i < Buffs.Count; i++)
 		{
@@ -438,6 +478,13 @@ public class Card : MonoBehaviour
 		}
 	}
 
+	public bool HasBuff(Buff buff)
+	{
+		if (buff == null)
+			return false;
+		return Buffs.Contains(buff);
+	}
+
 	public int TotalAttackBuff
 	{
 		get
@@ -446,6 +493,9 @@ public class Card : MonoBehaviour
 			for (int i = 0; i < Buffs.Count; i++)
 			{
 				retVal += Buffs[i].Attack;
+				if (Buffs[i].BeforeBonus)
+					if ((AttackBonus == FaceUpBonus.FACE_DOWN && !IsFaceUp) || (AttackBonus == FaceUpBonus.FACE_UP && IsFaceUp))
+						retVal += Buffs[i].Attack;
 			}
 			return retVal;
 		}
@@ -459,10 +509,27 @@ public class Card : MonoBehaviour
 			for (int i = 0; i < Buffs.Count; i++)
 			{
 				retVal += Buffs[i].Defense;
+				if(Buffs[i].BeforeBonus)
+					if((DefenseBonus == FaceUpBonus.FACE_DOWN && !IsFaceUp) || (DefenseBonus == FaceUpBonus.FACE_UP && IsFaceUp))
+						retVal += Buffs[i].Defense;
 			}
 			return retVal;
 		}
 	}
+
+	public bool HasKeyword(Keyword keyword)
+	{
+		if(Logic is IHasKeywords)
+			if (((IHasKeywords)Logic).GetKeywords().Contains(keyword))
+				return true;
+
+		foreach (Buff b in Buffs)
+			if (b.Keywords.Contains(keyword))
+				return true;
+
+		return false;
+	}
+
 
 	public class Buff
 	{
@@ -477,5 +544,13 @@ public class Card : MonoBehaviour
 		public int Defense;
 		public bool Permanent;
 		public bool BeforeBonus;
+
+		public List<Keyword> Keywords = new List<Keyword>();
+	}
+
+	public enum Keyword
+	{
+		CANT_BE_KILLED,
+		CANT_BE_DISCARDED
 	}
 }

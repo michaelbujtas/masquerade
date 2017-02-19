@@ -1,6 +1,13 @@
-﻿public interface IAfterAttacking
+﻿using System.Collections.Generic;
+
+public interface IAfterAttacking
 {
 	void AfterAttacking(Card defender);
+}
+
+public interface IBeforeAttacking
+{
+	void BeforeAttacking(Card defender);
 }
 
 public interface IOnKilled
@@ -37,3 +44,11 @@ public interface IStaticEffect
 {
 	void StaticEffect();
 }
+
+//This is for keywords that are on all the time. 
+public interface IHasKeywords
+{
+	List<Card.Keyword> GetKeywords();
+}
+
+

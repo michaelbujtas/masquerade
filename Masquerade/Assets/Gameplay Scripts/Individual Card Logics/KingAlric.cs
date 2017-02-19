@@ -1,5 +1,7 @@
-﻿
-public class KingAlric : CardLogic, IOnKilled, IEndPhase
+﻿using System.Collections.Generic;
+
+
+public class KingAlric : CardLogic, IOnKilled, IEndPhase, IHasKeywords
 {
 	void IOnKilled.OnKilled(Card killer, DeathContext context)
 	{
@@ -31,5 +33,12 @@ public class KingAlric : CardLogic, IOnKilled, IEndPhase
 			}
 		}
 	}
+
+	List<Card.Keyword> keywords = new List<Card.Keyword>() { Card.Keyword.CANT_BE_DISCARDED };
+	List<Card.Keyword> IHasKeywords.GetKeywords()
+	{
+		return keywords;
+	}
+
 
 }

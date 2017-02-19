@@ -42,6 +42,7 @@ public class CardRenderer : MonoBehaviour
 	//[Inspect]
 	public bool DummyRenderer;
 	bool dummyFacing = false;
+	bool dummyTapped = false;
 
 	//[Inspect]
 	public Card Card
@@ -51,10 +52,6 @@ public class CardRenderer : MonoBehaviour
 			if(Index < 200)
 				return CardIndex.GetCard(Index);
 			return null;
-		}
-		set
-		{
-			throw new System.Exception("You're using something incompatible with the newly-broken Card Renderer rewrite. Sorry sorry big sorry.");
 		}
 	}
 
@@ -199,7 +196,14 @@ public class CardRenderer : MonoBehaviour
 					Nameplate.Swap(Card.Logic != null);
 					Art.sprite = Card.Art;
 					NameText.text = Card.CardName;
-					if (Card.IsTapped)
+
+					bool useTapped;
+					if(DummyRenderer)
+						useTapped = dummyTapped;
+					else
+						useTapped = Card.IsTapped;
+
+					if (useTapped)
 					{
 						//NameText.text = "<i>" + Card.CardName + "</i>";
 						Visuals.GetComponent<RectTransform>().rotation = Quaternion.Euler(0, 0, transform.parent.GetComponent<RectTransform>().rotation.eulerAngles.z + 270);
@@ -233,11 +237,6 @@ public class CardRenderer : MonoBehaviour
     public void Highlight(Color color)
     {
         SelectionHighlight.color = color;
-    }
-
-    public void ShowFullMenu()
-    {
-        
     }
 
 	public void Destroy()

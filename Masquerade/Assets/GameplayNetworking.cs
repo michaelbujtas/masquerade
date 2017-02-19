@@ -211,11 +211,6 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 
 		StaticEffects();
 
-		//Untap
-		foreach (byte b in UsedHands[playerIndex].CardsOwned)
-		{
-			TheCardIndex.GetCard(b).Untap();
-		}
 
 
 
@@ -303,6 +298,8 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 
 		//Cleanup
 
+
+
 		StaticEffects();
 		for (int i = 0; i < MasqueradePlayers.Count; i++)
 		{
@@ -310,7 +307,7 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 			foreach (byte b in apnapHand.CardsOwned)
 			{
 				Card c = TheCardIndex.GetCard(b);
-				c.CleanupBuffs();
+				c.CleanupBuffsEOT();
 
 				if (c.Logic is IEndPhase)
 				{
@@ -319,6 +316,14 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 
 				SyncCard(c);
 			}
+		}
+		StaticEffects();
+
+
+		//Untap
+		foreach (byte b in UsedHands[playerIndex].CardsOwned)
+		{
+			TheCardIndex.GetCard(b).Untap();
 		}
 
 		StaticEffects();
@@ -333,18 +338,28 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 
 	public void StaticEffects()
 	{
+		//APNAP order for cards in play
 		for (int i = 0; i < MasqueradePlayers.Count; i++)
 		{
 			IndexHand apnapHand = GetPlayer(PlaceInTurnOrder + i).Hand;
 			foreach (byte b in apnapHand.CardsOwned)
 			{
 				Card c = TheCardIndex.GetCard(b);
+
+				if (c.GetCombatDefense() <= 0)
+					c.Kill();
+
 				if(c.Logic is IStaticEffect)
 				{
 					((IStaticEffect)c.Logic).StaticEffect();
 				}
 			}
 		}
+
+		//Random Order for everything else?
+		
+
+
 	}
 
 	#endregion
@@ -1062,7 +1077,7 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 		Card card = TheCardIndex.GetCard(index);
 		card.IsFaceUp = shouldBeFaceup;
 		card.IsTapped = shouldBeTapped;
-		card.CleanupBuffs();
+		card.Buffs.Clear();
 		card.AddBuff(totalAttackBuff, totalDefenseBuff, false, false);
 	}
 

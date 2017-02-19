@@ -34,7 +34,7 @@ public class IndexCardChoiceMenu : MonoBehaviour {
 
 		for(int i = 0; i < CardsInPlay.Count; i++)
 		{
-			CardsInPlay[i].Background.gameObject.name = "SET LISTENER";
+			//CardsInPlay[i].Background.gameObject.name = "SET LISTENER";
 			CardRenderer capturedRenderer = CardsInPlay[i];
 
 			CardsInPlay[i].Background.GetComponent<Button>().onClick.AddListener(
