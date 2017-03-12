@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using System.Collections;
-using AdvancedInspector;
 using BeardedManStudios.Network;
 using UnityEngine.UI;
 

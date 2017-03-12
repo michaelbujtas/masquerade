@@ -97,7 +97,7 @@
             Uniformized entry point of inspector drawing.
             </summary>
         </member>
-        <member name="M:AdvancedInspector.AdvancedInspectorControl.Inspect(AdvancedInspector.InspectorEditor,System.Collections.Generic.List{AdvancedInspector.InspectorField},System.Boolean,System.Boolean,System.Boolean,Separator)">
+        <member name="M:AdvancedInspector.AdvancedInspectorControl.Inspect(AdvancedInspector.InspectorEditor,System.Collections.Generic.List{AdvancedInspector.InspectorField},System.Boolean,System.Boolean,System.Boolean,AdvancedInspector.Separator)">
             <summary>
             Called by an Editor to have a collection of InspectorField to be displayed.
             Uniformized entry point of inspector drawing.
@@ -924,27 +924,12 @@
             Get an attribute by type that was applied to the original item.
             </summary>
         </member>
-        <member name="M:AdvancedInspector.InspectorField.GetAttribute(System.Type)">
-            <summary>
-            Get an attribute by type that was applied to the original item.
-            </summary>
-        </member>
         <member name="M:AdvancedInspector.InspectorField.GetAttributes``1">
             <summary>
             Get all the attributes by type that were applied to the original item.
             </summary>
         </member>
-        <member name="M:AdvancedInspector.InspectorField.GetAttributes(System.Type)">
-            <summary>
-            Get all the attributes by type that were applied to the original item.
-            </summary>
-        </member>
         <member name="M:AdvancedInspector.InspectorField.HasAttribute``1">
-            <summary>
-            Return true if the memberinfo of this field is sporting that specific attribute type.
-            </summary>
-        </member>
-        <member name="M:AdvancedInspector.InspectorField.HasAttribute(System.Type)">
             <summary>
             Return true if the memberinfo of this field is sporting that specific attribute type.
             </summary>
@@ -1486,6 +1471,72 @@
         <member name="E:AdvancedInspector.IControl.RequestRepaint">
             <summary>
             In the event an internal process of the Control want a repaint of the window outside the Drawing scope.
+            </summary>
+        </member>
+        <member name="T:AdvancedInspector.Separator">
+            <summary>
+            A separator holds two control side by side and divide them with a draggable line.
+            It can be horizontal or vertical.
+            </summary>
+        </member>
+        <member name="M:AdvancedInspector.Separator.Draw(UnityEngine.Rect)">
+            <summary>
+            Draw the whole region holding the two control and the separator.
+            The separator pass down the proper region to Draw of the sub-controls.
+            Returns true if the window needs to be repainted.
+            </summary>
+        </member>
+        <member name="P:AdvancedInspector.DragEventArgs.Target">
+            <summary>
+            Targeted object
+            </summary>
+        </member>
+        <member name="P:AdvancedInspector.DragEventArgs.InBetween">
+            <summary>
+            Is on top of the target
+            </summary>
+        </member>
+        <member name="P:AdvancedInspector.DragEventArgs.Dragged">
+            <summary>
+            Selecttion dragged
+            </summary>
+        </member>
+        <member name="T:AdvancedInspector.EnumExtension">
+            <summary>
+            Extends Enum with some bitfields related method.
+            </summary>
+        </member>
+        <member name="M:AdvancedInspector.EnumExtension.Append``1(System.Enum,``0)">
+            <summary>
+            Add a value to a bitfield.
+            </summary>
+        </member>
+        <member name="M:AdvancedInspector.EnumExtension.Remove``1(System.Enum,``0)">
+            <summary>
+            Remove a value from a bitfield.
+            </summary>
+        </member>
+        <member name="M:AdvancedInspector.EnumExtension.Has``1(System.Enum,``0)">
+            <summary>
+            Test if a bitfield has a value.
+            </summary>
+        </member>
+        <member name="M:AdvancedInspector.EnumExtension.GetAttribute``1(System.Enum)">
+            <summary>
+            Gets an attribute on an enum field value
+            </summary>
+            <typeparam name="T">The type of the attribute you want to retrieve</typeparam>
+            <param name="enumVal">The enum value</param>
+            <returns>The attribute of type T that exists on the enum value</returns>
+        </member>
+        <member name="T:AdvancedInspector.TypeExtension">
+            <summary>
+            Extends Enum with some bitfields related method.
+            </summary>
+        </member>
+        <member name="M:AdvancedInspector.TypeExtension.GetBaseGenericType(System.Type)">
+            <summary>
+            Returns the nearest parent class that is generic. 
             </summary>
         </member>
         <member name="T:AdvancedInspector.Helper">
@@ -2124,94 +2175,28 @@
               Looks up a localized resource of type System.Byte[].
             </summary>
         </member>
-        <member name="T:Separator">
-            <summary>
-            A separator holds two control side by side and divide them with a draggable line.
-            It can be horizontal or vertical.
-            </summary>
-        </member>
-        <member name="M:Separator.Draw(UnityEngine.Rect)">
-            <summary>
-            Draw the whole region holding the two control and the separator.
-            The separator pass down the proper region to Draw of the sub-controls.
-            Returns true if the window needs to be repainted.
-            </summary>
-        </member>
-        <member name="P:DragEventArgs.Target">
-            <summary>
-            Targeted object
-            </summary>
-        </member>
-        <member name="P:DragEventArgs.InBetween">
-            <summary>
-            Is on top of the target
-            </summary>
-        </member>
-        <member name="P:DragEventArgs.Dragged">
-            <summary>
-            Selecttion dragged
-            </summary>
-        </member>
-        <member name="T:EnumExtension">
-            <summary>
-            Extends Enum with some bitfields related method.
-            </summary>
-        </member>
-        <member name="M:EnumExtension.Append``1(System.Enum,``0)">
-            <summary>
-            Add a value to a bitfield.
-            </summary>
-        </member>
-        <member name="M:EnumExtension.Remove``1(System.Enum,``0)">
-            <summary>
-            Remove a value from a bitfield.
-            </summary>
-        </member>
-        <member name="M:EnumExtension.Has``1(System.Enum,``0)">
-            <summary>
-            Test if a bitfield has a value.
-            </summary>
-        </member>
-        <member name="M:EnumExtension.GetAttribute``1(System.Enum)">
-            <summary>
-            Gets an attribute on an enum field value
-            </summary>
-            <typeparam name="T">The type of the attribute you want to retrieve</typeparam>
-            <param name="enumVal">The enum value</param>
-            <returns>The attribute of type T that exists on the enum value</returns>
-        </member>
-        <member name="T:TypeExtension">
-            <summary>
-            Extends Enum with some bitfields related method.
-            </summary>
-        </member>
-        <member name="M:TypeExtension.GetBaseGenericType(System.Type)">
-            <summary>
-            Returns the nearest parent class that is generic. 
-            </summary>
-        </member>
-        <member name="T:TreeView">
+        <member name="T:AdvancedInspector.TreeView">
             <summary>
             A control that is a list of item that can be nested.
             Support drag and drop, editing and sorting.
             </summary>
         </member>
-        <member name="P:TreeView.Selection">
+        <member name="P:AdvancedInspector.TreeView.Selection">
             <summary>
             Current selected tags.
             </summary>
         </member>
-        <member name="P:TreeView.Count">
+        <member name="P:AdvancedInspector.TreeView.Count">
             <summary>
             Number of visible nodes.
             </summary>
         </member>
-        <member name="M:TreeView.BuildVisibility">
+        <member name="M:AdvancedInspector.TreeView.BuildVisibility">
             <summary>
             Refresh the list of visible item when the items list has changed.
             </summary>
         </member>
-        <member name="M:TreeView.BuildVisibility(System.Collections.Generic.List{TreeViewItem},System.Collections.Generic.List{TreeViewItem})">
+        <member name="M:AdvancedInspector.TreeView.BuildVisibility(System.Collections.Generic.List{AdvancedInspector.TreeViewItem},System.Collections.Generic.List{AdvancedInspector.TreeViewItem})">
             <summary>
             Refresh the list of visible item when the items list has changed.
             </summary>

@@ -211,11 +211,16 @@ namespace AdvancedInspector
 
         private void DrawObjectSelector(InspectorField field)
         {
-            MonoBehaviour behaviour = field.GetValue() as MonoBehaviour;
+            Component behaviour = field.GetValue() as Component;
             if (behaviour == null)
                 return;
 
-            List<Component> components = new List<Component>(behaviour.gameObject.GetComponents(field.BaseType));
+            List<Component> components;
+            if (typeof(Component).IsAssignableFrom(field.BaseType))
+                components = new List<Component>(behaviour.gameObject.GetComponents(field.BaseType));
+            else
+                components = new List<Component>(behaviour.gameObject.GetComponents(behaviour.GetType()));
+
             if (components.Count == 1)
                 return;
 

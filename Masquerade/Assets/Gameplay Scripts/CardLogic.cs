@@ -16,7 +16,7 @@ public class CardLogic //: ComponentMonoBehaviour
 
 	public virtual bool TriggerIsPlausible(MasqueradePlayer currentPlayer)
 	{
-		return false;
+		return true;
 	}
 	
 }

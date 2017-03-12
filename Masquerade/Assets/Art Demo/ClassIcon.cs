@@ -2,27 +2,16 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.UI;
-using AdvancedInspector;
-
-[AdvancedInspector]
 public class ClassIcon : MonoBehaviour {
 
-	[Inspect]
 	public Sprite KingSprite;
-	[Inspect]
 	public Sprite QueenSprite;
-	[Inspect]
 	public Sprite NobleSprite;
-	[Inspect]
 	public Sprite SoldierSprite;
-	[Inspect]
 	public Sprite AssassinSprite;
-	[Inspect]
 	public Sprite CommonSprite;
 
-	[Inspect]
 	public CardClass CurrentClass = 0;
-	[Inspect]
 	public bool DebugSwap = false;
 	Image image;
 

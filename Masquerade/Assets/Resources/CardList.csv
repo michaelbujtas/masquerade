@@ -35,7 +35,7 @@ Guildmaster le Blanc,Assassin,5,down,1,,,"The target he is, how you say, est mor
 The Black Widow,Assassin,1,,1,,"After a card attacks The Black Widow, kill that card.",Beware the black spider of death.,Assassin's Guild,BlackWidow
 Poisoner Roger Baldwin,Assassin,1,up,1,,"After Roger attacks a card, kill that card at the beginning of its controller's next start phase.","They say poison  is a coward's tool, but cowards don't end up dead.",Foreign Powers,RogerBaldwin
 Princess Isolda Drago,Assassin,1,,1,,"When Isolda is flipped up, kill a face-up Noble or Soldier of your choice.","Shh, don't tell my father, please.",Assassin's Guild,PrincessIsolda
-Rollin Hodgkin,Assassin,6,down,1,,"Rollin can't be killed while face-down. After Rollin attacks, discard him.",There's only purpose in life for me now.,The Main Cast,Hodgkin
+Rollin Hodgkin,Assassin,6,down,5,down,"After Rollin attacks, discard him.",There's only purpose in life for me now.,The Main Cast,Hodgkin
 Sir Olaf the Glutton,Soldier,1,,6,,"At the beginning of your start phase, draw a card.",More food!,The Main Cast,SirOlaf
 "Sir Ymbert ""Limper"" Garthas",Soldier,0,,4,up,,Wanna know why they call me Limper?,Assassin's Guild,Limper
 Dame Sela Tankcreed,Soldier,3,up,3,up,,A woman can do anything a man can. I'm proof of it.,Foreign Powers,DameSela
@@ -66,3 +66,6 @@ Dancer Isabella Pascoe,Commoner,1,,2,,"After Isabella attacks, shuffle the attac
 Doctor Pestilence ,Assassin,2,,6,,"If Doctor Pestilence is face-up, instead of drawing a card during your draw phase, look at the top two cards of the deck. You may discard both cards. If you don't, give one of them to the player of your choice face-down and draw the other one.",The only disease is life itself... and all must be cured of it's corruption…,Assassin's Guild,DrPestilence
 Mary the Mute,Commoner,1,,2,,"While Mary is face-up, all other non-King cards lose all abilities.",,The Main Cast,MaryTheMute
 Debug Dude,Noble,1,,1,,,,Rulers of Avalot,DancerIsabella
+Debug Dude2,Noble,1,,1,,,,Rulers of Avalot,DrPestilence
+Debug Dude3,Noble,1,,1,,,,Rulers of Avalot,ServingGirlEmma
+Debug Dude4,Noble,1,,1,,,,Rulers of Avalot,Ogg

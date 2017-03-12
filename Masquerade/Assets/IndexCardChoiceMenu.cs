@@ -47,15 +47,26 @@ public class IndexCardChoiceMenu : MonoBehaviour {
 
 	}
 
-	public Choice GetChoice(List<byte> options, Color highlight, HandleChoiceDelegate handle, HandleCancelDelegate cancel, HandleCancelDelegate pass)
+	public Choice GetChoice(List<byte> options, Color highlight, HandleChoiceDelegate handle, HandleCancelDelegate cancel, HandleCancelDelegate pass, bool mainTimerBound = true)
 	{
 		Choice choice = new Choice(options, highlight, handle, cancel, pass);
 
-		gameTimer.AddMainTimerDelegate(
-			delegate
-			{
-				PurgeChoice(choice);
-			});
+		if(mainTimerBound)
+		{
+			gameTimer.AddMainTimerDelegate(
+				delegate
+				{
+					PurgeChoice(choice);
+				});
+		}
+		else
+		{
+			gameTimer.AddSubTimerDelegate(
+				delegate
+				{
+					PurgeChoice(choice);
+				});
+		}
 
 		decisionQueue.Add(choice);
 		ShowChoice();
@@ -67,6 +78,17 @@ public class IndexCardChoiceMenu : MonoBehaviour {
 	{
 		decisionQueue.Remove(choice);
 		ShowChoice();
+	}
+
+	public Choice CurrentChoice
+	{
+		get
+		{
+			if (decisionQueue.Count > 0)
+				return decisionQueue[0];
+			return null;
+		}
+
 	}
 	public void OnAnyCardButtonUI(byte index)
 	{
@@ -204,6 +226,8 @@ public class IndexCardChoiceMenu : MonoBehaviour {
 		currentChoice.Pass();
 		ShowChoice();
 	}
+
+
 
 	public class Choice
 	{

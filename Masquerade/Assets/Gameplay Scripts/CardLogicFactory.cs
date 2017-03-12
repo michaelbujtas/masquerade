@@ -9,7 +9,13 @@ public class CardLogicFactory {
 		switch(name.ToLower())
 		{
 			case "debug dude":
-				return new OlafTheGlutton();
+				return new WarrinOldman();
+			case "debug dude2":
+				return new WarrinOldman();
+			case "debug dude3":
+				return new WarrinOldman();
+			case "debug dude4":
+				return new WarrinOldman();
 			case "court assassin timm":
 				return new Timm();
 			case "king alric dacre":
@@ -38,8 +44,22 @@ public class CardLogicFactory {
 				return new ArthurMourne();
 			case "rollin hodgkin":
 				return new RollinHodgkin();
-
-
+			case "queen beatrice dacre":
+				return new QueenBea();
+			case "the avatar of festivals":
+				return new AvatarOfFestivals();
+			case "advisor simon ernest":
+				return new SimonErnest();
+			case "sergeant warrin oldman":
+				return new WarrinOldman();
+			case "mistress eva":
+				return new MistressEva();
+			case "lord snivellous feck":
+				return new Feck();
+			case "guardsman terric illbert":
+				return new GuardsmanTerricIllbert();
+			case "gossip lady anneliese":
+				return new GossipLady();
 		}
 
 		return null;

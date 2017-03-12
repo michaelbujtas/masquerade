@@ -1,19 +1,14 @@
 ﻿using UnityEngine;
 using System.Collections;
 using BeardedManStudios.Network;
-using AdvancedInspector;
-
-[AdvancedInspector]
 public class PlayerIdentity : NetworkedMonoBehavior {
 
-	[Inspect]
 	public string Name
 	{
 		get;
 		private set;
 	}
 
-	[Inspect]
 	public int PlayerNumber
 	{
 		get;

@@ -1,17 +1,11 @@
 ﻿using UnityEngine;
 using System.Collections;
-using AdvancedInspector;
 using BeardedManStudios.Network;
 using System.Collections.Generic;
 
-[AdvancedInspector]
 public class Card : MonoBehaviour
 {
-	//Debug junk
-	[Inspect]
-	int debugOut = 0;
 	//Networking stuff attached to the card, set dynamically
-	[Inspect]
 	byte? index = null;
 
 	public byte? Index
@@ -36,32 +30,46 @@ public class Card : MonoBehaviour
 	}
 
 
-	public MasqueradePlayer Owner;
+
+	MasqueradePlayer lastOwner;
+
+	MasqueradePlayer owner;
+	public MasqueradePlayer Owner
+	{
+		get
+		{
+			return owner;
+		}
+		set
+		{
+			owner = value;
+			if(value != null)
+				lastOwner = value;
+		}
+	}
+
+	public MasqueradePlayer LastOwner
+	{
+		get
+		{
+			return lastOwner;
+		}
+	}
 
 	public byte? CurrentSlot = null;
 
 	//Actual card information
 
-	[Inspect]
 	public string CardName;
-	[Inspect, Enum(false)]
 	public CardClass CardClass;
-	[Inspect]
 	public int Attack;
-	[Inspect]
 	public FaceUpBonus AttackBonus;
-	[Inspect]
 	public int Defense;
-	[Inspect]
 	public FaceUpBonus DefenseBonus;
-	[Inspect]
 	public Sprite Art;
-	[Inspect]
 	public string RulesText = string.Empty;
-	[Inspect]
 	public string FlavorText = string.Empty;
 
-	[Inspect]
 	bool isFaceUp = true;
 	public bool IsFaceUp
 	{
@@ -88,7 +96,6 @@ public class Card : MonoBehaviour
 	public List<Buff> Buffs = new List<Buff>();
 
 
-	[Inspect]
 	public CardLogic[] logic = new CardLogic[1];
 
 	public CardLogic Logic
@@ -174,7 +181,6 @@ public class Card : MonoBehaviour
 
 	public void Update()
 	{
-		debugOut = (int)(CardClass & CardClass.KING);
 	}
 
 	public void Copy(Card newCard)
@@ -247,15 +253,6 @@ public class Card : MonoBehaviour
 		return modifiedDefense;
 	}
 
-	public IEnumerator FlipAction(bool shouldBeFaceUp, System.Action callback)
-	{
-		IsTapped = true;
-		Networking.SyncCard(this);
-		Flip(shouldBeFaceUp);
-		yield return null;
-		callback();
-	}
-
 	public void TapAction()
 	{
 		CustomConsole.Log("TAP ACTION!!!", Color.red);
@@ -263,30 +260,81 @@ public class Card : MonoBehaviour
 		Networking.SyncCard(this);
 	}
 
+	public IEnumerator FlipAction(bool shouldBeFaceUp, System.Action callback)
+	{
+		IsTapped = true;
+		Networking.SyncCard(this);
+
+		bool flipDone = false;
+		StartCoroutine(Flip(shouldBeFaceUp, ((a) => flipDone = true)));
+
+		while (!flipDone)
+			yield return null;
+
+		yield return null;
+		callback();
+	}
+
 	public IEnumerator FlipAction(System.Action callback)
 	{
 		IsTapped = true;
 		Networking.SyncCard(this);
-		Flip();
+
+		bool flipDone = false;
+		StartCoroutine(Flip(() => flipDone = true));
+
+		while(!flipDone)
+			yield return null;
+
+		callback();
+	}
+
+	public IEnumerator Flip(System.Action callback)
+	{
+		FlipNoTriggers();
+		
+		if (Logic is IFlipEffect)
+				((IFlipEffect)Logic).OnFlip(IsFaceUp, null);
 
 		yield return null;
 		callback();
+	}
+
+	public IEnumerator Flip(bool shouldBeFaceUp, System.Action<bool> callback)
+	{
+		if (IsFaceUp == shouldBeFaceUp)
+		{
+			callback(false);
+		}
+		else
+		{
+
+			bool flipDone = false;
+			StartCoroutine(Flip(() => flipDone = true));
+
+			while (!flipDone)
+				yield return null;
+
+			callback(true);
+
+		}
 
 	}
 
-	public void Flip()
+	public void FlipNoTriggers()
 	{
 		IsFaceUp = !IsFaceUp;
-		Networking.SyncCard(this);
-		Networking.EnsureProperFlippedness(this);
+		SyncFlip();
+
+
 		Networking.StaticEffects();
 	}
 
-	public bool Flip(bool shouldBeFaceUp)
+	public bool FlipNoTriggers(bool shouldBeFaceUp)
 	{
 		if (IsFaceUp == shouldBeFaceUp)
 			return false;
-		Flip();
+		FlipNoTriggers();
 		return true;
 	}
 
@@ -319,11 +367,15 @@ public class Card : MonoBehaviour
 
 
 		//FlipUp
-		Flip(true);
-		defender.Flip(true);
+		bool attackerFlipped = FlipNoTriggers(true);
+		bool defenderFlipped = defender.FlipNoTriggers(true);
+
+
+		bool attackerDied = false;
+		bool defenderDied = false;
 
 		//Kill Loser
-		if (attack >= defense)
+		if (attack >= defense && CanKill(defender) && defender.CanBeKilledBy(this))
 		{
 
 			CustomConsole.Log("Defending player owns " + networking.UsedHands[defender.Owner.PlayerIndex].CardsOwned.Count + " cards.", logColor);
@@ -338,21 +390,70 @@ public class Card : MonoBehaviour
 					yield return null;
 			}
 			yield return null;
-			defender.KillWithContext(this, DeathContext.DEFENDING);
+			defenderDied = defender.KillWithContextNoTriggers(this, DeathContext.DEFENDING);
 		}
 		else
 		{
-			this.KillWithContext(defender, DeathContext.ATTACKING);
+			attackerDied = this.KillWithContextNoTriggers(defender, DeathContext.ATTACKING);
 		}
 
 		CustomConsole.Log("AfterAttack isAlive status " + IsAlive);
 
-		//After Attacking
-		if (IsAlive)
-			if (Logic is IAfterAttacking)
-				((IAfterAttacking)Logic).AfterAttacking(defender);
+		//Attacker triggers from the combat (only one should exist)
 
-		callback();
+
+
+		//Flip Up
+			if (Logic is IFlipEffect && attackerFlipped)
+			{
+				bool attackFlipDone = false;
+				((IFlipEffect)Logic).OnFlip(true, (() => attackFlipDone = true));
+				while (!attackFlipDone)
+					yield return null;
+		}
+
+		//After Attacking
+		if (Logic is IAfterAttacking)
+		{
+			bool afterAttackDone = false;
+			((IAfterAttacking)Logic).AfterAttacking(defender, (() => afterAttackDone = true));
+			while (!afterAttackDone)
+				yield return null;
+		}
+
+		//Killed
+		if(Logic is IOnKilled && attackerDied)
+		{
+			bool attackerDiedTriggerDone = false;
+			((IOnKilled)Logic).OnKilled(defender, DeathContext.ATTACKING, (()=>attackerDiedTriggerDone = true));
+			while (!attackerDiedTriggerDone)
+				yield return null;
+		}
+
+		//Defender triggers from the combat (only one should exist)
+
+		//Flip Up
+		if (defender.Logic is IFlipEffect && defenderFlipped)
+		{
+			bool defenderFlipDone = false;
+			((IFlipEffect)defender.Logic).OnFlip(true, (() => defenderFlipDone = true));
+			while (!defenderFlipDone)
+				yield return null;
+
+		}
+
+		//Killed
+		if (defender.Logic is IOnKilled && defenderDied)
+		{
+			bool defenderDiedTriggerDone = false;
+			((IOnKilled)defender.Logic).OnKilled(this, DeathContext.DEFENDING, (() => defenderDiedTriggerDone = true));
+			while (!defenderDiedTriggerDone)
+				yield return null;
+
+		}
+
+		if (callback!= null)
+			callback();
 
 	}
 
@@ -382,29 +483,58 @@ public class Card : MonoBehaviour
 		return true;
 	}
 
-	public void KillWithContext(Card killer, DeathContext context)
+	public IEnumerator KillWithContext(Card killer, DeathContext context, System.Action<bool> callback)
 	{
 		//Check Context
-		if(killer.CanKill(this) && this.CanBeKilledBy(killer))
+		if (killer.CanKill(this) && this.CanBeKilledBy(killer))
 		{
+			
 			if (IsAlive)
 				if (Logic is IOnKilled)
-					((IOnKilled)Logic).OnKilled(killer, context);
+				{
+					bool onKilledFinished = false;
+					((IOnKilled)Logic).OnKilled(killer, context, (()=>onKilledFinished = true));
+					while (!onKilledFinished)
+						yield return null;
+				}
 
-			Kill();
+			Kill(false);
 			CustomConsole.Log(killer.CardName + " killed " + CardName + ". Context: " + context.ToString(), Color.red);
+			callback(true);
 		}
+		else
+		{
+			callback(false);
+		}
+
 
 	}
 
 
-	public void Kill()
+	public bool KillWithContextNoTriggers(Card killer, DeathContext context)
+	{
+		//Check Context
+		if (killer.CanKill(this) && this.CanBeKilledBy(killer))
+		{
+			Kill(true);
+			CustomConsole.Log(killer.CardName + " killed " + CardName + ". Context: " + context.ToString(), Color.red);
+			return true;
+		}
+		return false;
+
+	}
+
+	public void Kill(bool noTriggers = false)
 	{
 		CustomConsole.Log(CardName + " died.", Color.red);
 
+		/*
+		if(!noTriggers)
+		{
 		if (IsAlive)
-			if (Logic is IOnDeath)
-				((IOnDeath)Logic).OnDeath();
+				if (Logic is IOnDeath)
+					((IOnDeath)Logic).OnDeath();
+		}*/
 
 		IsAlive = false;
 		Networking.SendToDiscard(this);

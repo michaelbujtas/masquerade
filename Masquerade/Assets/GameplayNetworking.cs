@@ -2,64 +2,55 @@
 using System.Collections.Generic;
 using BeardedManStudios.Network;
 using System.Collections;
-using AdvancedInspector;
 using UnityEngine.UI;
 using System.Linq;
 
 
-[AdvancedInspector]
 public class GameplayNetworking : SimpleNetworkedMonoBehavior
 {
 
 	#region Properties
-	[Inspect]
 	public GameObject ServerControlPanel;
 
 
-	[Inspect]
 	public byte PlaceInTurnOrder = 0; //0-3, we don't handle players dropping very well, if someone drops someone gets skipped. This is a demo
 
-	[Inspect]
 	public byte MyPlayerNumber = 0;
 
-	[Inspect]
 	public List<IndexHand> ClockwiseHands = new List<IndexHand>();
 
-	[Inspect]
 	public List<IndexHand> UsedHands = new List<IndexHand>();
 
-	[Inspect]
 	public List<MasqueradePlayer> MasqueradePlayers = new List<MasqueradePlayer>();
-	[Inspect]
+
 	public List<PlayerIdentity> PlayerIdentities = new List<PlayerIdentity>();
 
-	[Inspect]
+
 	public CardIndex TheCardIndex;
 
-	[Inspect]
+
 	public IndexDeck TheDeck;
 
-	[Inspect]
+
 	public IndexDiscardPile TheDiscardPile;
 
-	[Inspect]
 	public IndexFaceUpChoiceMenu FaceUpChoiceMenu;
-	[Inspect]
+
 	public IndexActionChoiceMenu ActionChoiceMenu;
-	[Inspect]
+
 	public IndexCardChoiceMenu CardChoiceMenu;
-	[Inspect]
+
 	public EndGameScreen TheEndGameScreen;
 
 
 
-	[Inspect]
+
 	public NamedValueField CardsInDeckDisplay;
 
-	[Inspect]
+
 	public GameTimer Timer;
 
-	[Inspect]
+
 	public NamedValueField ActionsRemainingDisplay;
 
 
@@ -71,7 +62,7 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 
 
 
-	[Inspect]
+
 	public MasqueradePlayer CurrentPlayer
 	{
 		get
@@ -366,7 +357,7 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 
 	#region Trigger Stacking
 
-	public IEnumerator HandleTriggerStackCOR(byte playerIndex, Response<bool> coroutineReturn, List<CardLogic> allLogics, System.Action<CardLogic, Response<bool>> onTrigger)
+	public IEnumerator HandleTriggerStackCOR(byte playerIndex, Response<bool> coroutineReturn, List<CardLogic> allLogics, System.Action<CardLogic, Response<bool>> onTrigger, bool mainTimerBound = true)
 	{
 
 		List<CardLogic> allPlausibleLogics = new List<CardLogic>();
@@ -378,11 +369,24 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 		bool dumpMode = false;
 
 
-		GameTimer.MainTimerDelegate timeout = Timer.AddMainTimerDelegate(delegate
+		GameTimer.TimerDelegate timeout;
+		if(mainTimerBound)
 		{
-			CustomConsole.Log("Trigger stacking request out. Triggers in a random order.");
-			dumpMode = true;
-		});
+			timeout = Timer.AddMainTimerDelegate(delegate
+			{
+				CustomConsole.Log("Trigger stacking request out. Triggers in a random order.");
+				dumpMode = true;
+			});
+		}
+		else
+		{
+			timeout = Timer.AddSubTimerDelegate(delegate
+			{
+				CustomConsole.Log("Trigger stacking request out. Triggers in a random order.");
+				dumpMode = true;
+			});
+
+		}
 
 
 
@@ -401,7 +405,7 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 				}
 
 
-				AuthoritativeRPC("RequestChooseCardRPC", OwningNetWorker, MasqueradePlayers[playerIndex].NetworkingPlayer, false, cardResponse.Index, allTargets, false, new Color(0.75f, 0, 1));
+				AuthoritativeRPC("RequestChooseCardRPC", OwningNetWorker, MasqueradePlayers[playerIndex].NetworkingPlayer, false, cardResponse.Index, allTargets, false, mainTimerBound, new Color(0.75f, 0, 1));
 
 				while (cardResponse.FlagWaiting)
 				{
@@ -433,7 +437,11 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 			response.Recycle();
 
 		}
-		Timer.RemoveMainTimerDelegate(timeout);
+		if(mainTimerBound)
+			Timer.RemoveMainTimerDelegate(timeout);
+		else
+			Timer.RemoveSubTimerDelegate(timeout);
+
 		coroutineReturn.Fill(true);
 		yield return null;
 	}
@@ -442,13 +450,13 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 
 	#region Pick a Card
 
-	public IEnumerator PickACardCOR(byte playerIndex, byte[] allChoices, System.Action<byte> onChoice, System.Action onCancel, Color color)
+	public IEnumerator PickACardCOR(byte playerIndex, byte[] allChoices, System.Action<byte> onChoice, System.Action onCancel, Color color, bool mainTimerBound = true)
 	{
 		Response<byte> response = cardRequestResponses.Add();
 		
 
 
-		GameTimer.MainTimerDelegate timeout = delegate
+		GameTimer.TimerDelegate timeout = delegate
 		{
 			CustomConsole.Log("Pick-A-Card request timed out. Cancel if I can, otherwise pick at random.");
 			if (onCancel == null)
@@ -463,7 +471,7 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 		else
 		{
 			Timer.AddMainTimerDelegate(timeout);
-			AuthoritativeRPC("RequestChooseCardRPC", OwningNetWorker, MasqueradePlayers[playerIndex].NetworkingPlayer, false, response.Index, allChoices, onCancel != null, color);
+			AuthoritativeRPC("RequestChooseCardRPC", OwningNetWorker, MasqueradePlayers[playerIndex].NetworkingPlayer, false, response.Index, allChoices, onCancel != null, mainTimerBound, color);
 
 			while (response.FlagWaiting)
 				yield return null;
@@ -481,7 +489,7 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 	}
 
 	[BRPC]
-	void RequestChooseCardRPC(byte choiceID, byte[] cards, bool canCancel, Color color)
+	void RequestChooseCardRPC(byte choiceID, byte[] cards, bool canCancel, bool mainTimerBound, Color color)
 	{
 		List<byte> options = new List<byte>();
 		options.AddRange(cards);
@@ -501,7 +509,8 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 				{
 					RPC("ResponseChooseCardRPC", NetworkReceivers.Server, choiceID, CardIndex.CANCEL_CHOICE);
 				},
-				null
+				null,
+				mainTimerBound
 				);
 		}
 		else
@@ -516,7 +525,8 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 					RPC("ResponseChooseCardRPC", NetworkReceivers.Server, choiceID, choice);
 				},
 				null,
-				null
+				null,
+				mainTimerBound
 				);
 		}
 	}
@@ -584,7 +594,7 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 
 		Response<bool> response = facingRequestResponses.Add();
 
-		GameTimer.MainTimerDelegate timeout = delegate
+		GameTimer.TimerDelegate timeout = delegate
 		{
 			CustomConsole.Log("Facing request timed out. Placing facedown.");
 			response.Fill(false);
@@ -634,7 +644,7 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 		
 		Response<bool[]> response = multiFacingRequestResponses.Add();
 
-		GameTimer.MainTimerDelegate timeout = delegate
+		GameTimer.TimerDelegate timeout = delegate
 		{
 			List<bool> falseFill = new List<bool>();
 			for (int i = 0; i < cardIndices.Length; i++)
@@ -759,7 +769,7 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 
 
 		//Start Timer
-		GameTimer.MainTimerDelegate timeout = Timer.AddMainTimerDelegate(delegate
+		GameTimer.TimerDelegate timeout = Timer.AddMainTimerDelegate(delegate
 		{
 			CustomConsole.Log("Facing request timed out. Taking default actions.");
 			response.Fill(new ActionDescriptor(0, CardAction.PASS, 0));
@@ -1088,6 +1098,56 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 			AddCardToBoards(card.Owner.PlayerIndex, (byte)card.Index, (byte)card.CurrentSlot);
 		}
 	}
+
+	public void GiveControl(byte targetPlayer, byte targetIndex)
+	{
+		if (CurrentPlayer != null && OwningNetWorker.IsServer)
+		{
+			Card card = TheCardIndex.GetCard(targetIndex);
+			byte slotToNeutralize = (byte)card.CurrentSlot;
+
+
+			card.Owner = null;
+			card.CurrentSlot = null;
+			
+			NeutralizeCardRPC(targetIndex);
+
+			foreach (MasqueradePlayer p in MasqueradePlayers)
+			{
+				if(p == card.LastOwner || card.IsFaceUp)
+					AuthoritativeRPC("NeutralizeCardRPC", OwningNetWorker, p.NetworkingPlayer, false, targetIndex);
+				else
+					AuthoritativeRPC("NeutralizeFacedownRPC", OwningNetWorker, p.NetworkingPlayer, false, card.LastOwner.PlayerIndex, slotToNeutralize);
+
+			}
+
+			card.Owner = MasqueradePlayers[targetPlayer];
+
+			AddCardToBoards(targetPlayer, targetIndex);
+			card.SyncFlip();
+		}
+	}
+
+	[BRPC]
+	void NeutralizeCardRPC(byte cardIndex)
+	{
+		CustomConsole.Log("Neutralizing #" + cardIndex, Color.cyan);
+		foreach (IndexHand h in UsedHands)
+		{
+			h.RemoveIndex(cardIndex);
+		}
+	}
+
+	[BRPC]
+	void NeutralizeFacedownRPC(byte playerIndex, byte slotIndex)
+	{
+		CustomConsole.Log("Neutralizing Slot#" + slotIndex, Color.cyan);
+		UsedHands[playerIndex].RemoveFacedown(slotIndex);
+	}
+
+
+
+
 	#endregion
 
 	#region Start Game
@@ -1361,6 +1421,8 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 		TheDiscardPile.AddIndex(cardIndex);
 
 	}
+
+
 	#endregion
 
 	#region Update Display Values

@@ -68,6 +68,11 @@ namespace AdvancedInspector
         {
             public int integer;
             public string text;
+
+            public override string ToString()
+            {
+                return text;
+            }
         }
 
         [Collection(AlwaysExpanded = true)]

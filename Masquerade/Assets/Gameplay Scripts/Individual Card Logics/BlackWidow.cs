@@ -1,9 +1,23 @@
-﻿public class BlackWidow : CardLogic, IOnKilled
+﻿using System.Collections;
+
+public class BlackWidow : CardLogic, IOnKilled
 {
-	void IOnKilled.OnKilled(Card killer, DeathContext context)
+	void IOnKilled.OnKilled(Card killer, DeathContext context, System.Action callback)
 	{
 		if (context == DeathContext.DEFENDING)
-			killer.KillWithContext(Card, DeathContext.OTHER);
+			Card.StartCoroutine(doTriggerCOR(killer, context, (() => callback())));
+
+	}
+
+	IEnumerator doTriggerCOR(Card killer, DeathContext context, System.Action callback)
+	{
+		bool finished = false;
+
+		killer.StartCoroutine(killer.KillWithContext(Card, DeathContext.OTHER, ((actuallyDied) => finished = true)));
+		while (!finished)
+			yield return null;
+
+		callback();
 	}
 
 }

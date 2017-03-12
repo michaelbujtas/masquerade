@@ -1,8 +1,5 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
-using AdvancedInspector;
-
-[AdvancedInspector]
 public class CardIndex : MonoBehaviour {
 
 	public const byte PLAYER_1_FACEDOWN = 201;
@@ -13,18 +10,15 @@ public class CardIndex : MonoBehaviour {
 	public const byte CANCEL_CHOICE = 206;
 
 
-	[Inspect]
 	public string Path = "Assets\\Resources\\CardList.csv";
 
-	[Inspect]
 	public List<string> SetNames = new List<string>();
 
 
 	/*[Inspect]
 	public List<GameObject> Sets = new List<GameObject>();*/
 
-	[Inspect]
-	Dictionary<byte, Card> Cards = new Dictionary<byte, Card>();
+	public Dictionary<byte, Card> Cards = new Dictionary<byte, Card>();
 
 
 

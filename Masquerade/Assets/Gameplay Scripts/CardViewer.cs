@@ -7,6 +7,8 @@ using System.Linq;
 
 public class CardViewer : MonoBehaviour {
 
+	public IndexCardChoiceMenu cardsInPlaySelector;
+
 	public List<GameObject> otherScreens = new List<GameObject>();
 
 	public GameObject visuals;
@@ -35,7 +37,7 @@ public class CardViewer : MonoBehaviour {
 		{
 			CardRenderer capturedRenderer = CardsInPlay[i];
 
-			CardsInPlay[i].Background.GetComponent<Button>().onClick.AddListener(
+			CardsInPlay[i].Background.GetComponent<RightClickListener>().rightClick.AddListener(
 				delegate {
 					OnAnyCardButtonUI(capturedRenderer.Index);
 				}
@@ -58,16 +60,21 @@ public class CardViewer : MonoBehaviour {
 
 	public void OnAnyCardButtonUI(byte index)
 	{
+
 		Card c = CardIndex.GetCard(index);
 
-		visuals.SetActive(true);
+		if (c != null)
+		{
+				visuals.SetActive(true);
 
-		cardRenderer.Index = index;
-		cardRenderer.SetFacing(c.IsFaceUp);
-		cardRenderer.RefreshCardImage();
+				cardRenderer.Index = index;
+				cardRenderer.SetFacing(c.IsFaceUp);
+				cardRenderer.RefreshCardImage();
 
-		rulesText.text = c.RulesText;
-		flavorText.text = c.FlavorText;
+				rulesText.text = c.RulesText;
+				flavorText.text = c.FlavorText;
+		}
+
 
 
 	}

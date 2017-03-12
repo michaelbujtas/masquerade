@@ -2,22 +2,23 @@
 
 public interface IAfterAttacking
 {
-	void AfterAttacking(Card defender);
+	void AfterAttacking(Card defender, System.Action callback);
 }
 
 public interface IBeforeAttacking
 {
-	void BeforeAttacking(Card defender);
+	void BeforeAttacking(Card defender, System.Action callback);
 }
 
 public interface IOnKilled
 {
-	void OnKilled(Card killer, DeathContext context);
+	void OnKilled(Card killer, DeathContext context, System.Action callback);
 }
-public interface IOnDeath
+
+/*public interface IOnDeath
 {
 	void OnDeath();
-}
+}*/
 
 public interface IActivatedAbility
 {
@@ -46,9 +47,19 @@ public interface IStaticEffect
 }
 
 //This is for keywords that are on all the time. 
+//Specifically, it exists for things that have keywords when they're not in play, like the King.
+//Most things that only have keywords sometimes grant them as a self-buff instead.
+//Keywords exist in buffs at all because Arthur gives one to the King.
+//There is no good reason to use self-buffs instead of this, or the other way around. Both work.
 public interface IHasKeywords
 {
 	List<Card.Keyword> GetKeywords();
 }
+
+public interface IFlipEffect
+{
+	void OnFlip(bool flippedFaceUp, System.Action callback);
+}
+
 
 

@@ -1,14 +1,14 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+
 using AdvancedInspector;
 
 [AdvancedInspector]
 public class IndexDeck : MonoBehaviour {
 
 	
-
-public List<byte> Indices = new List<byte>();
-
+	[Inspect]
+	public List<byte> Indices = new List<byte>();
 
 	[Inspect]
 	public bool ShouldStack = false;

@@ -133,4 +133,29 @@ public class IndexHand : MonoBehaviour {
 		}
 		return false;
 	}
+
+	public bool RemoveFacedown(byte preferredSlotIndex)
+	{
+		byte currentIndex = Renderers[preferredSlotIndex].Index;
+		if(currentIndex >= CardIndex.PLAYER_1_FACEDOWN  && currentIndex <= CardIndex.PLAYER_4_FACEDOWN)
+		{
+			Renderers[preferredSlotIndex].Index = CardIndex.EMPTY_SLOT;
+			Renderers[preferredSlotIndex].RefreshCardImage();
+			return true;
+		}
+		return false;
+	}
+
+	public bool HasFacedown
+	{
+		get
+		{
+			var faceDownCards =
+			from r in Renderers
+			where r.Card != null && !r.Card.IsFaceUp
+			select r.Index;
+
+			return faceDownCards.Count() > 0;
+		}
+	}
 }

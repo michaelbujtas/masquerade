@@ -496,6 +496,23 @@ Take a look at the video for more information. It's an example of what the AI ca
 - Fixed a culture variation exception in saving colors in the preferences. 
 - Fixed a null occurring while watching a value.
 
+1.71:
+[CHANGES]
+- Introducing Menu Attribute, a way to add option menu to a field from an attribute.
+- TabAttribute is now a IRuntimeAttribute, which means the tab description can be changed per derived type or as you wish.
+- Derive from "AIStateMachineBehaviour" if you want your StateMachineBehaviour to be displayed by Advanced Inspector.
+[FIXES]
+- Performance improvements; 20% refresh speed boost and -40% memory allocation.
+- Property drawers bound by attributes were not being recongnized anymore. Fixed!
+- Changed how Apply/Revert works with prefabs, since the data was reverted, but not the link to the prefabs. Some issues still need to be resolved.
+- DescriptorAttribute applied directly to Enum can now target a static method delegate.
+- Apply "SetDirty" when a Method attribute has a undo message so that Prefabs can be considered modified.
+- Namespaced some classes that weren't previously.
+- Fixed an issue when a field is UnityEngine.Object and targets is hosting a MonoBehaviour.
+- Added an "inversing" condition similar to Inspect Attribute to the ReadOnly Attribute.
+- Extracted the Selection Tracker from the DLL so that people can change its shortcut, if wanted.
+- Rev A: Mistakingly flagged "AddAttribute" in InspectorField as private.
+
 1.60 and above is only supported on Unity 5.2+
 You may require to disable custom Advanced Inspector if you wish to use 1.60 on 5.1x.
 

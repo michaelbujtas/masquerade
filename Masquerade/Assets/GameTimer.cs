@@ -1,38 +1,39 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using AdvancedInspector;
 using TMPro;
 using System;
 using BeardedManStudios.Network;
 
 public class GameTimer : SimpleNetworkedMonoBehavior {
-	[Inspect]
+
 	public float GracePeriod = 1;
 
-	[Inspect]
 	public float MainTimer;
 
 
 	public bool MainTimerDone = false;
 
-	[Inspect]
+	public bool MainTimerPaused = false;
+
 	public NamedValueField TimerText;
+	TimerDelegate mainTimerDelegate;
 
-	public delegate void MainTimerDelegate();
+	public float SubTimer = 0;
+	public bool SubTimerDone = true;
 
-	MainTimerDelegate mainTimerDelegate;
+	TimerDelegate subTimerDelegate;
 
-	// Use this for initialization
-	void Start() {
 
-	}
+	public NamedValueField SubTimerText;
 
-	// Update is called once per frame
+	public delegate void TimerDelegate();
+
+
 	void Update() {
 
-
-		if (MainTimer > 0 && !MainTimerDone)
+		//Main Timer
+		if (MainTimer > 0 && !MainTimerDone && !MainTimerPaused)
 		{
 			MainTimer -= Time.deltaTime;
 			if (MainTimer <= 0)
@@ -62,11 +63,49 @@ public class GameTimer : SimpleNetworkedMonoBehavior {
 
 		TimerText.SetValue(MainTimer);
 
+		//Sub-Timer		
+		if (SubTimer > 0 && !SubTimerDone)
+		{
+			SubTimer -= Time.deltaTime;
+			if (SubTimer <= 0)
+			{
+				SubTimer = 0;
+				SubTimerDone = true;
+				if (subTimerDelegate != null)
+					subTimerDelegate();
+			}
+		}
+
+		if(SubTimerDone)
+		{
+			SubTimerText.Visuals.SetActive(false);
+		}
+		else
+		{
+			SubTimerText.Visuals.SetActive(true);
+			if (SubTimer < 10)
+			{
+				if (SubTimer < 1)
+				{
+					SubTimerText.SetColors(Color.red, Color.white);
+				}
+				else
+				{
+					SubTimerText.SetColors(Color.yellow, Color.white);
+				}
+			}
+			else
+			{
+				SubTimerText.SetColors(Color.green, Color.white);
+			}
+
+			SubTimerText.SetValue(SubTimer);
+		}
 
 
 	}
 
-	public void SetMainTimer(float value, MainTimerDelegate onEnd)
+	public void SetMainTimer(float value, TimerDelegate onEnd)
 	{
 
 		MainTimerDone = false;
@@ -81,7 +120,7 @@ public class GameTimer : SimpleNetworkedMonoBehavior {
 
 	}
 
-	public MainTimerDelegate AddMainTimerDelegate(MainTimerDelegate onEnd)
+	public TimerDelegate AddMainTimerDelegate(TimerDelegate onEnd)
 	{
 		mainTimerDelegate += onEnd;
 
@@ -91,9 +130,62 @@ public class GameTimer : SimpleNetworkedMonoBehavior {
 		return onEnd;
 	}
 
-	public void RemoveMainTimerDelegate(MainTimerDelegate del)
+	public void RemoveMainTimerDelegate(TimerDelegate del)
 	{
 		mainTimerDelegate -= del;
+	}
+
+	public void PauseMainTimer()
+	{
+		MainTimerPaused = true;
+		if (OwningNetWorker.IsServer)
+		{
+			foreach (NetworkingPlayer p in OwningNetWorker.Players)
+				AuthoritativeRPC("SyncMainTimerPause", OwningNetWorker, p, false, MainTimerPaused);
+		}
+	}
+
+	public void ResumeMainTimer()
+	{
+		MainTimerPaused = false;
+		if (OwningNetWorker.IsServer)
+		{
+			foreach (NetworkingPlayer p in OwningNetWorker.Players)
+				AuthoritativeRPC("SyncMainTimerPause", OwningNetWorker, p, false, MainTimerPaused);
+		}
+	}
+
+	[BRPC]
+	public void SyncMainTimerPause(bool paused)
+	{
+		MainTimerPaused = paused;
+	}
+
+	public void StartSubTimer(float value, TimerDelegate onEnd)
+	{
+		SubTimerDone = false;
+		if (OwningNetWorker.IsServer)
+		{
+			foreach (NetworkingPlayer p in OwningNetWorker.Players)
+				AuthoritativeRPC("SyncSubTimerDisplay", OwningNetWorker, p, false, value);
+		}
+		SubTimer = value + GracePeriod;
+		subTimerDelegate = onEnd;
+	}
+
+	public TimerDelegate AddSubTimerDelegate(TimerDelegate onEnd)
+	{
+		subTimerDelegate += onEnd;
+
+		if (SubTimer == 0)
+			onEnd();
+
+		return onEnd;
+	}
+
+	public void RemoveSubTimerDelegate(TimerDelegate del)
+	{
+		subTimerDelegate -= del;
 	}
 
 	[BRPC]
@@ -103,4 +195,32 @@ public class GameTimer : SimpleNetworkedMonoBehavior {
 		MainTimer = duration;
 	}
 
+	[BRPC]
+	public void SyncSubTimerDisplay(float duration)
+	{
+		SubTimer = duration;
+		SubTimerDone = false;
+		if (duration == 0)
+		{
+			SubTimerDone = true;
+			subTimerDelegate();
+		}
+	}
+
+
+	public void CancelSubTimer()
+	{
+		if(SubTimer > 0)
+		{
+			SubTimer = 0;
+			SubTimerDone = true;
+			subTimerDelegate();
+
+			if (OwningNetWorker.IsServer)
+			{
+				foreach (NetworkingPlayer p in OwningNetWorker.Players)
+					AuthoritativeRPC("SyncSubTimerDisplay", OwningNetWorker, p, false, SubTimer);
+			}
+		}
+	}
 }

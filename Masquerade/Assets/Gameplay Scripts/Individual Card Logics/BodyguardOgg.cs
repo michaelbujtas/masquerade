@@ -8,7 +8,7 @@ public class BodyguardOgg : CardLogic, IAfterAttacking {
 
 	int stacks = 0;
 
-	void IAfterAttacking.AfterAttacking(Card defender)
+	void IAfterAttacking.AfterAttacking(Card defender, System.Action callback)
 	{
 		if (!Card.HasBuff(buff))
 		{
@@ -23,6 +23,8 @@ public class BodyguardOgg : CardLogic, IAfterAttacking {
 		buff.Defense = stacks * -1;
 
 		Card.Sync();
+		if (callback != null)
+			callback();
 	}
 
 }

@@ -3,10 +3,11 @@
 
 public class KingAlric : CardLogic, IOnKilled, IEndPhase, IHasKeywords
 {
-	void IOnKilled.OnKilled(Card killer, DeathContext context)
+	void IOnKilled.OnKilled(Card killer, DeathContext context, System.Action callback)
 	{
-		CustomConsole.LogNetworked(killer.Owner.Identity.Name + " has killed the King! They win!", UnityEngine.Color.yellow);
-		Card.Networking.EndGame(killer.Owner);
+		CustomConsole.LogNetworked(killer.LastOwner.Identity.Name + " has killed the King! They win!", UnityEngine.Color.yellow);
+		Card.Networking.EndGame(killer.LastOwner);
+		callback();
 	}
 	
 

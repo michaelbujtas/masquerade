@@ -1,14 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
-using AdvancedInspector;
-
-[AdvancedInspector]
 public class EffectIcon : MonoBehaviour {
 
-	[Inspect]
 	public Sprite NormalSprite;
-	[Inspect]
 	public Sprite EffectSprite;
 	Image image;
 

@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 
 using UnityEngine;
@@ -128,7 +126,7 @@ namespace AdvancedInspector
             Type type = original.GetType();
             ScriptableComponent copy = original.Instantiate();
 
-            foreach (FieldInfo info in GetFields(type, false))
+            foreach (FieldInfo info in TypeUtility.GetFields(type))
             {
                 if (info.IsLiteral)
                     continue;
@@ -146,7 +144,7 @@ namespace AdvancedInspector
             Type type = original.GetType();
             object copy = Activator.CreateInstance(type, true);
 
-            foreach (FieldInfo info in GetFields(type, false))
+            foreach (FieldInfo info in TypeUtility.GetFields(type))
             {
                 if (info.IsLiteral)
                     continue;
@@ -155,21 +153,6 @@ namespace AdvancedInspector
             }
 
             return copy;
-        }
-
-        private static List<FieldInfo> GetFields(Type type, bool recursive)
-        {
-            List<FieldInfo> infos;
-
-            if (recursive)
-                infos = type.GetFields(BindingFlags.NonPublic | BindingFlags.Instance).ToList();
-            else
-                infos = type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy).ToList();
-
-            if (type.BaseType != null && type.BaseType != typeof(object) && type.BaseType != typeof(UnityEngine.Object))
-                infos.AddRange(GetFields(type.BaseType, true));
-
-            return infos;
         }
     }
 }
