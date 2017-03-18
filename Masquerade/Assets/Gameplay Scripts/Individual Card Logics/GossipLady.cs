@@ -6,9 +6,61 @@ public class GossipLady : CardLogic, IFlipEffect {
 
 	void IFlipEffect.OnFlip(bool flippedFaceUp, System.Action callback)
 	{
-		Card.StartCoroutine(triggerCOR((() => callback())));
+		if (flippedFaceUp)
+			Card.StartCoroutine(triggerCOR((() => callback())));
+		else
+			callback();
 	}
 
+
+	IEnumerator triggerCOR(System.Action callback)
+	{
+		//Flip every card
+		Dictionary<byte, Trigger> triggers = new Dictionary<byte, Trigger>();
+
+		foreach (MasqueradePlayer m in Card.Networking.MasqueradePlayers)
+		{
+			foreach (byte b in m.Hand.CardsOwned)
+			{
+				Card c = Card.Networking.TheCardIndex.GetCard(b);
+
+				if (!c.IsFaceUp)
+				{
+					bool flipped = c.FlipNoTriggers(true);
+					if (flipped)
+					{
+						if (c.Logic is IFlipEffect)
+						{
+							if (c.Logic.TriggerIsPlausible(Networking.CurrentPlayer))
+							{
+								Trigger newTrigger = new Trigger(c.Logic);
+								newTrigger.Resolution = () =>
+								{
+									((IFlipEffect)newTrigger.Source).OnFlip(true, () => newTrigger.PostResolution());
+								};
+								triggers.Add((byte)c.Index, newTrigger);
+							}
+						}
+					}
+
+				}
+			}
+		}
+		Response<bool> response = new Response<bool>(0);
+		response.Set();
+
+		Card.StartCoroutine(Networking.HandleTriggerStack2COR(response, triggers));
+
+		while (response.FlagWaiting)
+			yield return null;
+
+		callback();
+
+	}
+
+
+
+	/*
 	IEnumerator triggerCOR(System.Action callback)
 	{
 		
@@ -99,5 +151,5 @@ public class GossipLady : CardLogic, IFlipEffect {
 		callback();
 
 
-	}
+	}*/
 }

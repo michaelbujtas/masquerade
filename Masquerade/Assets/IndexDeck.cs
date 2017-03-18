@@ -62,6 +62,12 @@ public class IndexDeck : MonoBehaviour {
 		return retVal;
 	}
 
+	public void ShuffleAway(byte index)
+	{
+		Indices.Add(index);
+		Shuffle();
+	}
+
 	public int CardsRemaining
 	{
 		get { return Indices.Count; }

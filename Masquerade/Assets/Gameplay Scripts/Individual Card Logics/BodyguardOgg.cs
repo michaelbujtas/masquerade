@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class BodyguardOgg : CardLogic, IAfterAttacking {
 
-	Card.Buff buff;
+	Buff buff;
 
 	int stacks = 0;
 
@@ -13,7 +13,7 @@ public class BodyguardOgg : CardLogic, IAfterAttacking {
 		if (!Card.HasBuff(buff))
 		{
 			stacks = 0;
-			buff = Card.AddBuff(0, 0, true, true);
+			buff = Card.AddBuff(0, 0, true, true, this);
 		}
 
 		stacks++;

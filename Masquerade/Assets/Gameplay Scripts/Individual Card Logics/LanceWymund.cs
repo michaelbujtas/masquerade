@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class LanceWymund : CardLogic, IStaticEffect {
 
-	Card.Buff buff = null;
+	Buff buff = null;
 
 	bool wasTurnedOn;
 
@@ -22,7 +22,7 @@ public class LanceWymund : CardLogic, IStaticEffect {
 
 
 		if (!Card.HasBuff(buff))
-			buff = Card.AddBuff(0, 0, true, true);
+			buff = Card.AddBuff(0, 0, true, true, this);
 
 		if (isTurnedOn && Card.IsAlive)
 			buff.Attack = 7;

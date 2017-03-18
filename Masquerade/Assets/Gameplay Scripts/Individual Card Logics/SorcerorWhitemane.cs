@@ -9,14 +9,14 @@ public class SorcerorWhitemane : CardLogic, IStartPhase {
 		return currentPlayer == Card.Owner && Card.IsFaceUp && Card.IsAlive;
 	}
 
-	Card.Buff buff = null;
+	Buff buff = null;
 
-	void IStartPhase.OnStartPhase(MasqueradePlayer currentPlayer, Response<bool> response)
+	void IStartPhase.OnStartPhase(MasqueradePlayer currentPlayer, System.Action callback)
 	{
 		if (currentPlayer == Card.Owner && Card.IsFaceUp && Card.IsAlive)
 		{
 			if(!Card.HasBuff(buff))
-				buff = Card.AddBuff(0, 0, true, true);
+				buff = Card.AddBuff(0, 0, true, true, this);
 
 
 			List<byte> targets = new List<byte>();
@@ -24,7 +24,7 @@ public class SorcerorWhitemane : CardLogic, IStartPhase {
 			foreach (byte b in Card.Owner.Hand.CardsOwned)
 			{
 				Card c = Card.Networking.TheCardIndex.GetCard(b);
-				if(!c.HasKeyword(Card.Keyword.CANT_BE_DISCARDED))
+				if(!c.HasKeyword(Keyword.CANT_BE_DISCARDED))
 				{
 					targets.Add(b);
 				}
@@ -44,7 +44,7 @@ public class SorcerorWhitemane : CardLogic, IStartPhase {
 
 
 					Card.Networking.TheCardIndex.GetCard(choice).Kill();
-					response.Fill(true);
+					callback();
 				}
 				else
 				{
@@ -55,7 +55,7 @@ public class SorcerorWhitemane : CardLogic, IStartPhase {
 					buff.Attack = 0;
 					buff.Defense = 0;
 					Card.Networking.SyncCard(Card);
-					response.Fill(true);
+					callback();
 				}
 
 			},
@@ -68,7 +68,7 @@ public class SorcerorWhitemane : CardLogic, IStartPhase {
 
 				Card.Networking.SyncCard(Card);
 
-				response.Fill(true);
+				callback();
 			},
 			new Color(0, .5f, 0)
 			));

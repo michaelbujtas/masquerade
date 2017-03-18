@@ -18,5 +18,19 @@ public class CardLogic //: ComponentMonoBehaviour
 	{
 		return true;
 	}
-	
+
+	protected GameplayNetworking Networking
+	{
+		get { return Card.Networking; }
+	}
+
+	protected GameTimer Timer
+	{
+		get { return Card.Networking.Timer; }
+	}
+
+	protected Card GetCard(byte index)
+	{
+		return Card.Networking.TheCardIndex.GetCard(index);
+	}
 }

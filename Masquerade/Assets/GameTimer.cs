@@ -137,21 +137,27 @@ public class GameTimer : SimpleNetworkedMonoBehavior {
 
 	public void PauseMainTimer()
 	{
-		MainTimerPaused = true;
-		if (OwningNetWorker.IsServer)
+		if(!MainTimerPaused)
 		{
-			foreach (NetworkingPlayer p in OwningNetWorker.Players)
-				AuthoritativeRPC("SyncMainTimerPause", OwningNetWorker, p, false, MainTimerPaused);
+			MainTimerPaused = true;
+			if (OwningNetWorker.IsServer)
+			{
+				foreach (NetworkingPlayer p in OwningNetWorker.Players)
+					AuthoritativeRPC("SyncMainTimerPause", OwningNetWorker, p, false, MainTimerPaused);
+			}
 		}
 	}
 
 	public void ResumeMainTimer()
 	{
-		MainTimerPaused = false;
-		if (OwningNetWorker.IsServer)
+		if(MainTimerPaused)
 		{
-			foreach (NetworkingPlayer p in OwningNetWorker.Players)
-				AuthoritativeRPC("SyncMainTimerPause", OwningNetWorker, p, false, MainTimerPaused);
+			MainTimerPaused = false;
+			if (OwningNetWorker.IsServer)
+			{
+				foreach (NetworkingPlayer p in OwningNetWorker.Players)
+					AuthoritativeRPC("SyncMainTimerPause", OwningNetWorker, p, false, MainTimerPaused);
+			}
 		}
 	}
 
@@ -161,7 +167,7 @@ public class GameTimer : SimpleNetworkedMonoBehavior {
 		MainTimerPaused = paused;
 	}
 
-	public void StartSubTimer(float value, TimerDelegate onEnd)
+	public TimerDelegate StartSubTimer(float value, TimerDelegate onEnd)
 	{
 		SubTimerDone = false;
 		if (OwningNetWorker.IsServer)
@@ -171,6 +177,7 @@ public class GameTimer : SimpleNetworkedMonoBehavior {
 		}
 		SubTimer = value + GracePeriod;
 		subTimerDelegate = onEnd;
+		return onEnd;
 	}
 
 	public TimerDelegate AddSubTimerDelegate(TimerDelegate onEnd)
@@ -203,7 +210,8 @@ public class GameTimer : SimpleNetworkedMonoBehavior {
 		if (duration == 0)
 		{
 			SubTimerDone = true;
-			subTimerDelegate();
+			if(subTimerDelegate != null)
+				subTimerDelegate();
 		}
 	}
 
@@ -214,7 +222,8 @@ public class GameTimer : SimpleNetworkedMonoBehavior {
 		{
 			SubTimer = 0;
 			SubTimerDone = true;
-			subTimerDelegate();
+			if(subTimerDelegate != null)
+				subTimerDelegate();
 
 			if (OwningNetWorker.IsServer)
 			{

@@ -1,0 +1,7 @@
+﻿public enum Keyword
+{
+	CANT_BE_KILLED,
+	CANT_BE_DISCARDED,
+	NO_BONUSES,
+	START_PHASE_PARASITE
+}

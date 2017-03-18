@@ -35,8 +35,8 @@ public class KingAlric : CardLogic, IOnKilled, IEndPhase, IHasKeywords
 		}
 	}
 
-	List<Card.Keyword> keywords = new List<Card.Keyword>() { Card.Keyword.CANT_BE_DISCARDED };
-	List<Card.Keyword> IHasKeywords.GetKeywords()
+	List<Keyword> keywords = new List<Keyword>() { Keyword.CANT_BE_DISCARDED };
+	List<Keyword> IHasKeywords.GetKeywords()
 	{
 		return keywords;
 	}

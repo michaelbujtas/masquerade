@@ -114,30 +114,43 @@ public class CardRenderer : MonoBehaviour
 
     }
 
-	string FormatCombatValue(int value, FaceUpBonus bonus, int buffs)
+	string FormatCombatValue(int value, FaceUpBonus bonus, int buffs, bool noBonuses)
 	{
 		string retVal = value.ToString();
 
+		
 		if (bonus == FaceUpBonus.FACE_UP)
 		{
 			if (dummyFacing)
 			{
-				retVal = "<color=#00ff00>" + retVal + "</color>";
+				if(noBonuses)
+					retVal = "<color=#006600>" + retVal + "</color>";
+				else
+					retVal = "<color=#00ff00>" + retVal + "</color>";
 			}
 			else
 			{
-				retVal = "<color=#ff0000>" + retVal + "</color>";
+				if (noBonuses)
+					retVal = "<color=#660000>" + retVal + "</color>";
+				else
+					retVal = "<color=#ff0000>" + retVal + "</color>";
 			}
 		}
 		else if (bonus == FaceUpBonus.FACE_DOWN)
 		{
 			if (dummyFacing)
 			{
-				retVal = "<color=#ff0000>" + retVal + "</color>";
+				if (noBonuses)
+					retVal = "<color=#660000>" + retVal + "</color>";
+				else
+					retVal = "<color=#ff0000>" + retVal + "</color>";
 			}
 			else
 			{
-				retVal = "<color=#00ff00>" + retVal + "</color>";
+				if (noBonuses)
+					retVal = "<color=#006600>" + retVal + "</color>";
+				else
+					retVal = "<color=#00ff00>" + retVal + "</color>";
 			}
 		}
 		else if (buffs != 0)
@@ -190,8 +203,8 @@ public class CardRenderer : MonoBehaviour
 					else
 						SetFacing((bool)forceFaceUp);
 
-					AttackText.text = FormatCombatValue(Card.GetCombatAttack(dummyFacing), Card.AttackBonus, Card.TotalAttackBuff);
-					DefenseText.text = FormatCombatValue(Card.GetCombatDefense(dummyFacing), Card.DefenseBonus, Card.TotalDefenseBuff);
+					AttackText.text = FormatCombatValue(Card.GetCombatAttack(dummyFacing), Card.AttackBonus, Card.TotalAttackBuff, Card.HasKeyword(Keyword.NO_BONUSES));
+					DefenseText.text = FormatCombatValue(Card.GetCombatDefense(dummyFacing), Card.DefenseBonus, Card.TotalDefenseBuff, Card.HasKeyword(Keyword.NO_BONUSES));
 					ClassSeal.Swap(Card.CardClass);
 					Nameplate.Swap(Card.Logic != null);
 					Art.sprite = Card.Art;

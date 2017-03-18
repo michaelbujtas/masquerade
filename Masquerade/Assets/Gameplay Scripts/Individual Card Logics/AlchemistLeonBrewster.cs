@@ -5,14 +5,14 @@ using UnityEngine;
 public class AlchemistLeonBrewster : CardLogic, IStaticEffect
 {
 
-	Dictionary<Card, Card.Buff> buffs = new Dictionary<Card, Card.Buff>();
+	Dictionary<Card, Buff> buffs = new Dictionary<Card, Buff>();
 
 	void IStaticEffect.StaticEffect()
 	{
 		if (Card.IsAlive && Card.IsFaceUp)
 		{
 
-			foreach (KeyValuePair<Card, Card.Buff> b in buffs)
+			foreach (KeyValuePair<Card, Buff> b in buffs)
 			{
 				if (b.Key.Owner != Card.Owner)
 				{
@@ -26,18 +26,18 @@ public class AlchemistLeonBrewster : CardLogic, IStaticEffect
 
 				if (!buffs.ContainsKey(c))
 				{
-					buffs.Add(c, c.AddBuff(0, 2, true, false));
+					buffs.Add(c, c.AddBuff(0, 2, true, false, this));
 				}
 
 				if (!c.HasBuff(buffs[c]))
-					buffs[c] = c.AddBuff(0,2, true, false);
+					buffs[c] = c.AddBuff(0,2, true, false, this);
 			}
 		}
 		else
 		{
 			if (buffs.Count > 0)
 			{
-				foreach (KeyValuePair<Card, Card.Buff> b in buffs)
+				foreach (KeyValuePair<Card, Buff> b in buffs)
 					b.Key.RemoveBuff(b.Value);
 				buffs.Clear();
 			}

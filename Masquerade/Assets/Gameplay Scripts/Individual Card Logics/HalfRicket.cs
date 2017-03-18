@@ -4,14 +4,14 @@ using UnityEngine;
 
 public class HalfRicket : CardLogic, IStaticEffect {
 
-	Card.Buff buff = null;
+	Buff buff = null;
 	int lastAttack = 0;
 	void IStaticEffect.StaticEffect()
 	{
 		if(Card.IsAlive)
 		{
 			if (!Card.HasBuff(buff))
-				buff = Card.AddBuff(0, 0, true, true);
+				buff = Card.AddBuff(0, 0, true, true, this);
 
 			lastAttack = buff.Attack;
 			buff.Attack = Card.Owner.Hand.CardsOwned.Count * 2;

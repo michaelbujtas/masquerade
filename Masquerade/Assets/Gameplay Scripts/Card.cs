@@ -179,27 +179,6 @@ public class Card : MonoBehaviour
 
 	}
 
-	public void Update()
-	{
-	}
-
-	public void Copy(Card newCard)
-	{
-		isFaceUp = newCard.isFaceUp;
-		Attack = newCard.Attack;
-		Defense = newCard.Defense;
-		AttackBonus = newCard.AttackBonus;
-		DefenseBonus = newCard.DefenseBonus;
-		CardName = newCard.CardName;
-
-
-		if (newCard.Logic != null)
-			CustomConsole.LogError("We can't copy cards with logics right now.");
-		//	Logic = newCard.Logic.Instantiate(gameObject, this) as CardLogic;
-
-	}
-
-
 	public int GetCombatAttack(bool? hypotheticalFacing = null)
 	{
 		bool useFacing = false;
@@ -214,9 +193,12 @@ public class Card : MonoBehaviour
 			if(b.BeforeBonus)
 				modifiedAttack += b.Attack;
 
-		if (useFacing && AttackBonus == FaceUpBonus.FACE_UP ||
+		if (!HasKeyword(Keyword.NO_BONUSES))
+		{
+			if (useFacing && AttackBonus == FaceUpBonus.FACE_UP ||
 		   !useFacing && AttackBonus == FaceUpBonus.FACE_DOWN)
 				modifiedAttack *= 2;
+		}
 
 		foreach (Buff b in Buffs)
 			if (!b.BeforeBonus)
@@ -240,9 +222,12 @@ public class Card : MonoBehaviour
 			if (b.BeforeBonus)
 				modifiedDefense += b.Defense;
 
-		if (useFacing && DefenseBonus == FaceUpBonus.FACE_UP ||
-		   !useFacing && DefenseBonus == FaceUpBonus.FACE_DOWN)
-			 modifiedDefense *= 2;
+		if(!HasKeyword(Keyword.NO_BONUSES))
+		{
+			if (useFacing && DefenseBonus == FaceUpBonus.FACE_UP ||
+			   !useFacing && DefenseBonus == FaceUpBonus.FACE_DOWN)
+				modifiedDefense *= 2;
+		}
 
 
 
@@ -292,11 +277,18 @@ public class Card : MonoBehaviour
 	public IEnumerator Flip(System.Action callback)
 	{
 		FlipNoTriggers();
-		
-		if (Logic is IFlipEffect)
-				((IFlipEffect)Logic).OnFlip(IsFaceUp, null);
 
-		yield return null;
+
+		if (Logic is IFlipEffect)
+		{
+			bool flipDone = false;
+			((IFlipEffect)Logic).OnFlip(IsFaceUp, () => flipDone = true);
+
+
+			while (!flipDone)
+				yield return null;
+		}
+
 		callback();
 	}
 
@@ -308,17 +300,19 @@ public class Card : MonoBehaviour
 		}
 		else
 		{
+			FlipNoTriggers();
 
-			bool flipDone = false;
-			StartCoroutine(Flip(() => flipDone = true));
+			if (Logic is IFlipEffect)
+			{
+				bool flipDone = false;
+				((IFlipEffect)Logic).OnFlip(IsFaceUp, () => flipDone = true);
 
-			while (!flipDone)
-				yield return null;
+				while (!flipDone)
+					yield return null;
+			}
 
 			callback(true);
-
 		}
-
 	}
 
 	public void FlipNoTriggers()
@@ -354,6 +348,14 @@ public class Card : MonoBehaviour
 		Networking.SyncCard(this);
 
 
+		//Before Attacking
+		if (Logic is IBeforeAttacking)
+		{
+			bool beforeAttackDone = false;
+			((IBeforeAttacking)Logic).BeforeAttacking(defender, (() => beforeAttackDone = true));
+			while (!beforeAttackDone)
+				yield return null;
+		}
 
 		//Calculate Attack and Defense
 		int attack = GetCombatAttack();
@@ -375,22 +377,24 @@ public class Card : MonoBehaviour
 		bool defenderDied = false;
 
 		//Kill Loser
-		if (attack >= defense && CanKill(defender) && defender.CanBeKilledBy(this))
+		if (attack >= defense)
 		{
-
-			CustomConsole.Log("Defending player owns " + networking.UsedHands[defender.Owner.PlayerIndex].CardsOwned.Count + " cards.", logColor);
-
-			if (networking.UsedHands[defender.Owner.PlayerIndex].CardsOwned.Count == 1)
+			if (CanKill(defender) && defender.CanBeKilledBy(this))
 			{
-				bool BoardClearDrawFinished = false;
+				CustomConsole.Log("Defending player owns " + networking.UsedHands[defender.Owner.PlayerIndex].CardsOwned.Count + " cards.", logColor);
 
-				StartCoroutine(networking.DrawCardCOR(Owner.PlayerIndex, 1, (coroutineReturn) => { BoardClearDrawFinished = true; }));
+				if (networking.UsedHands[defender.Owner.PlayerIndex].CardsOwned.Count == 1)
+				{
+					bool BoardClearDrawFinished = false;
 
-				while (!BoardClearDrawFinished)
-					yield return null;
+					StartCoroutine(networking.DrawCardCOR(Owner.PlayerIndex, 1, (coroutineReturn) => { BoardClearDrawFinished = true; }));
+
+					while (!BoardClearDrawFinished)
+						yield return null;
+				}
+				yield return null;
+				defenderDied = defender.KillWithContextNoTriggers(this, DeathContext.DEFENDING);
 			}
-			yield return null;
-			defenderDied = defender.KillWithContextNoTriggers(this, DeathContext.DEFENDING);
 		}
 		else
 		{
@@ -480,7 +484,10 @@ public class Card : MonoBehaviour
 
 	public bool CanKill(Card other)
 	{
-		return true;
+		if (Logic is ICanKill)
+			return ((ICanKill)Logic).CanKill(other);
+		else
+			return true;
 	}
 
 	public IEnumerator KillWithContext(Card killer, DeathContext context, System.Action<bool> callback)
@@ -536,8 +543,12 @@ public class Card : MonoBehaviour
 					((IOnDeath)Logic).OnDeath();
 		}*/
 
-		IsAlive = false;
-		Networking.SendToDiscard(this);
+		if(IsAlive)
+		{
+			IsAlive = false;
+
+			Networking.SendToDiscard(this);
+		}
 	}
 
 
@@ -567,6 +578,9 @@ public class Card : MonoBehaviour
 		//Forget our tappedness
 		IsTapped = false;
 
+		
+		IsAlive = false;
+
 		//Forget basically everything else
 		Buffs.Clear();
 
@@ -579,14 +593,27 @@ public class Card : MonoBehaviour
 		CurrentSlot = null;
 	}
 
-	public Buff AddBuff(int attack, int defense, bool permanent, bool beforeBonus)
+	public Buff AddBuff(int attack, int defense, bool permanent, bool beforeBonus, CardLogic source)
 	{
-		Buff buff = new Buff(attack, defense, permanent, beforeBonus);
+		Buff buff = new Buff(attack, defense, permanent, beforeBonus, source, this);
 
 		Buffs.Add(buff);
 
 		Sync();
 		return buff;
+	}
+
+	public List<Buff> GetBuffs(Keyword keyword)
+	{
+		List<Buff> retVal = new List<Buff>();
+
+		for (int i = 0; i < Buffs.Count; i++)
+		{
+			if (Buffs[i].Keywords.Contains(keyword))
+				retVal.Add(Buffs[i]);
+		}
+
+		return retVal;
 	}
 
 	public bool RemoveBuff(Buff buff)
@@ -661,26 +688,5 @@ public class Card : MonoBehaviour
 	}
 
 
-	public class Buff
-	{
-		public Buff(int attack, int defense, bool permanent, bool beforeBonus)
-		{
-			Attack = attack;
-			Defense = defense;
-			Permanent = permanent;
-			BeforeBonus = beforeBonus;
-		}
-		public int Attack;
-		public int Defense;
-		public bool Permanent;
-		public bool BeforeBonus;
 
-		public List<Keyword> Keywords = new List<Keyword>();
-	}
-
-	public enum Keyword
-	{
-		CANT_BE_KILLED,
-		CANT_BE_DISCARDED
-	}
 }

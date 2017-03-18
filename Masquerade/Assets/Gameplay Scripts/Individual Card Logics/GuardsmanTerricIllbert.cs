@@ -12,16 +12,10 @@ public class GuardsmanTerricIllbert : CardLogic, IAfterAttacking {
 
 	IEnumerator triggerCOR(Card defender, System.Action callback)
 	{
-		
-		//Not our turn, we have to do subtimer bullshit
-		Card.Networking.Timer.PauseMainTimer();
-		Card.Networking.Timer.StartSubTimer(15, (() =>
-		{
-			//Actual timeout is handled in the trigger but this probably isn't allowed to be null or something?
-		}
-		));
 
-		List<CardLogic> triggers = new List<CardLogic>();
+
+		Dictionary<byte, Trigger> triggers = new Dictionary<byte, Trigger>();
+
 
 		foreach (byte b in defender.LastOwner.Hand.CardsOwned)
 		{
@@ -30,34 +24,32 @@ public class GuardsmanTerricIllbert : CardLogic, IAfterAttacking {
 			if (!c.IsFaceUp)
 			{
 				bool flipped = c.FlipNoTriggers(true);
-				if (c.Logic is IFlipEffect)
-					triggers.Add(c.Logic);
+				if (flipped)
+				{
+					if (c.Logic is IFlipEffect)
+					{
+						if (c.Logic.TriggerIsPlausible(Networking.CurrentPlayer))
+						{
+							Trigger newTrigger = new Trigger(c.Logic);
+							newTrigger.Resolution = () =>
+							{
+								((IFlipEffect)newTrigger.Source).OnFlip(true, () => newTrigger.PostResolution());
+							};
+							triggers.Add((byte)c.Index, newTrigger);
+						}
+					}
+				}
+
 			}
 		}
 
-		Response<bool> corReturn = new Response<bool>(0);
-		corReturn.Set();
-		Card.Networking.StartCoroutine(Card.Networking.HandleTriggerStackCOR(
-			defender.LastOwner.PlayerIndex,
-			corReturn,
-			triggers,
-			(logic, response) =>
-			{
-				((IFlipEffect)logic).OnFlip(true, () =>
-				{
-					response.Fill(true);
-				});
-			},
-			false
-		));
+		Response<bool> response = new Response<bool>(0);
+		response.Set();
 
-		while (corReturn.FlagWaiting)
+		Card.StartCoroutine(Networking.HandleTriggerStack2COR(response, triggers));
+
+		while (response.FlagWaiting)
 			yield return null;
-
-
-		//Not our turn, we have to restart the main timer
-		Card.Networking.Timer.ResumeMainTimer();
-		Card.Networking.Timer.CancelSubTimer();
 
 		callback();
 

@@ -11,11 +11,14 @@ public class Timm : CardLogic, IAfterAttacking
 				{
 					CustomConsole.Log("Timm should have just flipped down. His faceup status is " + Card.IsFaceUp, UnityEngine.Color.green);
 
-					if (callback != null)
-						callback();
+					callback();
 				})));
 
 
+		}
+		else
+		{
+			callback();
 		}
 	}
 

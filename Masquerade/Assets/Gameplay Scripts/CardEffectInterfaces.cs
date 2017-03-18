@@ -32,7 +32,7 @@ public interface IEndPhase
 
 public interface IStartPhase
 {
-	void OnStartPhase(MasqueradePlayer turn, Response<bool> response);
+	void OnStartPhase(MasqueradePlayer turn, System.Action callback);
 }
 
 public interface ISpecialStats
@@ -53,12 +53,22 @@ public interface IStaticEffect
 //There is no good reason to use self-buffs instead of this, or the other way around. Both work.
 public interface IHasKeywords
 {
-	List<Card.Keyword> GetKeywords();
+	List<Keyword> GetKeywords();
 }
 
 public interface IFlipEffect
 {
 	void OnFlip(bool flippedFaceUp, System.Action callback);
+}
+
+public interface ICanKill
+{
+	bool CanKill(Card other);
+}
+
+public interface IStartPhaseParasite
+{
+	void OnStartPhaseParasite(Card other, System.Action callback);
 }
 
 

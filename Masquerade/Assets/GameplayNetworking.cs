@@ -75,6 +75,14 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 		}
 	}
 
+	public MasqueradePlayer NextPlayer(MasqueradePlayer currentPlayer)
+	{
+		int nextIndex = currentPlayer.PlayerIndex + 1;
+		if (nextIndex >= MasqueradePlayers.Count)
+			nextIndex = 0;
+		return MasqueradePlayers[nextIndex];
+	}
+
 	public MasqueradePlayer GetPlayer(int playerIndex)
 	{
 		while (MasqueradePlayers.Count <= playerIndex)
@@ -205,27 +213,55 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 
 
 
-		List<CardLogic> StartPhaseTriggers = new List<CardLogic>();
-		foreach (byte b in UsedHands[playerIndex].CardsOwned)
+		Dictionary<byte, Trigger> StartPhaseTriggers = new Dictionary<byte, Trigger>();
+		foreach(Card c in GetCardsInPlay())
 		{
-			Card c = TheCardIndex.GetCard(b);
 			if (c.Logic is IStartPhase)
-				StartPhaseTriggers.Add(c.Logic);
+			{
+				if (c.Logic.TriggerIsPlausible(CurrentPlayer))
+				{
+					Trigger newTrigger = new Trigger(c.Logic);
+					newTrigger.Resolution = () =>
+					{
+						((IStartPhase)newTrigger.Source).OnStartPhase(CurrentPlayer,
+						() => newTrigger.PostResolution());
+					};
+
+					StartPhaseTriggers.Add((byte)c.Index, newTrigger);
+				}
+			}
+
+			List<Buff> parasites = c.GetBuffs(Keyword.START_PHASE_PARASITE);
+			foreach(Buff b in parasites)
+			{
+				Trigger newTrigger = new Trigger(b.Source);
+
+				newTrigger.Resolution = () =>
+				{
+					((IStartPhaseParasite)newTrigger.Source).OnStartPhaseParasite(c,
+					() => newTrigger.PostResolution());
+				};
+
+				StartPhaseTriggers.Add((byte)newTrigger.Source.Card.Index, newTrigger);
+			}
+				
+				
 		}
 
 
 		Response<bool> startPhaseTriggersResponse = coroutineReturns.Add();
 
-		StartCoroutine(HandleTriggerStackCOR(playerIndex, startPhaseTriggersResponse, StartPhaseTriggers,
+		StartCoroutine(HandleTriggerStack2COR(startPhaseTriggersResponse, StartPhaseTriggers));
+
+		/*StartCoroutine(HandleTriggerStackCOR(playerIndex, startPhaseTriggersResponse, StartPhaseTriggers,
 			delegate (CardLogic c, Response<bool> response)
 			{
 				((IStartPhase)c).OnStartPhase(CurrentPlayer, response);
 			}
-			));
+			));*/
 
 		while (startPhaseTriggersResponse.FlagWaiting)
 			yield return null;
-
 
 		foreach (byte b in UsedHands[playerIndex].CardsOwned)
 		{
@@ -357,6 +393,7 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 
 	#region Trigger Stacking
 
+	/*
 	public IEnumerator HandleTriggerStackCOR(byte playerIndex, Response<bool> coroutineReturn, List<CardLogic> allLogics, System.Action<CardLogic, Response<bool>> onTrigger, bool mainTimerBound = true)
 	{
 
@@ -444,6 +481,130 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 
 		coroutineReturn.Fill(true);
 		yield return null;
+	}
+	*/
+
+	public IEnumerator HandleTriggerStack2COR(Response<bool> coroutineReturn, Dictionary<byte, Trigger> triggers)
+	{
+
+		MasqueradePlayer apnapPlayer = CurrentPlayer;
+		bool dumpMode = false;
+		GameTimer.TimerDelegate timeout = Timer.AddMainTimerDelegate(() => dumpMode = true);
+
+		while (triggers.Count > 0)
+		{
+			//Get the current player's triggers
+			Dictionary<byte,Trigger> currentPlayerTriggers = new Dictionary<byte, Trigger>();
+			foreach (KeyValuePair<byte, Trigger> t in triggers)
+			{
+				if (t.Value.Source.Card.LastOwner == apnapPlayer)
+					currentPlayerTriggers.Add(t.Key, t.Value);
+			}
+
+			List<byte> options = new List<byte>();
+			foreach (KeyValuePair<byte, Trigger> t in currentPlayerTriggers)
+				options.Add(t.Key);
+
+			//Figure out if the current player has a decision to make
+			if (currentPlayerTriggers.Count > 1)
+			{
+				//Are we choosing at random?
+				if(dumpMode)
+				{
+					byte randomChoice = options[Random.Range(0, options.Count)];
+
+					bool choiceDone = false;
+					currentPlayerTriggers[randomChoice].Resolve(() => choiceDone = true);
+
+					triggers.Remove(randomChoice);
+
+					while (!choiceDone)
+						yield return null;
+
+				}
+				else
+				{
+					//We have a decision to make
+
+
+					bool choiceMade = false;
+					StartCoroutine(PickACardCOR(
+						apnapPlayer.PlayerIndex,
+						options.ToArray(),
+						(choice) =>
+						{
+							if (options.Contains(choice))
+							{
+								//Resolve that choice
+								currentPlayerTriggers[choice].Resolve(() => choiceMade = true);
+								//Remove it from the dictionary
+								triggers.Remove(choice);
+
+							}
+							else
+							{
+								//We failed the sanity check. we'll just try again
+								choiceMade = true;
+							}
+						},
+						(() => dumpMode = true),
+						Color.magenta,
+						apnapPlayer == CurrentPlayer
+						));
+
+					while (!choiceMade && !dumpMode)
+						yield return null;
+
+				}
+
+			}
+			else
+			{
+				//We have one trigger
+				if(currentPlayerTriggers.Count == 1)
+				{
+					//Resolve it
+					byte choice = currentPlayerTriggers.First().Key;
+
+					bool choiceDone = false;
+					currentPlayerTriggers[choice].Resolve(() => choiceDone = true);
+					//Remove it from the dictionary
+					currentPlayerTriggers.Remove(choice);
+					triggers.Remove(choice);
+
+					while (!choiceDone)
+						yield return null;
+				}
+				else //We have no triggers
+				{
+					MasqueradePlayer nextPlayer = NextPlayer(apnapPlayer);
+
+					Timer.CancelSubTimer();
+					if (nextPlayer != CurrentPlayer)
+					{
+						Timer.PauseMainTimer();
+						Timer.RemoveMainTimerDelegate(timeout);
+						Timer.RemoveSubTimerDelegate(timeout);
+						timeout = Timer.StartSubTimer(15, () => dumpMode = true);
+					}
+					else
+					{
+						Timer.ResumeMainTimer();
+						Timer.RemoveMainTimerDelegate(timeout);
+						Timer.RemoveSubTimerDelegate(timeout);
+						timeout = Timer.AddMainTimerDelegate(() => dumpMode = true);
+					}
+					apnapPlayer = nextPlayer;
+					dumpMode = false;
+				}
+			}
+
+		}
+		Timer.RemoveMainTimerDelegate(timeout);
+		Timer.RemoveSubTimerDelegate(timeout);
+		Timer.CancelSubTimer();
+		Timer.ResumeMainTimer();
+		coroutineReturn.Fill(true);
 	}
 
 	#endregion
@@ -1088,7 +1249,7 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 		card.IsFaceUp = shouldBeFaceup;
 		card.IsTapped = shouldBeTapped;
 		card.Buffs.Clear();
-		card.AddBuff(totalAttackBuff, totalDefenseBuff, false, false);
+		card.AddBuff(totalAttackBuff, totalDefenseBuff, false, false, null);
 	}
 
 	public void EnsureProperFlippedness(Card card)
@@ -1423,6 +1584,36 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 	}
 
 
+	#endregion
+
+	#region ShuffleAway
+
+	public void ShuffleAway(Card card)
+	{
+		card.ForgetHistory();
+		TheDeck.ShuffleAway((byte)card.Index);
+
+		ShuffleAwayRPC((byte)card.Index);
+
+
+		foreach (MasqueradePlayer p in MasqueradePlayers)
+		{
+			AuthoritativeRPC("SendToDiscardRPC", OwningNetWorker, p.NetworkingPlayer, false, card.Index);
+		}
+	}
+
+	[BRPC]
+	void ShuffleAwayRPC(byte cardIndex)
+	{
+		CustomConsole.Log("Shuffling " + TheCardIndex.GetCard(cardIndex).CardName + " into the deck.", Color.cyan);
+
+		foreach (IndexHand h in UsedHands)
+		{
+			h.RemoveIndex(cardIndex);
+		}
+		TheDiscardPile.RemoveIndex(cardIndex);
+
+	}
 	#endregion
 
 	#region Update Display Values

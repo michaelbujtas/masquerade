@@ -27,7 +27,7 @@ public class IndexDiscardPile : MonoBehaviour {
 
 		if(Contents.Count > 0)
 		{
-			Renderer.Index = Contents[Contents.Count];
+			Renderer.Index = Contents[Contents.Count - 1];
 		}
 		else
 		{

@@ -5,7 +5,7 @@ using UnityEngine;
 public class ArthurMourne : CardLogic, IStaticEffect
 {
 	Card theKing = null;
-	Card.Buff buff = null;
+	Buff buff = null;
 	void IStaticEffect.StaticEffect()
 	{
 		if (Card.IsAlive && Card.IsFaceUp)
@@ -31,8 +31,8 @@ public class ArthurMourne : CardLogic, IStaticEffect
 			{
 				if (!theKing.HasBuff(buff))
 				{
-					buff = theKing.AddBuff(0, 0, true, true);
-					buff.Keywords.Add(Card.Keyword.CANT_BE_KILLED);
+					buff = theKing.AddBuff(0, 0, true, true, this);
+					buff.Keywords.Add(Keyword.CANT_BE_KILLED);
 				}
 			}
 			

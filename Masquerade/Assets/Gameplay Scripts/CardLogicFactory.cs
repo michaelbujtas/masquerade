@@ -60,6 +60,21 @@ public class CardLogicFactory {
 				return new GuardsmanTerricIllbert();
 			case "gossip lady anneliese":
 				return new GossipLady();
+			case "princess isolda drago":
+				return new IsoldaDrago();
+			case "baron radolf maynard":
+				return new BaronRadolf();
+			case "nickie \"the shredder\" dickens":
+				return new NickieTheShredder();
+			case "ourri the nobleslayer":
+				return new OurriTheNobleslayer();
+			case "raz the shiv":
+				return new Poisoner();
+			case "poisoner roger baldwin":
+				return new Poisoner();
+			case "dancer isabella pascoe":
+				return new DancerIsabella();
+
 		}
 
 		return null;

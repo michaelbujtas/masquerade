@@ -12,23 +12,9 @@ public class Feck : CardLogic, IOnKilled {
 
 	IEnumerator triggerCOR(System.Action callback)
 	{
-		if (Card.LastOwner == Card.Networking.CurrentPlayer)
-		{
-			//It's our turn and we don't have to mess with subtimers at all.
-		}
-		else
-		{
-			//Not our turn, we have to do subtimer bullshit
-			Card.Networking.Timer.PauseMainTimer();
-			Card.Networking.Timer.StartSubTimer(15, (() =>
-			{
-				//What do we even do when Feck times out
-				//I think... nothing, here? 
-			}
-			));
-		}
+		
+		Dictionary<byte, Trigger> triggers = new Dictionary<byte, Trigger>();
 
-		List<CardLogic> triggers = new List<CardLogic>();
 
 		foreach (byte b in Card.LastOwner.Hand.CardsOwned)
 		{
@@ -37,45 +23,35 @@ public class Feck : CardLogic, IOnKilled {
 			if (!c.IsFaceUp)
 			{
 				bool flipped = c.FlipNoTriggers(true);
-				if (c.Logic is IFlipEffect)
-					triggers.Add(c.Logic);
+				if (flipped)
+				{
+					if (c.Logic is IFlipEffect)
+					{
+						if (c.Logic.TriggerIsPlausible(Networking.CurrentPlayer))
+						{
+							Trigger newTrigger = new Trigger(c.Logic);
+							newTrigger.Resolution = () =>
+							{
+								((IFlipEffect)newTrigger.Source).OnFlip(true, () => newTrigger.PostResolution());
+							};
+							triggers.Add((byte)c.Index, newTrigger);
+						}
+					}
+				}
+
 			}
 		}
 
-		Response<bool> corReturn = new Response<bool>(0);
-		corReturn.Set();
-		Card.Networking.StartCoroutine(Card.Networking.HandleTriggerStackCOR(
-			Card.LastOwner.PlayerIndex, 
-			corReturn, 
-			triggers, 
-			(logic, response) =>
-			{
-				((IFlipEffect)logic).OnFlip(true, () =>
-				{
-					response.Fill(true);
-				});
-			},
-			false
-		));
+		Response<bool> response = new Response<bool>(0);
+		response.Set();
 
-		while (corReturn.FlagWaiting)
+		Card.StartCoroutine(Networking.HandleTriggerStack2COR(response, triggers));
+
+		while (response.FlagWaiting)
 			yield return null;
-
-
-		if (Card.LastOwner == Card.Networking.CurrentPlayer)
-		{
-			//It's our turn and we don't have to mess with subtimers at all.
-		}
-		else
-		{
-			//Not our turn, we have to restart the main timer
-
-			Card.Networking.Timer.CancelSubTimer();
-			Card.Networking.Timer.ResumeMainTimer();
-		}
 
 		callback();
 
-		
+
 	}
 }

@@ -12,15 +12,10 @@ public class WarrinOldman : CardLogic, IFlipEffect
 			MasqueradePlayer owner = Card.LastOwner;
 
 
-			List<byte> allCards = new List<byte>();
-			foreach (MasqueradePlayer p in Card.Networking.MasqueradePlayers)
-				allCards.AddRange(p.Hand.CardsOwned);
-
-			for (int i = 0; i < allCards.Count; i++)
+			foreach (Card c in Networking.GetCardsInPlay())
 			{
-				Card c = Card.Networking.TheCardIndex.GetCard(allCards[i]);
-				if (c.IsFaceUp && c.CardClass == CardClass.SOLDIER)
-					Card.Networking.GiveControl(Card.LastOwner.PlayerIndex, allCards[i]);
+				if (c.IsFaceUp && c.CardClass == CardClass.SOLDIER && c.Owner != owner)
+					Card.Networking.GiveControl(owner.PlayerIndex, (byte)c.Index);
 			}
 
 

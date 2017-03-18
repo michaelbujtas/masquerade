@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class DanteTheStud : CardLogic, IStaticEffect
 {
-	Card.Buff buff = null;
+	Buff buff = null;
 	void IStaticEffect.StaticEffect()
 	{
 		if(Card.IsAlive)
@@ -13,8 +13,8 @@ public class DanteTheStud : CardLogic, IStaticEffect
 			{
 				if (!Card.HasBuff(buff))
 				{
-					buff = Card.AddBuff(3, 0, true, true);
-					buff.Keywords.Add(Card.Keyword.CANT_BE_KILLED);
+					buff = Card.AddBuff(3, 0, true, true, this);
+					buff.Keywords.Add(Keyword.CANT_BE_KILLED);
 				}
 			}
 			else
