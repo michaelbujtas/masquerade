@@ -40,6 +40,9 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 
 	public IndexCardChoiceMenu CardChoiceMenu;
 
+	public PlayerChoiceMenu ThePlayerChoiceMenu;
+
+
 	public EndGameScreen TheEndGameScreen;
 
 
@@ -328,22 +331,35 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 
 
 		StaticEffects();
-		for (int i = 0; i < MasqueradePlayers.Count; i++)
+
+		Dictionary<byte, Trigger> EndPhaseTriggers = new Dictionary<byte, Trigger>();
+		foreach (Card c in GetCardsInPlay())
 		{
-			IndexHand apnapHand = GetPlayer(PlaceInTurnOrder + i).Hand;
-			foreach (byte b in apnapHand.CardsOwned)
+			if (c.Logic is IEndPhase)
 			{
-				Card c = TheCardIndex.GetCard(b);
-				c.CleanupBuffsEOT();
-
-				if (c.Logic is IEndPhase)
+				if (c.Logic.TriggerIsPlausible(CurrentPlayer))
 				{
-					((IEndPhase)c.Logic).OnEndPhase(CurrentPlayer);
-				}
+					Trigger newTrigger = new Trigger(c.Logic);
+					newTrigger.Resolution = () =>
+					{
+						((IEndPhase)newTrigger.Source).OnEndPhase(CurrentPlayer,
+						() => newTrigger.PostResolution());
+					};
 
-				SyncCard(c);
+					EndPhaseTriggers.Add((byte)c.Index, newTrigger);
+				}
 			}
+			
 		}
+
+
+		Response<bool> endPhaseTriggersResponse = coroutineReturns.Add();
+
+		StartCoroutine(HandleTriggerStack2COR(endPhaseTriggersResponse, EndPhaseTriggers));
+
+		while (endPhaseTriggersResponse.FlagWaiting)
+			yield return null;
+
 		StaticEffects();
 
 
@@ -627,16 +643,18 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 		};
 
 
-		if (Timer.MainTimerDone)
-			timeout();
-		else
+		if (mainTimerBound)
 		{
 			Timer.AddMainTimerDelegate(timeout);
+		}
+		else
+		{
+			Timer.AddSubTimerDelegate(timeout);
+		}
 			AuthoritativeRPC("RequestChooseCardRPC", OwningNetWorker, MasqueradePlayers[playerIndex].NetworkingPlayer, false, response.Index, allChoices, onCancel != null, mainTimerBound, color);
 
 			while (response.FlagWaiting)
 				yield return null;
-		}
 
 		if (response.Result == CardIndex.CANCEL_CHOICE && onCancel != null)
 			onCancel();
@@ -645,7 +663,14 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 
 		response.Recycle();
 
-		Timer.RemoveMainTimerDelegate(timeout);
+		if(mainTimerBound)
+		{
+			Timer.RemoveMainTimerDelegate(timeout);
+		}
+		else
+		{
+			Timer.RemoveSubTimerDelegate(timeout);
+		}
 		yield return null;
 	}
 
@@ -700,7 +725,123 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 
 	#endregion
 
+	#region Pick a Player
+
+
+	public IEnumerator PickAPlayerCOR(byte playerIndex, byte[] allChoices, System.Action<byte> onChoice, System.Action onCancel, Color color, bool mainTimerBound = true)
+	{
+		Response<byte> response = cardRequestResponses.Add();
+
+
+
+		GameTimer.TimerDelegate timeout = delegate
+		{
+			CustomConsole.Log("Pick-A-Player request timed out. Cancel if I can, otherwise pick at random.");
+			if (onCancel == null)
+				response.Fill(allChoices[Random.Range(0, allChoices.Length)]);
+			else
+				response.Fill(CardIndex.CANCEL_CHOICE);
+		};
+
+
+		if (mainTimerBound)
+		{
+			Timer.AddMainTimerDelegate(timeout);
+		}
+		else
+		{
+			Timer.AddSubTimerDelegate(timeout);
+		}
+
+		AuthoritativeRPC("RequestChoosePlayerRPC", OwningNetWorker, MasqueradePlayers[playerIndex].NetworkingPlayer, false, response.Index, allChoices, onCancel != null, mainTimerBound, color);
+
+		while (response.FlagWaiting)
+			yield return null;
+
+		if (response.Result == CardIndex.CANCEL_CHOICE && onCancel != null)
+			onCancel();
+		else
+			onChoice(response.Result);
+
+		response.Recycle();
+
+		if (mainTimerBound)
+		{
+			Timer.RemoveMainTimerDelegate(timeout);
+		}
+		else
+		{
+			Timer.RemoveSubTimerDelegate(timeout);
+		}
+
+		yield return null;
+	}
+
+	[BRPC]
+	void RequestChoosePlayerRPC(byte choiceID, byte[] cards, bool canCancel, bool mainTimerBound, Color color)
+	{
+		List<byte> options = new List<byte>();
+		options.AddRange(cards);
+
+		CustomConsole.Log("Being asked to pick a player.");
+
+		if (canCancel)
+		{
+			ThePlayerChoiceMenu.GetChoice(
+				options,
+				color,
+				delegate (byte choice)
+				{
+					CustomConsole.Log("Choosing player: " + choice);
+					RPC("ResponseChoosePlayerRPC", NetworkReceivers.Server, choiceID, choice);
+				},
+				delegate
+				{
+					RPC("ResponseChoosePlayerRPC", NetworkReceivers.Server, choiceID, CardIndex.CANCEL_CHOICE);
+				},
+				mainTimerBound
+				);
+		}
+		else
+		{
+
+			ThePlayerChoiceMenu.GetChoice(
+				options,
+				color,
+				delegate (byte choice)
+				{
+					CustomConsole.Log("Choosing player: " + choice);
+					RPC("ResponseChoosePlayerRPC", NetworkReceivers.Server, choiceID, choice);
+				},
+				null,
+				mainTimerBound
+				);
+		}
+	}
+
+	[BRPC]
+	void ResponseChoosePlayerRPC(byte choiceID, byte choice)
+	{
+		cardRequestResponses.Responses[choiceID].Fill(choice);
+	}
+	#endregion
+
 	#region Draw Card
+
+	public void DrawCardFacing(byte playerIndex, int cardsToDraw = 1, bool faceUp = false)
+	{
+		for (int i = 0; i < cardsToDraw; i++)
+		{
+			byte cardIndex = TheDeck.Draw();
+			Card card = TheCardIndex.GetCard(cardIndex);
+			card.Owner = MasqueradePlayers[playerIndex];
+			card.IsAlive = true;
+			card.IsFaceUp = faceUp;
+			UpdateCardsInDeck(TheDeck.CardsRemaining);
+			AddCardToBoards(playerIndex, cardIndex);
+		}
+
+	}
 
 	public IEnumerator DrawCardCOR(byte playerIndex, int cardsToDraw = 1, System.Action<bool[]> callback = null)
 	{
@@ -952,6 +1093,7 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 			yield return null;
 		}
 		CustomConsole.Log("Got a response.", logColor);
+		bool actionFinished = false;
 
 		switch (response.Result.Type)
 		{
@@ -959,11 +1101,19 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 				CustomConsole.Log("Flipping card #" + response.Result.ActorIndex, logColor);
 				Card cardToFlip = TheCardIndex.GetCard(response.Result.ActorIndex);
 
+				if(cardToFlip.Owner == CurrentPlayer)
+				{
+					actionFinished = false;
+					StartCoroutine(cardToFlip.FlipAction(() => { actionFinished = true; }));
+					while (!actionFinished)
+						yield return null;
 
-				bool actionFinished = false;
-				StartCoroutine(cardToFlip.FlipAction(() => { actionFinished = true; }));
-				while (!actionFinished)
-					yield return null;
+				}
+				else
+				{
+					//Sanity check failed
+				}
+
 				break;
 			case CardAction.ATTACK:
 				CustomConsole.Log("Card #" + response.Result.ActorIndex + " attacks Card #" + response.Result.TargetIndex, logColor);
@@ -982,14 +1132,24 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 					defender = TheCardIndex.GetCard(randomTargetIndex);
 				}
 
+				bool sanityCheckPassed = true;
+				if (attacker.Owner != CurrentPlayer)
+					sanityCheckPassed = false;
+				if (!defender.OpenToAttack())
+					sanityCheckPassed = false;
+				if (attacker.Owner == defender.Owner)
+					sanityCheckPassed = false;
 
-
-				if (attacker.Owner != defender.Owner)
+				if (sanityCheckPassed)
 				{
 					actionFinished = false;
 					StartCoroutine(attacker.AttackAction(defender, () => { actionFinished = true; }));
 					while (!actionFinished)
 						yield return null;
+				}
+				else
+				{
+					//If we failed the sanity check right now you don't get your action back
 				}
 
 				break;
@@ -997,9 +1157,17 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 				CustomConsole.Log("Activating card #" + response.Result.ActorIndex, logColor);
 
 				actionFinished = false;
-				StartCoroutine(TheCardIndex.GetCard(response.Result.ActorIndex).ActivateAction(() => { actionFinished = true; }));
-				while (!actionFinished)
-					yield return null;
+				Card cardToActivate = TheCardIndex.GetCard(response.Result.ActorIndex);
+				if (cardToActivate.Owner == CurrentPlayer)
+				{
+					StartCoroutine(cardToActivate.ActivateAction(() => { actionFinished = true; }));
+					while (!actionFinished)
+						yield return null;
+				}
+				else
+				{
+					//Sanity check failed
+				}
 				break;
 			case CardAction.PASS:
 				CustomConsole.Log("Passing Turn.", logColor);
@@ -1123,9 +1291,16 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 
 					for (int i = 0; i < UsedHands.Count; i++)
 					{
+						byte b = (byte)i;
 						if (i != MyPlayerNumber)
-							potentialTargets.AddRange(UsedHands[i].CardsOpenToAttack);
+						{
+							if (UsedHands[i].FaceUpCards.Count > 0)
+								potentialTargets.AddRange(UsedHands[i].FaceUpCards);
+							else
+								potentialTargets.Add(((byte)(CardIndex.PLAYER_1_FACEDOWN + b)));
+						}
 					}
+
 					secondCardChoice = CardChoiceMenu.GetChoice(potentialTargets, Color.yellow,
 					   delegate (byte choice)
 					   {
@@ -1352,6 +1527,10 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 			RPC("LinkHandIdentityRPC", p.PlayerIndex, p.Identity.PlayerNumber);
 		}
 
+		foreach (MasqueradePlayer p in MasqueradePlayers)
+		{
+			p.Identity.SetIndex(p.PlayerIndex);
+		}
 
 		UpdateWhoseTurn();
 
@@ -1500,19 +1679,9 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 				ClockwiseHands[2].PlayerNumber = 3;
 				ClockwiseHands[3].PlayerNumber = 1;
 			}
-
-
-
 		}
 
-		/*
-		for (int i = 0; i < 4; i++)
-		{
 
-			UsedHands[i].AttachedIdentityRenderer.Identity = PlayerIdentities[UsedHands[i].PlayerNumber];
-			//ClockwiseHands[i].AttachedIdentityRenderer.Identity = MasqueradePlayers[ClockwiseHands[i].PlayerNumber].Identity;
-		}
-		*/
 	}
 
 	[BRPC]
@@ -1520,6 +1689,7 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 	{
 		CustomConsole.Log("LinkHandIdentityRPC");
 		UsedHands[hand].AttachedIdentityRenderer.Identity = PlayerIdentities[identity];
+		//UsedHands[hand].AttachedIdentityRenderer.Identity.Index = MasqueradePlayers[identity].PlayerIndex;
 
 	}
 

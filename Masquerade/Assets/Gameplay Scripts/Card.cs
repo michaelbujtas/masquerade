@@ -96,6 +96,7 @@ public class Card : MonoBehaviour
 	public List<Buff> Buffs = new List<Buff>();
 
 
+	public bool noText = false;
 	public CardLogic[] logic = new CardLogic[1];
 
 	public CardLogic Logic
@@ -105,11 +106,19 @@ public class Card : MonoBehaviour
 
 			if (logic != null)
 			{
-				if (logic.Length > 1)
-					CustomConsole.LogError(CardName + "has too many logics. I'm gonna use the first one, but you need to get your shit together.");
-				if (logic.Length == 0)
+				if(noText)
+				{
 					return null;
-				return logic[0];
+				}
+				else
+				{
+					if (logic.Length > 1)
+						CustomConsole.LogError(CardName + "has too many logics. I'm gonna use the first one, but you need to get your shit together.");
+					if (logic.Length == 0)
+						return null;
+					return logic[0];
+
+				}
 			}
 			return null;
 		}
@@ -598,9 +607,21 @@ public class Card : MonoBehaviour
 		Buff buff = new Buff(attack, defense, permanent, beforeBonus, source, this);
 
 		Buffs.Add(buff);
+		
 
 		Sync();
 		return buff;
+	}
+
+	public Buff AddKeywordBuff(CardLogic source, Keyword keyword)
+	{
+		Buff buff = new Buff(0, 0, true, false, source, this);
+		Buffs.Add(buff);
+		buff.AddKeyword(keyword);
+		Sync();
+		return buff;
+
+
 	}
 
 	public List<Buff> GetBuffs(Keyword keyword)
@@ -619,6 +640,8 @@ public class Card : MonoBehaviour
 	public bool RemoveBuff(Buff buff)
 	{
 		bool retVal = Buffs.Remove(buff);
+		if (!HasKeyword(Keyword.NO_TEXT))
+			noText = false;
 		Sync();
 		return retVal;
 	}
@@ -687,6 +710,20 @@ public class Card : MonoBehaviour
 		return false;
 	}
 
+
+	public bool OpenToAttack()
+	{
+		if (!isFaceUp)
+		{
+			foreach(byte b in Owner.Hand.CardsOwned)
+			{
+				Card c = Networking.TheCardIndex.GetCard(b);
+				if (c.IsFaceUp)
+					return false;
+			}
+		}
+		return true;
+	}
 
 
 }

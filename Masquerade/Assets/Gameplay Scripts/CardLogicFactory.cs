@@ -74,6 +74,14 @@ public class CardLogicFactory {
 				return new Poisoner();
 			case "dancer isabella pascoe":
 				return new DancerIsabella();
+			case "court jester foolset":
+				return new CourtJesterFoolset();
+			case "job the butler":
+				return new JobTheButler();
+			case "mary the mute":
+				return new MaryTheMute();
+			case "lady beatrice serell":
+				return new LadyBeatriceSerell();
 
 		}
 

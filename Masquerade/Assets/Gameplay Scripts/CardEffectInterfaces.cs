@@ -27,7 +27,7 @@ public interface IActivatedAbility
 
 public interface IEndPhase
 {
-	void OnEndPhase(MasqueradePlayer turn);
+	void OnEndPhase(MasqueradePlayer turn, System.Action callback);
 }
 
 public interface IStartPhase

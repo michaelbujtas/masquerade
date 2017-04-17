@@ -191,6 +191,7 @@ public class IndexCardChoiceMenu : MonoBehaviour {
 			}
 		}
 	}
+
 	void Clear()
 	{
 		foreach (CardRenderer r in CardsInPlay)

@@ -1,0 +1,22 @@
+fileFormatVersion: 2
+guid: 594f09223bdf3ef45a251756da2ae05d
+timeCreated: 1492115409
+licenseType: Free
+TrueTypeFontImporter:
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontName: Eczar
+  fontNames:
+  - Eczar
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: 280a5b9bc54cd3b42a5d0c92f6242db3, type: 3}
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

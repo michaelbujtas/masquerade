@@ -22,5 +22,14 @@ public class Buff
 	public Card Card;
 
 	public List<Keyword> Keywords = new List<Keyword>();
+
+	public void AddKeyword(Keyword keyword)
+	{
+		if(keyword == Keyword.NO_TEXT)
+		{
+			Card.noText = true;
+		}
+		Keywords.Add(keyword);
+	}
 }
 

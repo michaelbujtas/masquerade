@@ -16,6 +16,13 @@ public class PlayerIdentity : NetworkedMonoBehavior {
 	}
 
 
+	public byte Index
+	{
+		get;
+		set;
+	}
+
+
 	PlayerIdentitySettings localSettingsObject;
 	PlayerIdentitySettings LocalSettingsObject
 	{
@@ -41,6 +48,7 @@ public class PlayerIdentity : NetworkedMonoBehavior {
 		{
 			owner.SetMyBehavior(this);
 			RPC("SetPlayerNumberRPC", number);
+
 			AuthoritativeRPC("ConnectSettingsObjectRPC", OwningNetWorker, owner, false);
 		}
 	}
@@ -58,6 +66,11 @@ public class PlayerIdentity : NetworkedMonoBehavior {
 		RPC("SetNameRPC", NetworkReceivers.AllBuffered, name);
 	}
 
+	public void SetIndex(byte index)
+	{
+
+		RPC("SetIndexRPC", NetworkReceivers.AllBuffered, index);
+	}
 
 	[BRPC]
 	void SetNameRPC(string name)
@@ -82,6 +95,15 @@ public class PlayerIdentity : NetworkedMonoBehavior {
 	{
 		PlayerNumber = number;
 	}
+
+
+
+	[BRPC]
+	void SetIndexRPC(byte index)
+	{
+		Index = index;
+	}
+
 
 
 }

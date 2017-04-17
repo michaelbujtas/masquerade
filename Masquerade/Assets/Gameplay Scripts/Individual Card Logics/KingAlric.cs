@@ -11,7 +11,7 @@ public class KingAlric : CardLogic, IOnKilled, IEndPhase, IHasKeywords
 	}
 	
 
-	void IEndPhase.OnEndPhase(MasqueradePlayer turn)
+	void IEndPhase.OnEndPhase(MasqueradePlayer turn, System.Action callback)
 	{
 		if(Card.Networking.TheDeck.CardsRemaining == 0)
 		{
@@ -33,9 +33,10 @@ public class KingAlric : CardLogic, IOnKilled, IEndPhase, IHasKeywords
 				}
 			}
 		}
+		callback();
 	}
 
-	List<Keyword> keywords = new List<Keyword>() { Keyword.CANT_BE_DISCARDED };
+	List<Keyword> keywords = new List<Keyword>() { Keyword.CANT_BE_DISCARDED, Keyword.CANT_LOSE_TEXT };
 	List<Keyword> IHasKeywords.GetKeywords()
 	{
 		return keywords;

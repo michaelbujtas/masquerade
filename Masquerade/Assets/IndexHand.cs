@@ -71,12 +71,45 @@ public class IndexHand : MonoBehaviour {
 				where r.Card != null && r.Card.IsFaceUp
 				select r.Index;
 			retval.AddRange(faceUpCards);
-			if(retval.Count == 0/* && CardsOwned.Count > 0*/)
+			retval.Remove(CardIndex.PLAYER_1_FACEDOWN);
+			retval.Remove(CardIndex.PLAYER_2_FACEDOWN);
+			retval.Remove(CardIndex.PLAYER_3_FACEDOWN);
+			retval.Remove(CardIndex.PLAYER_4_FACEDOWN);
+			if (retval.Count == 0/* && CardsOwned.Count > 0*/)
 			{
 				retval.Add((byte)(PlayerNumber + CardIndex.PLAYER_1_FACEDOWN));
 			}
+
 			return retval;
 		}
+	}
+
+	public List<byte> FaceUpCards
+	{
+		get
+		{
+			List<byte> retval = new List<byte>();
+			var faceUpCards =
+				from r in Renderers
+				where r.Card != null && r.Card.IsFaceUp
+				select r.Index;
+			retval.AddRange(faceUpCards);
+
+			return retval;
+		}
+	}
+
+
+	public bool HasFaceUpCards()
+	{
+		foreach (CardRenderer r in Renderers)
+		{
+			if (r.Card != null && r.Card.IsFaceUp)
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public List<byte> CardsOwned
@@ -92,6 +125,21 @@ public class IndexHand : MonoBehaviour {
 			return retval;
 		}
 	}
+
+	public List<byte> CardsThatCanBeDiscarded
+	{
+		get
+		{
+			List<byte> retval = new List<byte>();
+			var nonBlankCards =
+				from r in Renderers
+				where r.Card != null && !r.Card.HasKeyword(Keyword.CANT_BE_DISCARDED)
+				select r.Index;
+			retval.AddRange(nonBlankCards);
+			return retval;
+		}
+	}
+
 
 	public List<byte> UntappedCards
 	{
