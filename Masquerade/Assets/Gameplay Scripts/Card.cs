@@ -473,12 +473,19 @@ public class Card : MonoBehaviour
 	public IEnumerator ActivateAction(System.Action callback)
 	{
 		IsTapped = true;
+		Sync();
+
+		bool actionDone = false;
 
 		if (Logic is IActivatedAbility)
-			((IActivatedAbility)Logic).ActivateAbility();
+			((IActivatedAbility)Logic).ActivateAbility(()=> actionDone = true);
+		else
+			actionDone = true;
+
+		while (!actionDone)
+			yield return null;
 
 		callback();
-		return null;
 
 	}
 

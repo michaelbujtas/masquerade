@@ -2,15 +2,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class LadyBeatriceSerell : CardLogic, IHasKeywords, IStartPhase
+public class LadyBeatriceSerell : CardLogic, IStartPhase
 {
 
 	Color serellGreen = new Color(0.5f, 1, 0.5f);
-	List<Keyword> keywords = new List<Keyword>() { Keyword.SKIP_DRAW_PHASE };
-	List<Keyword> IHasKeywords.GetKeywords()
-	{
-		return keywords;
-	}
 
 	void IStartPhase.OnStartPhase(MasqueradePlayer turn, System.Action callback)
 	{

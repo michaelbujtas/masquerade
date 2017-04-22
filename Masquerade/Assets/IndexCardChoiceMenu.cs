@@ -10,6 +10,7 @@ public class IndexCardChoiceMenu : MonoBehaviour {
 	public GameObject Visuals;
 
 	public NamedButton PassButton, CancelButton;
+	public CollectionViewer CardsNotInPlay;
 
 	public List<CardRenderer> CardsInPlay = new List<CardRenderer>();
 
@@ -43,6 +44,8 @@ public class IndexCardChoiceMenu : MonoBehaviour {
 				}
 			);
 		}
+
+		CardsNotInPlay.OnAnyCardClickedDelegate = (index) => { OnAnyCardButtonUI(index); };
 
 
 	}
@@ -153,7 +156,16 @@ public class IndexCardChoiceMenu : MonoBehaviour {
 		{
 			Visuals.SetActive(true);
 			Choice nextChoice = decisionQueue[0];
-            Highlight(nextChoice.Options, nextChoice.Highlight);
+			List<byte> cardsNotOnBoard = HighlightChoicesOnBoard(nextChoice.Options, nextChoice.Highlight);
+			if(cardsNotOnBoard.Count == 0)
+			{
+				CardsNotInPlay.gameObject.SetActive(false);
+			}
+			else
+			{
+				CardsNotInPlay.gameObject.SetActive(true);
+				CardsNotInPlay.SetValues(cardsNotOnBoard);
+			}
 
 			if (nextChoice.Cancel != null)
 			{
@@ -181,16 +193,31 @@ public class IndexCardChoiceMenu : MonoBehaviour {
 	}
 
 
-	void Highlight(List<byte> indices, Color color)
+	List<byte> HighlightChoicesOnBoard(List<byte> indices, Color color)
 	{
+		List<byte> retVal = new List<byte>();
+		retVal.AddRange(indices);
 		foreach (CardRenderer r in CardsInPlay)
 		{
 			if (indices.Contains(r.Index))
 			{
 				r.Highlight(color);
+				retVal.Remove(r.Index);
 			}
 		}
+
+		for (int i = 0; i < retVal.Count; i++)
+		{
+			if(retVal[i]>=200)
+			{
+				retVal.RemoveAt(i);
+				i--;
+			}
+		}
+		return retVal;
 	}
+
+
 
 	void Clear()
 	{
@@ -227,8 +254,6 @@ public class IndexCardChoiceMenu : MonoBehaviour {
 		currentChoice.Pass();
 		ShowChoice();
 	}
-
-
 
 	public class Choice
 	{

@@ -62,6 +62,35 @@ public class IndexDeck : MonoBehaviour {
 		return retVal;
 	}
 
+
+	public List<byte> TopCards(int count)
+	{
+		List<byte> retVal = new List<byte>();
+
+		for (int i = 0; i < count; i++)
+		{
+			retVal.Add(Indices[i]);
+		}
+
+		return retVal;
+	}
+
+	public bool PullCard(byte index)
+	{
+		if(Indices.Contains(index))
+		{
+			Indices.Remove(index);
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+
+
+
 	public void ShuffleAway(byte index)
 	{
 		Indices.Add(index);

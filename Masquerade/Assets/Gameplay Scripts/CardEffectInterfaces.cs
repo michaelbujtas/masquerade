@@ -22,7 +22,7 @@ public interface IOnKilled
 
 public interface IActivatedAbility
 {
-	void ActivateAbility();
+	void ActivateAbility(System.Action callback);
 }
 
 public interface IEndPhase

@@ -16,7 +16,7 @@ Sorcerer Theodoric Whitemane,Noble,3,,3,,"During your start phase, you may disca
 Countess Ida Ermintrade,Noble,4,up,3,down,,"She's normally harmless, but watch out if you disturb the Countess's dinner.",Noble Guests,CountessIda
 Baron Van Cole,Noble,1,up,6,,,"The older you get, the longer it takes for your body to get in the swing of things.",The Main Cast,BaronVanCole
 Prince Hugh Drago,Noble,4,up,1,up,,"The prince is beloved by all, especially his father.",Noble Guests,PrinceHughDrago
-Bishop Cornellous Shepard,Noble,0,,2,up,"When Cornellus is flipped up, choose another card from the discard pile and put it into play face-up.",To the faithful come the spoils.,Noble Guests,BishopCornelliusShephard
+Bishop Cornellous Shepard,Noble,0,,2,up,"When Cornellous is flipped up, choose another card from the discard pile and put it into play face-up.",To the faithful come the spoils.,Noble Guests,BishopCornelliusShephard
 Gossip Lady Anneliese,Noble,0,,2,,"When Annelise is flipped up, flip up all cards in play.","Did you hear about what she did? I know, right!?",Noble Guests,GossipLadyAvelyn
 Advisor Simon Ernest,Noble,0,,2,down,"When Simon is flipped up, each player gives you all Assassins they control.","Behind every throne, there's a schemer.",Assassin's Guild,SimonErnest
 Baron Radolf Maynard,Noble,2,,3,,"After Radolf attacks, draw a card.",Every kingdom needs its royal accountant.,The Main Cast,BaronMaynard
@@ -63,9 +63,5 @@ Nan the Disgruntled,Commoner,1,,6,,,"You can only take so many ""wench"" comment
 Squire Terry Wynne,Commoner,3,up,2,,,"I try my best to be helpful, sire!",The Main Cast,SquireTerry
 Alchemist Leon Brewster,Commoner,2,,1,,"While Leon is face-up, cards you control get +2 defense after facing bonuses.",The last batch I made caused a tree to grow out of the man's ears… Less wolfbane maybe...,Foreign Powers,AlchemistDucan
 Dancer Isabella Pascoe,Commoner,1,,2,,"After Isabella attacks, shuffle the attacked card into the deck.","Dancing is like an art, do it well and it can capitivate anyone.",Foreign Powers,DancerIsabella
-Doctor Pestilence ,Assassin,2,,6,,"If Doctor Pestilence is face-up, instead of drawing a card during your draw phase, look at the top two cards of the deck. You may discard both cards. If you don't, give one of them to the player of your choice face-down and draw the other one.",The only disease is life itself... and all must be cured of it's corruption…,Assassin's Guild,DrPestilence
+Doctor Pestilence,Assassin,2,,6,,"If Doctor Pestilence is face-up, instead of drawing a card during your draw phase, look at the top two cards of the deck. You may discard both cards. If you don't, give one of them to the player of your choice face-down and draw the other one.",The only disease is life itself... and all must be cured of it's corruption…,Assassin's Guild,DrPestilence
 Mary the Mute,Commoner,1,,2,,"While Mary is face-up, all other non-King cards lose all abilities.",,The Main Cast,MaryTheMute
-Debug Dude,Noble,1,,1,,,,Rulers of Avalot,DancerIsabella
-Debug Dude2,Noble,1,,1,,,,Rulers of Avalot,DrPestilence
-Debug Dude3,Noble,1,,1,,,,Rulers of Avalot,ServingGirlEmma
-Debug Dude4,Noble,1,,1,,,,Rulers of Avalot,Ogg

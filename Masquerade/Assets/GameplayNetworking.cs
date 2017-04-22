@@ -113,6 +113,7 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 
 	//This and Place in Turn Order are our only state variables
 	bool gameIsOver = false;
+	int actionsLeft = 0; //This is also a state variable :(
 
 	#endregion
 
@@ -197,7 +198,7 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 
 		bool bonusDrawFinished = true;
 		bool drawIsFinished = false;
-		int actionsLeft = 3;
+		actionsLeft = 3;
 		Response<bool> actionIsFinished = null;
 		//START PHASE
 
@@ -272,20 +273,35 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 		}
 
 
-		//DRAW PHASE
 
+
+		//DRAW PHASE
 		StaticEffects();
-		//Bonus 
-		if (UsedHands[playerIndex].CardsOwned.Count == 0)
+
+		//Figure out if we get a draw phase
+		bool willDrawThisTurn = true;
+		foreach(byte b in UsedHands[playerIndex].CardsOwned)
 		{
-			bonusDrawFinished = false;
-			StartCoroutine(DrawCardCOR(playerIndex, 1, delegate { bonusDrawFinished = true; }));
+			Card c = TheCardIndex.GetCard(b);
+			if (c.IsFaceUp && c.HasKeyword(Keyword.SKIP_DRAW_PHASE))
+				willDrawThisTurn = false;
 		}
 
-		//Normal 
-		StartCoroutine(DrawCardCOR(playerIndex, 1, delegate { drawIsFinished = true; }));
-		while (!bonusDrawFinished || !drawIsFinished)
-			yield return null;
+		if(willDrawThisTurn)
+		{
+			//Bonus 
+			if (UsedHands[playerIndex].CardsOwned.Count == 0)
+			{
+				bonusDrawFinished = false;
+				StartCoroutine(DrawCardCOR(playerIndex, 1, delegate { bonusDrawFinished = true; }));
+			}
+
+			//Normal 
+			StartCoroutine(DrawCardCOR(playerIndex, 1, delegate { drawIsFinished = true; }));
+			while (!bonusDrawFinished || !drawIsFinished)
+				yield return null;
+		}
+		
 
 
 
@@ -1080,18 +1096,11 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 
 		CustomConsole.Log("Sending RequestTakeActionRPC", logColor);
 		AuthoritativeRPC("RequestTakeActionRPC", OwningNetWorker, GetPlayer(playerIndex).NetworkingPlayer, false, response.Index);
-		int framesWaited = 0;
-		while (!response.FlagCompleted)
-		{
-			framesWaited++;
-			if (framesWaited > 600)
-			{
 
-				CustomConsole.Log("Waited 600 frames for response.", logColor);
-				framesWaited = 0;
-			}
+		while (!response.FlagCompleted)
 			yield return null;
-		}
+
+
 		CustomConsole.Log("Got a response.", logColor);
 		bool actionFinished = false;
 
@@ -1345,6 +1354,11 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 		{
 			response.Fill(new ActionDescriptor(actorIndex, (CardAction)actionType, targetIndex));
 		}
+	}
+
+	public void RefundAction()
+	{
+		actionsLeft++;
 	}
 	#endregion
 
