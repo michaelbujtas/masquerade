@@ -33,8 +33,15 @@ public class LadyBeatriceSerell : CardLogic, IStartPhase
 				sacTargets.ToArray(),
 				(choice) =>
 				{
-					foundACard = true;
-					Networking.TheCardIndex.GetCard(choice).Kill();
+
+					Card foundCard = Networking.TheCardIndex.GetCard(choice);
+
+					foundCard.StartCoroutine(foundCard.Flip(true, 
+						(b) =>
+					{
+						foundACard = true;
+						foundCard.Kill();
+					}));
 				},
 				null,
 				serellGreen,
@@ -73,6 +80,7 @@ public class LadyBeatriceSerell : CardLogic, IStartPhase
 			//We'll be doing her default behavior
 
 			//Currently she dies
+
 			Card.Kill();
 		}
 

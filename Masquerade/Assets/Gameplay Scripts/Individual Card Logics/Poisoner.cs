@@ -27,7 +27,12 @@ public class Poisoner : CardLogic, IAfterAttacking, IStartPhaseParasite
 				if (b.Card == other)
 				{
 					whiffed = false;
-					Card.StartCoroutine(b.Card.KillWithContext(Card, DeathContext.OTHER, (a)=>callback()));
+					Card.StartCoroutine(b.Card.Flip(true, (actuallyFlipped) => {
+
+						Card.StartCoroutine(b.Card.KillWithContext(Card, DeathContext.OTHER, (a) => callback()));
+
+					}));
+
 				}
 			}
 			else

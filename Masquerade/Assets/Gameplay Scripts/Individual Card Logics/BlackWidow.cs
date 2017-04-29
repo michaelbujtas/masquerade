@@ -6,12 +6,24 @@ public class BlackWidow : CardLogic, IOnKilled
 	{
 		if (context == DeathContext.DEFENDING)
 			Card.StartCoroutine(doTriggerCOR(killer, context, (() => callback())));
+		else
+			callback();
 
 	}
 
 	IEnumerator doTriggerCOR(Card killer, DeathContext context, System.Action callback)
 	{
 		bool finished = false;
+
+		killer.StartCoroutine(killer.Flip(true, (b) =>
+		{
+			finished = true;
+		}));
+
+		while (!finished) 
+			yield return null;
+
+		finished = false;
 
 		killer.StartCoroutine(killer.KillWithContext(Card, DeathContext.OTHER, ((actuallyDied) => finished = true)));
 		while (!finished)

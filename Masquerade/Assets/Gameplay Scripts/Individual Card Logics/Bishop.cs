@@ -17,15 +17,19 @@ public class Bishop : CardLogic, IFlipEffect
 				cardsInGraveyard.ToArray(),
 				(choice) =>
 				{
-					Networking.TheDiscardPile.RemoveIndex(choice);
 
-					Card foundCard = Networking.TheCardIndex.GetCard(choice);
-					foundCard.Owner = Card.LastOwner;
+					if(cardsInGraveyard.Contains(choice))
+					{
+						Networking.TheDiscardPile.RemoveIndex(choice);
 
-					foundCard.IsAlive = true;
-					foundCard.IsFaceUp = true;
+						Card foundCard = Networking.TheCardIndex.GetCard(choice);
+						foundCard.Owner = Card.LastOwner;
 
-					Networking.AddCardToBoards(Card.LastOwner.PlayerIndex, choice);
+						foundCard.IsAlive = true;
+						foundCard.IsFaceUp = true;
+
+						Networking.AddCardToBoards(Card.LastOwner.PlayerIndex, choice);
+					}
 					callback();
 
 				},

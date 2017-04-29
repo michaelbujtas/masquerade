@@ -43,8 +43,14 @@ public class SorcerorWhitemane : CardLogic, IStartPhase {
 					Card.Networking.SyncCard(Card);
 
 
-					Card.Networking.TheCardIndex.GetCard(choice).Kill();
-					callback();
+					Card foundCard = Networking.TheCardIndex.GetCard(choice);
+
+					foundCard.StartCoroutine(foundCard.Flip(true,
+						(b) =>
+						{
+							foundCard.Kill();
+							callback();
+						}));
 				}
 				else
 				{

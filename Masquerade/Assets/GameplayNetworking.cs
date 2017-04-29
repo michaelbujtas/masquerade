@@ -1745,17 +1745,20 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 	public void SendToDiscard(Card card)
 	{
 		card.ForgetHistory();
-		SendToDiscardRPC((byte)card.Index);
+
+		TheDiscardPile.AddIndex((byte)card.Index);
+
+		RemoveFromBoardRPC((byte)card.Index);
 
 
 		foreach (MasqueradePlayer p in MasqueradePlayers)
 		{
-			AuthoritativeRPC("SendToDiscardRPC", OwningNetWorker, p.NetworkingPlayer, false, card.Index);
+			AuthoritativeRPC("RemoveFromBoardRPC", OwningNetWorker, p.NetworkingPlayer, false, card.Index);
 		}
 	}
 
 	[BRPC]
-	void SendToDiscardRPC(byte cardIndex)
+	void RemoveFromBoardRPC(byte cardIndex)
 	{
 		CustomConsole.Log("Sending " + TheCardIndex.GetCard(cardIndex).CardName + " to the discard.", Color.red);
 
@@ -1763,7 +1766,6 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 		{
 			h.RemoveIndex(cardIndex);
 		}
-		TheDiscardPile.AddIndex(cardIndex);
 
 	}
 
@@ -1775,29 +1777,19 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 	public void ShuffleAway(Card card)
 	{
 		card.ForgetHistory();
+		TheDiscardPile.RemoveIndex((byte)card.Index);
 		TheDeck.ShuffleAway((byte)card.Index);
 
-		ShuffleAwayRPC((byte)card.Index);
+		RemoveFromBoardRPC((byte)card.Index);
 
 
 		foreach (MasqueradePlayer p in MasqueradePlayers)
 		{
-			AuthoritativeRPC("SendToDiscardRPC", OwningNetWorker, p.NetworkingPlayer, false, card.Index);
+			AuthoritativeRPC("RemoveFromBoardRPC", OwningNetWorker, p.NetworkingPlayer, false, card.Index);
 		}
 	}
 
-	[BRPC]
-	void ShuffleAwayRPC(byte cardIndex)
-	{
-		CustomConsole.Log("Shuffling " + TheCardIndex.GetCard(cardIndex).CardName + " into the deck.", Color.cyan);
 
-		foreach (IndexHand h in UsedHands)
-		{
-			h.RemoveIndex(cardIndex);
-		}
-		TheDiscardPile.RemoveIndex(cardIndex);
-
-	}
 	#endregion
 
 	#region Update Display Values

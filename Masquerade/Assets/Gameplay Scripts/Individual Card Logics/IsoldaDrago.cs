@@ -56,14 +56,20 @@ public class IsoldaDrago : CardLogic, IFlipEffect {
 					//Kill it (KillWithContext should handle all legality checks)
 					if (targets.Contains((byte)victim.Index))
 					{
-						Card.StartCoroutine(victim.KillWithContext(Card, DeathContext.OTHER, (a) => { killDone = true; }));
+						Card.StartCoroutine(victim.Flip(true, (b) =>
+						{
+							Card.StartCoroutine(victim.KillWithContext(Card, DeathContext.OTHER, (a) => { killDone = true; }));
+						}));
 					}
 					else
 					{
 						//If you failed the sanity check you're probably cheating -- we'll choose at random
 						int randomIndex = UnityEngine.Random.Range(0, targets.Count);
 						Card randomVictim = GetCard(targets[randomIndex]);
-						Card.StartCoroutine(randomVictim.KillWithContext(Card, DeathContext.OTHER, (a) => { killDone = true; }));
+						Card.StartCoroutine(randomVictim.Flip(true, (b) =>
+						{
+							Card.StartCoroutine(randomVictim.KillWithContext(Card, DeathContext.OTHER, (a) => { killDone = true; }));
+						}));
 					}
 				},
 				null,

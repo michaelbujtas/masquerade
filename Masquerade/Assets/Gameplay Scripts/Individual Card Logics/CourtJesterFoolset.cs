@@ -36,17 +36,28 @@ public class CourtJesterFoolset : CardLogic, IAfterAttacking
 					if (targets.Contains(choice))
 					{
 						//Discard it
-						Networking.TheCardIndex.GetCard(choice).Kill();
-						choiceMade = true;
+						Card foundCard = Networking.TheCardIndex.GetCard(choice);
+
+						foundCard.StartCoroutine(foundCard.Flip(true,
+							(b) =>
+							{
+								choiceMade = true;
+								foundCard.Kill();
+							}));
 
 					}
 					else
 					{
 						//If we failed the sanity check choose at random;
 						int randomChoice = Random.Range(0, targets.Count);
+						Card foundCard = Networking.TheCardIndex.GetCard(targets[randomChoice]);
 
-						Networking.TheCardIndex.GetCard((byte)randomChoice).Kill();
-						choiceMade = true;
+						foundCard.StartCoroutine(foundCard.Flip(true,
+							(b) =>
+							{
+								choiceMade = true;
+								foundCard.Kill();
+							}));
 					}
 				},
 				null,
