@@ -58,6 +58,8 @@ public class IsoldaDrago : CardLogic, IFlipEffect {
 					{
 						Card.StartCoroutine(victim.Flip(true, (b) =>
 						{
+							Networking.TheAnimationQueue.QueueThrowAnimationNetworked("KnifeThrow", (byte)Card.Index, (byte)victim.Index);
+							//killDone = true;
 							Card.StartCoroutine(victim.KillWithContext(Card, DeathContext.OTHER, (a) => { killDone = true; }));
 						}));
 					}
@@ -68,6 +70,7 @@ public class IsoldaDrago : CardLogic, IFlipEffect {
 						Card randomVictim = GetCard(targets[randomIndex]);
 						Card.StartCoroutine(randomVictim.Flip(true, (b) =>
 						{
+							Networking.TheAnimationQueue.QueueThrowAnimationNetworked("KnifeThrow", (byte)Card.Index, (byte)randomVictim.Index);
 							Card.StartCoroutine(randomVictim.KillWithContext(Card, DeathContext.OTHER, (a) => { killDone = true; }));
 						}));
 					}

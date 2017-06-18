@@ -1,8 +1,3 @@
-// Copyright (C) 2014 - 2016 Stephan Bouchard - All Rights Reserved
-// This code can only be used under the standard Unity Asset Store End User License Agreement
-// A Copy of the EULA APPENDIX 1 is available at http://unity3d.com/company/legal/as_terms
-
-
 using UnityEngine;
 using System.Collections;
 
@@ -16,7 +11,6 @@ namespace TMPro.Examples
 
         private GameObject m_floatingText;
         private TextMeshPro m_textMeshPro;
-        private TextContainer m_textContainer;
         private TextMesh m_textMesh;
 
         private Transform m_transform;
@@ -48,15 +42,14 @@ namespace TMPro.Examples
             {
                 // TextMesh Pro Implementation
                 m_textMeshPro = m_floatingText.AddComponent<TextMeshPro>();
-                m_textContainer = m_floatingText.GetComponent<TextContainer>();
+                m_textMeshPro.rectTransform.sizeDelta = new Vector2(3, 3);
                 
                 m_floatingText_Transform = m_floatingText.transform;
                 m_floatingText_Transform.position = m_transform.position + new Vector3(0, 15f, 0);
 
-                m_textContainer.isAutoFitting = false;
                 //m_textMeshPro.fontAsset = Resources.Load("Fonts & Materials/JOKERMAN SDF", typeof(TextMeshProFont)) as TextMeshProFont; // User should only provide a string to the resource.
-                //m_textMeshPro.fontSharedMaterial = Resources.Load("Fonts & Materials/ARIAL SDF 1", typeof(Material)) as Material;
-                //m_textContainer.anchorPosition = TextContainerAnchors.Bottom;
+                //m_textMeshPro.fontSharedMaterial = Resources.Load("Fonts & Materials/LiberationSans SDF", typeof(Material)) as Material;
+
                 m_textMeshPro.alignment = TextAlignmentOptions.Center;
                 m_textMeshPro.color = new Color32((byte)Random.Range(0, 255), (byte)Random.Range(0, 255), (byte)Random.Range(0, 255), 255);
                 m_textMeshPro.fontSize = 24;

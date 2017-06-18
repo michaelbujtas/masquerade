@@ -1,19 +1,13 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
-using AdvancedInspector;
-
-[AdvancedInspector]
 public class IndexDeck : MonoBehaviour {
 
 	
-	[Inspect]
 	public List<byte> Indices = new List<byte>();
 
-	[Inspect]
 	public bool ShouldStack = false;
 
-	[Inspect]
 	public List<string> StackNames;
 
 	CardIndex cardIndex;

@@ -1,7 +1,3 @@
-// Copyright (C) 2014 - 2016 Stephan Schaem - All Rights Reserved
-// This code can only be used under the standard Unity Asset Store End User License Agreement
-// A Copy of the EULA APPENDIX 1 is available at http://unity3d.com/company/legal/as_terms
-
 // Simplified SDF shader:
 // - No Shading Option (bevel / bump / env map)
 // - No Glow Option
@@ -42,7 +38,7 @@ Properties {
 	_VertexOffsetX		("Vertex OffsetX", float) = 0
 	_VertexOffsetY		("Vertex OffsetY", float) = 0
 
-	_ClipRect			("Clip Rect", vector) = (-10000, -10000, 10000, 10000)
+	_ClipRect			("Clip Rect", vector) = (-32767, -32767, 32767, 32767)
 	_MaskSoftnessX		("Mask SoftnessX", float) = 0
 	_MaskSoftnessY		("Mask SoftnessY", float) = 0
 	_MaskTex			("Mask Texture", 2D) = "white" {}
@@ -131,7 +127,7 @@ SubShader {
 			float4 vert = input.vertex;
 			vert.x += _VertexOffsetX;
 			vert.y += _VertexOffsetY;
-			float4 vPosition = mul(UNITY_MATRIX_MVP, vert);
+			float4 vPosition = UnityObjectToClipPos(vert);
 
 			float2 pixelSize = vPosition.w;
 			pixelSize /= float2(_ScaleX, _ScaleY) * abs(mul((float2x2)UNITY_MATRIX_P, _ScreenParams.xy));
@@ -140,8 +136,8 @@ SubShader {
 			scale *= abs(input.texcoord1.y) * _GradientScale * 1.5;
 			if(UNITY_MATRIX_P[3][3] == 0) scale = lerp(abs(scale) * (1 - _PerspectiveFilter), scale, abs(dot(UnityObjectToWorldNormal(input.normal.xyz), normalize(WorldSpaceViewDir(vert)))));
 
-			float weight = lerp(_WeightNormal, _WeightBold, bold) / _GradientScale;
-			weight += _FaceDilate * _ScaleRatioA * 0.5;
+			float weight = lerp(_WeightNormal, _WeightBold, bold) / 4.0;
+			weight = (weight + _FaceDilate) * _ScaleRatioA * 0.5;
 
 			float layerScale = scale;
 
@@ -216,32 +212,18 @@ SubShader {
 			c += float4(_UnderlayColor.rgb * _UnderlayColor.a, _UnderlayColor.a) * (1 - saturate(d - input.underlayParam.y)) * sd * (1 - c.a);
 		#endif
 
-		#if UNITY_VERSION < 530
-			// Unity 5.2 2D Rect Mask Support
-			if (_UseClipRect)
-			{
-				half2 m = saturate((_ClipRect.zw - _ClipRect.xy - abs(input.mask.xy)) * input.mask.zw);
-				c *= m.x * m.y;
+		// Alternative implementation to UnityGet2DClipping with support for softness.
+		half2 m = saturate((_ClipRect.zw - _ClipRect.xy - abs(input.mask.xy)) * input.mask.zw);
+		c *= m.x * m.y;
 
-				float a = abs(_MaskInverse - tex2D(_MaskTex, input.texcoord0.zw).a);
-				float t = a + (1 - _MaskWipeControl) * _MaskEdgeSoftness - _MaskWipeControl;
-				a = saturate(t / _MaskEdgeSoftness);
-				c.rgb = lerp(_MaskEdgeColor.rgb*c.a, c.rgb, a);
-				c *= a;
-			}
-		#else
-			// Alternative implementation to UnityGet2DClipping with support for softness.
-			half2 m = saturate((_ClipRect.zw - _ClipRect.xy - abs(input.mask.xy)) * input.mask.zw);
-			c *= m.x * m.y;
+		//#if ALPHA_MASK_ON
+		float a = abs(_MaskInverse - tex2D(_MaskTex, input.texcoord0.zw).a);
+		float t = a + (1 - _MaskWipeControl) * _MaskEdgeSoftness - _MaskWipeControl;
+		a = saturate(t / _MaskEdgeSoftness);
+		c.rgb = lerp(_MaskEdgeColor.rgb*c.a, c.rgb, a);
+		c *= a;
+		//#endif
 
-			//#if ALPHA_MASK_ON
-			float a = abs(_MaskInverse - tex2D(_MaskTex, input.texcoord0.zw).a);
-			float t = a + (1 - _MaskWipeControl) * _MaskEdgeSoftness - _MaskWipeControl;
-			a = saturate(t / _MaskEdgeSoftness);
-			c.rgb = lerp(_MaskEdgeColor.rgb*c.a, c.rgb, a);
-			c *= a;
-			//#endif
-		#endif
 
 		#if (UNDERLAY_ON | UNDERLAY_INNER)
 			c *= input.texcoord1.z;

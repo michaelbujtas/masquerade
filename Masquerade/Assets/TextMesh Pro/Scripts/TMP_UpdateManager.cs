@@ -44,7 +44,8 @@ namespace TMPro
         /// </summary>
         protected TMP_UpdateManager()
         {
-            Camera.onPreRender += new Camera.CameraCallback(this.OnCameraPreRender);
+            //Camera.onPreRender += new Camera.CameraCallback(this.OnCameraPreRender);
+            Camera.onPreCull += new Camera.CameraCallback(this.OnCameraPreRender); // Temporary until onPreRender fix is available.
         }
 
 
@@ -100,6 +101,11 @@ namespace TMPro
         /// <param name="cam"></param>
         void OnCameraPreRender(Camera cam)
         {
+            // Exclude the PreRenderCamera
+            #if UNITY_EDITOR
+                if (cam.cameraType == CameraType.Preview) return;
+            #endif
+
             // Handle Layout Rebuild Phase
             for (int i = 0; i < m_LayoutRebuildQueue.Count; i++)
             {

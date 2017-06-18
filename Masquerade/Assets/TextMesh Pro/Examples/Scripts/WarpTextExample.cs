@@ -1,9 +1,4 @@
-﻿// Copyright (C) 2014 - 2016 Stephan Bouchard - All Rights Reserved
-// This code can only be used under the standard Unity Asset Store End User License Agreement
-// A Copy of the EULA APPENDIX 1 is available at http://unity3d.com/company/legal/as_terms
-
-
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections;
 
 
@@ -19,9 +14,6 @@ namespace TMPro.Examples
         public float AngleMultiplier = 1.0f;
         public float SpeedMultiplier = 1.0f;
         public float CurveScale = 1.0f;
-
-		public bool ForceReset = false;
-
 
         void Awake()
         {
@@ -44,19 +36,6 @@ namespace TMPro.Examples
             return newCurve;
         }
 
-		void Update()
-		{
-			if(ForceReset)
-			{
-				ForceReset = false;
-				m_TextComponent.havePropertiesChanged = true;
-			}
-			else
-			{
-				ForceReset = true;
-			}
-		}
-
 
         /// <summary>
         ///  Method to curve text along a Unity animation curve.
@@ -73,15 +52,14 @@ namespace TMPro.Examples
             Vector3[] vertices;
             Matrix4x4 matrix;
 
-            //CurveScale *= 10; //WTF
+            m_TextComponent.havePropertiesChanged = true; // Need to force the TextMeshPro Object to be updated.
+            CurveScale *= 10;
             float old_CurveScale = CurveScale;
             AnimationCurve old_curve = CopyAnimationCurve(VertexCurve);
 
-			m_TextComponent.havePropertiesChanged = true; // Need to force the TextMeshPro Object to be updated.
-			while (true)
+            while (true)
             {
-
-				if (!m_TextComponent.havePropertiesChanged && old_CurveScale == CurveScale && old_curve.keys[1].value == VertexCurve.keys[1].value)
+                if (!m_TextComponent.havePropertiesChanged && old_CurveScale == CurveScale && old_curve.keys[1].value == VertexCurve.keys[1].value)
                 {
                     yield return null;
                     continue;

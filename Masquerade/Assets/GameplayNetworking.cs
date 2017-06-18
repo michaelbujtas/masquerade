@@ -46,6 +46,8 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 	public EndGameScreen TheEndGameScreen;
 
 
+	public AnimationQueue TheAnimationQueue;
+
 
 
 	public NamedValueField CardsInDeckDisplay;
@@ -1748,6 +1750,12 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 
 		TheDiscardPile.AddIndex((byte)card.Index);
 
+
+		//foreach (IndexHand h in UsedHands)
+		//{
+		//	h.RemoveIndex((byte)card.Index);
+		//}
+
 		RemoveFromBoardRPC((byte)card.Index);
 
 
@@ -1762,6 +1770,8 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 	{
 		CustomConsole.Log("Sending " + TheCardIndex.GetCard(cardIndex).CardName + " to the discard.", Color.red);
 
+		//TheAnimationQueue.QueueDiscardAnimation(cardIndex);
+		TheAnimationQueue.QueueFakeCardAnimation(cardIndex, TheDiscardPile.Renderer.rectTransform.position);
 		foreach (IndexHand h in UsedHands)
 		{
 			h.RemoveIndex(cardIndex);
