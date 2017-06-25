@@ -21,17 +21,18 @@ public class IndexDiscardPile : SimpleNetworkedMonoBehavior {
 
 		Renderer.Index = TopCard;
 		Renderer.RefreshCardImage();
-		Sync();
+		//Sync();
 	}
 
 	public void RemoveIndex(byte index)
 	{
+
 		Contents.Remove(index);
 
 		Renderer.Index = TopCard;
 
 		Renderer.RefreshCardImage();
-		Sync();
+		//Sync();
 
 	}
 
@@ -67,4 +68,6 @@ public class IndexDiscardPile : SimpleNetworkedMonoBehavior {
 		Renderer.Index = TopCard;
 		Renderer.RefreshCardImage();
 	}
+
+
 }

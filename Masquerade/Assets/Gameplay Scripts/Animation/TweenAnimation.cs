@@ -5,6 +5,8 @@ using UnityEngine;
 public class TweenAnimation : Animation {
 	Vector2 Origin, Destination;
 	public float Duration = 1;
+	public float Speed = 1;
+	public bool SpeedMode = false;
 	float Age = 0;
 
 	public bool AimAtTarget;
@@ -22,18 +24,45 @@ public class TweenAnimation : Animation {
 	void Update () {
 		Age += Time.deltaTime;
 
-		if(transform != null)
+		if (transform != null)
 		{
-			transform.position = Vector2.Lerp(Origin, Destination, Age / Duration);
 			transform.eulerAngles += Time.deltaTime * Rotation * Duration;
+
+			if (SpeedMode)
+			{
+				float distance = Vector3.Distance(transform.position, new Vector3(Destination.x, Destination.y, transform.position.z));
+
+				if (distance == 0)
+				{
+					if (callback != null)
+						callback();
+					Destroy(this.gameObject);
+				}
+				else if (distance < Speed * Time.deltaTime)
+				{
+					transform.position = new Vector3(Destination.x, Destination.y, transform.position.z);
+				}
+				else
+				{
+
+					transform.position += new Vector3(Destination.x - Origin.x, Destination.y - Origin.y, 0).normalized * Speed * Time.deltaTime;
+				}
+			}
+			else
+			{
+
+				transform.position = Vector2.Lerp(Origin, Destination, Age / Duration);
+
+				if (Age > Duration)
+				{
+					if (callback != null)
+						callback();
+					Destroy(this.gameObject);
+				}
+			}
+
 		}
 
-		if (Age > Duration)
-		{
-			if(callback != null)
-				callback();
-			Destroy(this.gameObject);
-		}
 			
 	}
 

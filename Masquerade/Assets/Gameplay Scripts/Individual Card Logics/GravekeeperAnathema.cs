@@ -120,10 +120,11 @@ public class GravekeeperAnathema : CardLogic, IActivatedAbility
 			Networking.TheCardIndex.GetCard(cardIndexToReanimate).IsAlive = true;
 
 			bool facingPickedDone = false;
-			Card.StartCoroutine(Networking.ChooseFacingCOR(cardIndexToReanimate, Card.Owner.PlayerIndex, false, (facingChoice) =>
+			Card.StartCoroutine(Networking.ChooseFacingCOR(cardIndexToReanimate, Card.Owner.PlayerIndex,  (facingChoice) =>
 			{
 				facingPickedDone = true;
-			}));
+			}, 
+			true));
 			while (!facingPickedDone)
 				yield return null;
 		}

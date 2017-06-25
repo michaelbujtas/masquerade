@@ -20,6 +20,9 @@ public class AnimationQueue : SimpleNetworkedMonoBehavior
 
 	List<CardRenderer> cardsInPlay = new List<CardRenderer>();
 
+	List<Vector2> slotPositions = new List<Vector2>();
+
+
 
 	public int debug1, debug2;
 
@@ -34,18 +37,28 @@ public class AnimationQueue : SimpleNetworkedMonoBehavior
 			Debug.Log("found a thing");
 		}
 
-		CardRenderer[] cardRenderers = FindObjectsOfType<CardRenderer>();
-		for (int i = 0; i < cardRenderers.Length; i++)
-		{
-			if (!cardRenderers[i].DummyRenderer)
-				cardsInPlay.Add(cardRenderers[i]);
-		}
 
 		Networking = FindObjectOfType<GameplayNetworking>();
+
+
 		Discard = Networking.TheDiscardPile;
 		Deck = Networking.CardsInDeckDisplay;
 		GraphicsSettings = FindObjectOfType<MultiWidthDriver>();
 
+
+		for (int i = 0; i < Networking.ClockwiseHands.Count; i++)
+		{
+			cardsInPlay.AddRange(Networking.ClockwiseHands[i].Renderers);
+		}
+
+
+		slotPositions.Add(DeckPosition);
+		slotPositions.Add(DiscardPosition);
+
+		for (int i = 0; i < cardsInPlay.Count; i++)
+		{
+			slotPositions.Add(cardsInPlay[i].rectTransform.position);
+		}
 	}
 
 	void Update() {
@@ -54,7 +67,10 @@ public class AnimationQueue : SimpleNetworkedMonoBehavior
 		{
 			//QueueThrowAnimationNetworked("KnifeThrow", (byte)debug1, (byte)debug2);
 
-			QueueFakeCardAnimation((byte)debug1, Vector2.zero);
+			byte cardIndex = Networking.TheDeck.Draw();
+			Networking.TheCardIndex.GetCard(cardIndex).IsFaceUp = false;
+			Networking.TheCardIndex.GetCard(cardIndex).SyncFlip();
+			QueueDrawAnimationNetworked((byte)Random.Range(0, 2), (byte)Random.Range(0, 6), cardIndex);
 		}
 
 	}
@@ -72,6 +88,11 @@ public class AnimationQueue : SimpleNetworkedMonoBehavior
 			return DiscardPosition;
 
 		return DeckPosition;
+	}
+
+	Vector2 GetSlotPosition(byte player, byte slot)
+	{
+		return Networking.UsedHands[player].Renderers[slot].rectTransform.position;
 	}
 
 	Vector2 DiscardPosition
@@ -106,11 +127,13 @@ public class AnimationQueue : SimpleNetworkedMonoBehavior
 
 	public void QueueTweenAnimation(string name, Vector2 origin, Vector2 destination)
 	{
+		CustomConsole.Log("Queue Tween Animation");
 		Animation anim = prefabs[name];
 		if (anim is TweenAnimation)
 		{
 			animationQueue.Add(() =>
 			{
+				CustomConsole.Log("Play Tween Animation");
 				TweenAnimation tweenAnim = Instantiate(anim.gameObject, transform).GetComponent<TweenAnimation>();
 				tweenAnim.Setup(origin, destination, AnimationSpeed,
 					() => {
@@ -118,7 +141,6 @@ public class AnimationQueue : SimpleNetworkedMonoBehavior
 					});
 			});
 			ResumePlayback();
-
 		}
 		else
 		{
@@ -126,19 +148,38 @@ public class AnimationQueue : SimpleNetworkedMonoBehavior
 		}
 	}
 
+
+	public void QueueFakeCardAnimationNetworked(byte cardIndex, byte destinationIndex)
+	{
+		foreach (MasqueradePlayer p in Networking.MasqueradePlayers)
+		{
+			AuthoritativeRPC("QueueFakeCardAnimationRPC", OwningNetWorker, p.NetworkingPlayer, false,  cardIndex, destinationIndex);
+		}
+	}
+
+	[BRPC]
+	void QueueFakeCardAnimationRPC(byte cardIndex, byte destinationIndex)
+	{
+		QueueFakeCardAnimation(cardIndex, slotPositions[destinationIndex]);
+	}
+
 	public void QueueFakeCardAnimation(byte index, Vector2 destination)
 	{
 		QueueFakeCardAnimation(index, GetCardPosition(index), destination);
 	}
 
-
-	public void QueueFakeCardAnimation(byte index, Vector2 origin, Vector2 destination)
+	public void QueueFakeCardAnimation(byte index, Vector2 origin, Vector2 destination, System.Action pre = null, System.Action post = null)
 	{
-		CardRenderer extantCard = Networking.TheCardIndex.GetCard(index).Renderer;
+		CustomConsole.Log("Queue Fake Card Animation");
 
+		
 		Animation anim = prefabs["FakeCard"];
 		animationQueue.Add(() =>
 		{
+			CustomConsole.Log("Play Fake Card Animation");
+			if(pre != null)
+				pre();
+
 			CardRenderer renderer = Instantiate(anim.gameObject, transform).GetComponent<CardRenderer>();
 			renderer.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, GraphicsSettings.CardHeight);
 			renderer.Index = index;
@@ -148,6 +189,8 @@ public class AnimationQueue : SimpleNetworkedMonoBehavior
 
 			tweenAnim.Setup(origin, destination, AnimationSpeed,
 					() => {
+						if (post != null)
+							post();
 						PlayNextAnimation();
 					});
 
@@ -156,37 +199,197 @@ public class AnimationQueue : SimpleNetworkedMonoBehavior
 
 	}
 
+	public void QueueDiscardAnimationNetworked(byte index)
+	{
+		foreach (MasqueradePlayer p in Networking.MasqueradePlayers)
+		{
+			AuthoritativeRPC("QueueDiscardAnimationRPC", OwningNetWorker, p.NetworkingPlayer, false, index);
+		}
+	}
+
+	[BRPC]
+	void QueueDiscardAnimationRPC(byte index)
+	{
+		QueueDiscardAnimation(index);
+	}
+
 	public void QueueDiscardAnimation(byte index)
 	{
-		animationQueue.Add(() =>
-		{
-			//See if we can even find that index
-			foreach (CardRenderer r in cardsInPlay)
+		CustomConsole.Log("Queue Discard Animation");
+
+		System.Action Pre = () => {
+			foreach (IndexHand h in Networking.UsedHands)
 			{
-				if (r.Index == index)
-				{
-					//If we can, get rid of it and make a fake version going to the discard
-					Vector2 origin = GetCardPosition(index);
-
-					foreach (IndexHand h in Networking.UsedHands)
-					{
-						h.RemoveIndex(index);
-					}
-
-					QueueFakeCardAnimation(index, origin, DiscardPosition);
-
-					//Once it gets there, add it to the discard pile
-					//NOT FIXED YET
-				}
+				h.RemoveIndex(index);
 			}
-		});
-		ResumePlayback();
+		};
 
+		System.Action Post = () => {
+			Networking.TheDiscardPile.AddIndex(index);
+
+		};
+
+		QueueFakeCardAnimation(index, GetCardPosition(index), DiscardPosition, Pre, Post);
+		
+
+
+	}
+
+
+
+	public void QueueShuffleAwayAnimationNetworked(byte index)
+	{
+		foreach (MasqueradePlayer p in Networking.MasqueradePlayers)
+		{
+			AuthoritativeRPC("QueueShuffleAwayAnimationRPC", OwningNetWorker, p.NetworkingPlayer, false, index);
+		}
+	}
+
+	[BRPC]
+	void QueueShuffleAwayAnimationRPC(byte index)
+	{
+		QueueShuffleAwayAnimation(index);
+	}
+
+	public void QueueShuffleAwayAnimation(byte index)
+	{
+		CustomConsole.Log("Queue Discard Animation");
+
+		System.Action Pre = () => {
+			foreach (IndexHand h in Networking.UsedHands)
+			{
+				h.RemoveIndex(index);
+			}
+			Networking.TheDiscardPile.RemoveIndex(index);
+		};
+
+		System.Action Post = () => {
+			//Increase the deck by 1
+
+		};
+
+		QueueFakeCardAnimation(index, GetCardPosition(index), DeckPosition, Pre, Post);
 
 
 
 	}
-	
+
+
+	public void QueueTakeControlAnimationNetworked(byte index, byte oldOwner, byte newOwner)
+	{
+		Card c = Networking.TheCardIndex.GetCard(index);
+		foreach (MasqueradePlayer p in Networking.MasqueradePlayers)
+		{
+			if(c.IsFaceUp)
+			{
+				//Do a normal slide from A to B
+			}
+			else
+			{
+				if(p.PlayerIndex == oldOwner)
+				{
+					//Do a normal slide that turns facedown
+				}
+				else if(p.PlayerIndex == newOwner)
+				{
+					//Do a normal slide from a facedown slot
+				}
+				else
+				{
+					//Do a slide from a facedown slot to another facedown slot
+				}
+			}
+		}
+	}
+
+	[BRPC]
+	void QueueTakeControlAnimationRPC(byte index, byte oldOwner, byte oldSlot, byte newOwner, byte newSlot)
+	{
+		QueueTakeControlAnimation(index, oldOwner, oldSlot, newOwner, newSlot);
+	}
+
+	public void QueueTakeControlAnimation(byte index, byte oldOwner, byte oldSlot, byte newOwner, byte newSlot)
+	{
+
+		System.Action Pre = () => {
+			//Neutralize the old slot
+
+		};
+
+		System.Action Post = () => {
+			//If the card is facedown and leaving my control for someone else's, place a facedown index instead
+			if(Networking.MyPlayerNumber == oldOwner && Networking.MyPlayerNumber != newOwner && !Networking.TheCardIndex.GetCard(index).IsFaceUp)
+			{
+
+				Networking.UsedHands[newOwner].SetIndex(newSlot, (byte)(CardIndex.PLAYER_1_FACEDOWN + newOwner));
+			}
+			//Otherwise place a normal index
+			Networking.UsedHands[newOwner].SetIndex(newSlot, index);
+
+		};
+
+		QueueFakeCardAnimation(index, GetSlotPosition(oldOwner, oldSlot), GetSlotPosition(newOwner, newSlot), Pre, Post);
+
+
+
+	}
+
+
+
+	public void QueueDrawAnimationNetworked(byte player, byte slot, byte index, bool reanimateMode = false)
+	{
+		Card c = Networking.TheCardIndex.GetCard(index);
+
+		foreach (MasqueradePlayer p in Networking.MasqueradePlayers)
+		{
+			
+				if (c.IsFaceUp || player == p.PlayerIndex)
+					AuthoritativeRPC("QueueDrawAnimationRPC", OwningNetWorker, p.NetworkingPlayer, false, player, slot, index, reanimateMode);
+				else
+					AuthoritativeRPC("QueueDrawAnimationRPC", OwningNetWorker, p.NetworkingPlayer, false, player, slot, (byte)(CardIndex.PLAYER_1_FACEDOWN + player), reanimateMode);
+			
+		}
+	}
+
+	[BRPC]
+	public void QueueDrawAnimationRPC(byte player, byte slot, byte index, bool reanimateMode)
+	{
+		QueueDrawAnimation(player, slot, index, reanimateMode);
+	}
+
+	public void QueueDrawAnimation(byte player, byte slot, byte index, bool reanimateMode = false)
+	{
+		Card c = Networking.TheCardIndex.GetCard(index);
+		System.Action Pre = () => {
+			//Reduce the deck by 1
+			
+
+		};
+
+		System.Action Post = () => {
+
+			Networking.UsedHands[player].SetIndex(slot, index);
+			/*
+			if (reanimateMode)
+			{
+				if (!c.IsFaceUp || player == Networking.MyPlayerNumber)
+					Networking.UsedHands[player].SetIndex(slot, index);
+				else
+					Networking.UsedHands[player].SetIndex(slot, (byte)(CardIndex.PLAYER_1_FACEDOWN + player));
+
+			}
+			else
+			{
+
+			}*/
+
+		};
+
+		QueueFakeCardAnimation(index, reanimateMode ? DiscardPosition: DeckPosition, GetSlotPosition(player, slot), Pre, Post);
+	}
+
+
+
 	public void ResumePlayback()
 	{
 		if (!Playing)

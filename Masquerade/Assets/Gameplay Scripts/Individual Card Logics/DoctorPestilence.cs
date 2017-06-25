@@ -121,7 +121,6 @@ public class DoctorPestilence : CardLogic, IStartPhase, IHasKeywords
 			Card.StartCoroutine(Networking.ChooseFacingCOR(
 				(byte)toKeep.Index,
 				Card.Owner.PlayerIndex,
-				false,
 				(choice) =>
 				{
 					facingPicked = true;
