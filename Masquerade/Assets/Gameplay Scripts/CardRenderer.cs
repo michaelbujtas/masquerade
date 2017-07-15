@@ -38,6 +38,12 @@ public class CardRenderer : MonoBehaviour
 	const int shieldIndex = 1;
 	const int swordIndex = 3;
 
+	public RectTransform rectTransform
+	{
+		get;
+		private set;
+	}
+
 
 	//[Inspect]
 	public bool DummyRenderer;
@@ -68,23 +74,18 @@ public class CardRenderer : MonoBehaviour
 		card.LinkRenderer(this);
 	}
 
-	public RectTransform rectTransform
-	{
-		get { return (RectTransform)transform; }
-	}
 
-	// Use this for initialization
 	void Awake() {
 		CardIndex = FindObjectOfType<CardIndex>();
 
-		/*ImportantObjectReference reference = FindObjectOfType<ImportantObjectReference>();
+		rectTransform = GetComponent<RectTransform>();
 
-		Menu = reference.CardOptionsMenu;
-        Selector = reference.CardSelector;
+		OnSettled += () => {
+			UseSpeed = BaselineSpeed;
 
+		};
 
-        if (Selector != null && !NoSelector)
-            Selector.CardsInPlay.Add(this);*/
+		MoveTarget = rectTransform.anchoredPosition;
 
 
 	}
@@ -92,9 +93,14 @@ public class CardRenderer : MonoBehaviour
 
 	public void Update()
 	{
-		if(!DummyRenderer)
+		if (!DummyRenderer)
+		{
 			RefreshCardImage();
-	}
+			MoveUpdate();
+		}
+
+
+		}
 
 
     public void SetFacing(bool isFaceUp)
@@ -160,7 +166,6 @@ public class CardRenderer : MonoBehaviour
 
         return retVal;
     }
-
 
     public void RefreshCardImage(bool? forceFaceUp = null)
     {
@@ -257,6 +262,42 @@ public class CardRenderer : MonoBehaviour
 		Card.Renderer = null;
 		Destroy(this.gameObject);
 	}
+
+
+	//Animation Stuff
+	float BaselineSpeed = 500;
+	float UseSpeed = 500;
+	Vector2 MoveTarget;
+	public void SetMoveTarget(Vector2 target)
+	{
+		MoveTarget = target;
+	}
+	public void SetMoveSpeed(float speed)
+	{
+		UseSpeed = speed;
+	}
+	public void SetBaselineSpeed(float speed)
+	{
+		BaselineSpeed = speed;
+	}
+	public void MoveUpdate()
+	{
+		Vector2 totalDelta = MoveTarget - rectTransform.anchoredPosition;
+		Vector2 moveDelta = totalDelta.normalized * UseSpeed * Time.deltaTime;
+		if(moveDelta.SqrMagnitude() >= totalDelta.SqrMagnitude())
+		{
+			rectTransform.anchoredPosition = MoveTarget;
+			OnSettled();
+		}
+		else
+		{
+
+			rectTransform.anchoredPosition += moveDelta;
+		}
+
+	}
+
+	public System.Action OnSettled;
 
 
 }

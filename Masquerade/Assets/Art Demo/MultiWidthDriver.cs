@@ -18,7 +18,8 @@ public class MultiWidthDriver : MonoBehaviour {
 	{
 		get
 		{
-			return CardHeight * 2 + 5;
+			return CardHeight;
+			//return CardHeight * 2 + 5;
 		}
 	}
 
@@ -45,13 +46,12 @@ public class MultiWidthDriver : MonoBehaviour {
 
 		float shortEdgeTargetHeight = (shortEdge - 2 * EdgePadding) / aspectRatio;
 		//float shortEdgeTargetHeight = 10000;
-		float middleStackTargetHeight = (Screen.height - 2 * EdgePadding - 2 * PaddingBetweenMainAndBackup - 2 * InternalPadding) / 5;
+		//float middleStackTargetHeight = (Screen.height - 2 * EdgePadding - 2 * PaddingBetweenMainAndBackup - 2 * InternalPadding) / 5;
 		float longEdgeTargetHeight = (longEdge - 2 * EdgePadding - 2 * PaddingBetweenMainAndBackup - 2 * InternalPadding) / (4 + aspectRatio);
 		///float longEdgeTargetHeight = 10000;
 
-		height = Mathf.Min(Mathf.Min(shortEdgeTargetHeight, middleStackTargetHeight), longEdgeTargetHeight);
-
-
+		//height = Mathf.Min(Mathf.Min(shortEdgeTargetHeight, middleStackTargetHeight), longEdgeTargetHeight);
+		height = Mathf.Min(shortEdgeTargetHeight, longEdgeTargetHeight);
 
 	}
 

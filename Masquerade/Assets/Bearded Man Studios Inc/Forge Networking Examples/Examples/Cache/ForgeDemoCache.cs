@@ -12,13 +12,13 @@ namespace BeardedManStudios.Forge.Examples
 		{
 			if (NetworkingManager.Instance.OwningNetWorker.IsServer)
 			{
-				Cache.Set(dummyCacheKey, dummyData);
+				BeardedManStudios.Network.Cache.Set(dummyCacheKey, dummyData);
 				Debug.Log(dummyData.Length);
 				Debug.Log(dummyData);
 			}
 			else
 			{
-				Cache.Request<string>(dummyCacheKey, (object x) =>
+				BeardedManStudios.Network.Cache.Request<string>(dummyCacheKey, (object x) =>
 				{
 					string response = (string)x;
 					Debug.Log(response.Length);

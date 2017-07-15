@@ -131,11 +131,11 @@ namespace BeardedManStudios.Forge.Examples
 				floatNumber += 50.35f;
 
 			if (Input.GetKeyDown(KeyCode.S))
-				Cache.Set<int>("test", 9);
+				BeardedManStudios.Network.Cache.Set<int>("test", 9);
 
 			if (Input.GetKeyDown(KeyCode.G))
 			{
-				Cache.Request<int>("test", (object x) =>
+				BeardedManStudios.Network.Cache.Request<int>("test", (object x) =>
 				{
 					Debug.Log(x);
 				});
