@@ -60,7 +60,6 @@ public class IndexHand : MonoBehaviour {
 			throw new System.NotFiniteNumberException();
 		}
 	}
-
 	public List<byte> CardsOpenToAttack
 	{
 		get
@@ -83,7 +82,6 @@ public class IndexHand : MonoBehaviour {
 			return retval;
 		}
 	}
-
 	public List<byte> FaceUpCards
 	{
 		get
@@ -98,8 +96,6 @@ public class IndexHand : MonoBehaviour {
 			return retval;
 		}
 	}
-
-
 	public bool HasFaceUpCards()
 	{
 		foreach (CardRenderer r in Renderers)
@@ -111,7 +107,6 @@ public class IndexHand : MonoBehaviour {
 		}
 		return false;
 	}
-
 	public List<byte> CardsOwned
 	{
 		get
@@ -125,7 +120,6 @@ public class IndexHand : MonoBehaviour {
 			return retval;
 		}
 	}
-
 	public List<byte> CardsThatCanBeDiscarded
 	{
 		get
@@ -139,8 +133,6 @@ public class IndexHand : MonoBehaviour {
 			return retval;
 		}
 	}
-
-
 	public List<byte> UntappedCards
 	{
 		get
@@ -169,6 +161,7 @@ public class IndexHand : MonoBehaviour {
 			return CardIndex.EMPTY_SLOT;
 		}
 	}
+
 
 	public bool RemoveIndex(byte index)
 	{

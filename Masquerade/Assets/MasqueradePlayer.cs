@@ -23,13 +23,13 @@ public class MasqueradePlayer {
 		private set;
 	}
 
-	public IndexHand Hand
+	public AnimatedHand Hand
 	{
 		get;
 		private set;
 	}
 
-	public MasqueradePlayer(NetworkingPlayer netWorker, byte index, PlayerIdentity identity, IndexHand hand)
+	public MasqueradePlayer(NetworkingPlayer netWorker, byte index, PlayerIdentity identity, AnimatedHand hand)
 	{
 		PlayerIndex = index;
 

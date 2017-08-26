@@ -12,17 +12,36 @@ public class IndexCardChoiceMenu : MonoBehaviour {
 	public NamedButton PassButton, CancelButton;
 	public CollectionViewer CardsNotInPlay;
 
-	public List<CardRenderer> CardsInPlay = new List<CardRenderer>();
 
-	public 
-	List<Choice> decisionQueue = new List<Choice>();
+	public List<AnimatedHand> AnimatedHands = new List<AnimatedHand>();
+
+	//public List<CardRenderer> CardsInPlay = new List<CardRenderer>();
+	public List<CardRenderer> CardsInPlay
+	{
+		get
+		{
+			List<CardRenderer> retVal = new List<CardRenderer>();
+			foreach(AnimatedHand h in AnimatedHands)
+			{
+				retVal.AddRange(h.CardRenderers);
+			}
+			return retVal;
+		}
+	}
+
+	public List<Choice> decisionQueue = new List<Choice>();
 
 	public delegate void HandleChoiceDelegate(byte choice);
 
 	public delegate void HandleCancelDelegate();
 
+	GameplayNetworking networking;
+
 	public void Awake()
 	{
+		networking = FindObjectOfType<GameplayNetworking>();
+		AnimatedHands.AddRange(networking.ClockwiseHands);
+
 		gameTimer = FindObjectOfType<GameTimer>();
 
 		var notDummyCardRenderers =

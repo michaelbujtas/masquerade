@@ -11,12 +11,19 @@ public class AnimatedHand : MonoBehaviour {
 	public float EdgePadding;
 	public float CardPadding;
 
-	public byte PlayerNumber;
 	public CardRenderer Prefab;
 	public GameObject Discard;
 	public Transform Deck;
 
 	public int debug;
+
+
+	RectTransform rectTransform;
+
+	public List<CardRenderer> CardRenderers = new List<CardRenderer>();
+	public byte PlayerNumber;
+	public PlayerIdentityRenderer AttachedIdentityRenderer;
+
 
 	float CardAspect = 5f / 7f;
 
@@ -39,10 +46,9 @@ public class AnimatedHand : MonoBehaviour {
 	{
 		get
 		{
-			return Renderers.Count;
+			return CardRenderers.Count;
 		}
 	}
-
 	float TotalSpacedWidth
 	{
 		get
@@ -50,7 +56,6 @@ public class AnimatedHand : MonoBehaviour {
 			return CardsInHand * CardWidth + (CardsInHand - 1) * CardPadding + 2 * EdgePadding;
 		}
 	}
-
 	bool OverlapMode
 	{
 		get
@@ -60,17 +65,12 @@ public class AnimatedHand : MonoBehaviour {
 	}
 
 
-	RectTransform rectTransform;
-
-	List<CardRenderer> Renderers = new List<CardRenderer>();
-
-
 
 	void Start() {
 		rectTransform = GetComponent<RectTransform>();
 		//DEBUG
-		if (Renderers.Count == 0)
-			Renderers.AddRange(GetComponentsInChildren<CardRenderer>());
+		if (CardRenderers.Count == 0)
+			CardRenderers.AddRange(GetComponentsInChildren<CardRenderer>());
 
 
 	}
@@ -82,18 +82,18 @@ public class AnimatedHand : MonoBehaviour {
 
 		//Debug
 
-		Debug.Log(CardWidth + ", " + TotalSpacedWidth + "/" + HandWidth + ", " + OverlapMode);
+		//Debug.Log(CardWidth + ", " + TotalSpacedWidth + "/" + HandWidth + ", " + OverlapMode);
 
 		if (Input.GetKeyDown(KeyCode.Space))
 		{
-			CardRenderer newCard = Instantiate(Renderers[0]);
+			CardRenderer newCard = Instantiate(CardRenderers[0]);
 			newCard.Index = (byte)Random.Range(0, 60);
 			AddCardRenderer(newCard);
 		}
 
 		if (Input.GetKeyDown(KeyCode.Backspace))
 		{
-			CardRenderer renderer = Renderers[Random.Range(0, Renderers.Count)];
+			CardRenderer renderer = CardRenderers[Random.Range(0, CardRenderers.Count)];
 			RemoveCardRenderer(renderer);
 			Destroy(renderer.gameObject);
 		}
@@ -110,13 +110,13 @@ public class AnimatedHand : MonoBehaviour {
 
 	public void AddCardRenderer(CardRenderer card)
 	{
-		Renderers.Add(card);
+		CardRenderers.Add(card);
 		card.transform.parent = transform;
 	}
 
 	public void RemoveCardRenderer(CardRenderer card)
 	{
-		Renderers.Remove(card);
+		CardRenderers.Remove(card);
 	}
 
 	void UpdateCardSizes()
@@ -124,7 +124,7 @@ public class AnimatedHand : MonoBehaviour {
 
 		for (int i = 0; i < CardsInHand; i++)
 		{
-			Renderers[i].rectTransform.sizeDelta = new Vector2(CardWidth, CardWidth / CardAspect);
+			CardRenderers[i].rectTransform.sizeDelta = new Vector2(CardWidth, CardWidth / CardAspect);
 		}
 	}
 
@@ -132,7 +132,7 @@ public class AnimatedHand : MonoBehaviour {
 	{
 		for (int i = 0; i < CardsInHand; i++)
 		{
-			Renderers[i].rectTransform.anchoredPosition = new Vector2(GetCardTargetXPosition(i), 0);
+			CardRenderers[i].rectTransform.anchoredPosition = new Vector2(GetCardTargetXPosition(i), 0);
 
 		}
 	}
@@ -141,11 +141,11 @@ public class AnimatedHand : MonoBehaviour {
 	{
 		for (int i = 0; i < CardsInHand; i++)
 		{
-			Renderers[i].SetMoveTarget(new Vector2(GetCardTargetXPosition(i), 0));
+			CardRenderers[i].SetMoveTarget(new Vector2(GetCardTargetXPosition(i), 0));
 
 		}
 	}
-
+	
 	float GetCardTargetXPosition(int slot)
 	{
 		if (!OverlapMode)
@@ -161,27 +161,26 @@ public class AnimatedHand : MonoBehaviour {
 		}
 	}
 
+	//Hand Linq Queries
 	CardRenderer GetRendererByIndex(byte index)
 	{
 		var matches =
-				from r in Renderers
+				from r in CardRenderers
 				where r.Card != null && r.Index == index
 				select r;
 
 		CardRenderer[] retArray = matches.ToArray();
-		if(retArray.Length > 0)
+		if (retArray.Length > 0)
 			return retArray[Random.Range(0, retArray.Length)];
 		return null;
 	}
-
-	//Hand Linq Queries
 	public List<byte> CardsOpenToAttack
 	{
 		get
 		{
 			List<byte> retval = new List<byte>();
 			var faceUpCards =
-				from r in Renderers
+				from r in CardRenderers
 				where r.Card != null && r.Card.IsFaceUp
 				select r.Index;
 			retval.AddRange(faceUpCards);
@@ -203,7 +202,7 @@ public class AnimatedHand : MonoBehaviour {
 		{
 			List<byte> retval = new List<byte>();
 			var faceUpCards =
-				from r in Renderers
+				from r in CardRenderers
 				where r.Card != null && r.Card.IsFaceUp
 				select r.Index;
 			retval.AddRange(faceUpCards);
@@ -213,7 +212,7 @@ public class AnimatedHand : MonoBehaviour {
 	}
 	public bool HasFaceUpCards()
 	{
-		foreach (CardRenderer r in Renderers)
+		foreach (CardRenderer r in CardRenderers)
 		{
 			if (r.Card != null && r.Card.IsFaceUp)
 			{
@@ -228,7 +227,7 @@ public class AnimatedHand : MonoBehaviour {
 		{
 			List<byte> retval = new List<byte>();
 			var nonBlankCards =
-				from r in Renderers
+				from r in CardRenderers
 				where r.Card != null
 				select r.Index;
 			retval.AddRange(nonBlankCards);
@@ -241,7 +240,7 @@ public class AnimatedHand : MonoBehaviour {
 		{
 			List<byte> retval = new List<byte>();
 			var nonBlankCards =
-				from r in Renderers
+				from r in CardRenderers
 				where r.Card != null && !r.Card.HasKeyword(Keyword.CANT_BE_DISCARDED)
 				select r.Index;
 			retval.AddRange(nonBlankCards);
@@ -254,7 +253,7 @@ public class AnimatedHand : MonoBehaviour {
 		{
 			List<byte> retval = new List<byte>();
 			var nonBlankCards =
-				from r in Renderers
+				from r in CardRenderers
 				where r.Card != null && !r.Card.IsTapped
 				select r.Index;
 			retval.AddRange(nonBlankCards);
@@ -267,7 +266,7 @@ public class AnimatedHand : MonoBehaviour {
 		{
 			List<byte> possibleCards = new List<byte>();
 			var faceDownCards =
-				from r in Renderers
+				from r in CardRenderers
 				where r.Card != null && !r.Card.IsFaceUp
 				select r.Index;
 			possibleCards.AddRange(faceDownCards);
@@ -281,7 +280,7 @@ public class AnimatedHand : MonoBehaviour {
 		get
 		{
 			var faceDownCards =
-			from r in Renderers
+			from r in CardRenderers
 			where r.Card != null && !r.Card.IsFaceUp
 			select r.Index;
 
@@ -290,7 +289,7 @@ public class AnimatedHand : MonoBehaviour {
 	}
 
 
-	//Add and Remove Index
+	//New style add and remove
 	public void DrawCard(byte index)
 	{
 		CardRenderer newCard = Instantiate(Prefab);
@@ -341,4 +340,38 @@ public class AnimatedHand : MonoBehaviour {
 		return false;
 	}
 
+
+	//Old Functions w/ Slots
+	public void SetIndex(byte slot, byte index)
+	{
+		DrawCard(index);
+	}
+
+	public byte GetIndex(byte slot)
+	{
+		return CardIndex.EMPTY_SLOT;
+	}
+
+	public int? GetSlot(byte index)
+	{
+		return null;
+	}
+
+	public byte FirstOpenSlot
+	{
+		get
+		{
+			return 0;
+		}
+	}
+	
+	public bool RemoveIndex(byte index)
+	{
+		return DiscardCard(index);
+	}
+
+	public bool RemoveFacedown(byte PreferredSlotIndex)
+	{
+		return DiscardCard((byte)(CardIndex.PLAYER_1_FACEDOWN + PlayerNumber));
+	}
 }

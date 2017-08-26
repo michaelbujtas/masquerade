@@ -17,9 +17,9 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 
 	public byte MyPlayerNumber = 0;
 
-	public List<IndexHand> ClockwiseHands = new List<IndexHand>();
+	public List<AnimatedHand> ClockwiseHands = new List<AnimatedHand>();
 
-	public List<IndexHand> UsedHands = new List<IndexHand>();
+	public List<AnimatedHand> UsedHands = new List<AnimatedHand>();
 
 	public List<MasqueradePlayer> MasqueradePlayers = new List<MasqueradePlayer>();
 
@@ -402,7 +402,7 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 		//APNAP order for cards in play
 		for (int i = 0; i < MasqueradePlayers.Count; i++)
 		{
-			IndexHand apnapHand = GetPlayer(PlaceInTurnOrder + i).Hand;
+			AnimatedHand apnapHand = GetPlayer(PlaceInTurnOrder + i).Hand;
 			foreach (byte b in apnapHand.CardsOwned)
 			{
 				Card c = TheCardIndex.GetCard(b);
@@ -946,16 +946,16 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 		CustomConsole.Log("Got a response. Calling AddCardToBoards and calling it a day.", logColor);
 
 
-		//AddCardToBoards(playerIndex, cardIndex);
-		byte targetSlot = UsedHands[playerIndex].FirstOpenSlot;
+		AddCardToBoards(playerIndex, cardIndex);
+		//byte targetSlot = UsedHands[playerIndex].FirstOpenSlot;
 
-		card.CurrentSlot = targetSlot;
+		//card.CurrentSlot = targetSlot;
 
 
 
-		UsedHands[playerIndex].SetIndex(targetSlot, cardIndex);
+		//UsedHands[playerIndex].SetIndex(targetSlot, cardIndex);
 
-		TheAnimationQueue.QueueDrawAnimationNetworked(playerIndex, targetSlot, cardIndex, reanimateMode);
+		//TheAnimationQueue.QueueDrawAnimationNetworked(playerIndex, targetSlot, cardIndex, reanimateMode);
 
 		response.Recycle();
 
@@ -1459,7 +1459,8 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 	{
 		if (card.Index != null && card.CurrentSlot != null)
 		{
-			AddCardToBoards(card.Owner.PlayerIndex, (byte)card.Index, (byte)card.CurrentSlot);
+			//TROUBLE
+			//AddCardToBoards(card.Owner.PlayerIndex, (byte)card.Index, (byte)card.CurrentSlot);
 		}
 	}
 
@@ -1496,7 +1497,7 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 	void NeutralizeCardRPC(byte cardIndex)
 	{
 		CustomConsole.Log("Neutralizing #" + cardIndex, Color.cyan);
-		foreach (IndexHand h in UsedHands)
+		foreach (AnimatedHand h in UsedHands)
 		{
 			h.RemoveIndex(cardIndex);
 		}
@@ -1762,9 +1763,9 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 
 		TheDiscardPile.AddIndex((byte)card.Index);
 
-		TheAnimationQueue.QueueDiscardAnimationNetworked((byte)card.Index);
+		//TheAnimationQueue.QueueDiscardAnimationNetworked((byte)card.Index);
 
-		foreach (IndexHand h in UsedHands)
+		foreach (AnimatedHand h in UsedHands)
 		{
 			h.RemoveIndex((byte)card.Index);
 		}
@@ -1774,7 +1775,7 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 
 		foreach (MasqueradePlayer p in MasqueradePlayers)
 		{
-			//AuthoritativeRPC("RemoveFromBoardRPC", OwningNetWorker, p.NetworkingPlayer, false, card.Index);
+			AuthoritativeRPC("RemoveFromBoardRPC", OwningNetWorker, p.NetworkingPlayer, false, card.Index);
 		}
 	}
 
@@ -1787,7 +1788,7 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 
 		
 		//TheAnimationQueue.QueueFakeCardAnimation(cardIndex, TheDiscardPile.Renderer.rectTransform.position);
-		foreach (IndexHand h in UsedHands)
+		foreach (AnimatedHand h in UsedHands)
 		{
 			h.RemoveIndex(cardIndex);
 		}
@@ -1806,9 +1807,9 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 		TheDiscardPile.RemoveIndex((byte)card.Index);
 
 		TheDeck.ShuffleAway((byte)card.Index);
-		TheAnimationQueue.QueueShuffleAwayAnimationNetworked((byte)card.Index);
+		//TheAnimationQueue.QueueShuffleAwayAnimationNetworked((byte)card.Index);
 
-		foreach (IndexHand h in UsedHands)
+		foreach (AnimatedHand h in UsedHands)
 		{
 			h.RemoveIndex((byte)card.Index);
 		}
@@ -1817,12 +1818,12 @@ public class GameplayNetworking : SimpleNetworkedMonoBehavior
 
 
 		/*RemoveFromBoardRPC((byte)card.Index);
-
+		*/
 
 		foreach (MasqueradePlayer p in MasqueradePlayers)
 		{
 			AuthoritativeRPC("RemoveFromBoardRPC", OwningNetWorker, p.NetworkingPlayer, false, card.Index);
-		}*/
+		}
 	}
 
 

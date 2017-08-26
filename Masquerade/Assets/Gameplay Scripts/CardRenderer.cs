@@ -233,7 +233,7 @@ public class CardRenderer : MonoBehaviour
 					}
 					name = NameText.text;
 				}
-				else
+			 	else
 				{
 					//This is essentially an error message
 					CardBack.enabled = false;
